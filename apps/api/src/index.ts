@@ -1,6 +1,6 @@
 // Simple Apollo Server v4 using the standalone helper.
 // Strict TS and ESM-ready.
-
+import type { Product } from '@ts-fullstack-learning/shared';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 
@@ -21,10 +21,9 @@ const typeDefs = /* GraphQL */ `
   }
 `;
 
-type Product = { id: string; name: string; price: number };
 const db: Product[] = [
   { id: '1', name: 'Coffee', price: 3.5 },
-  { id: '2', name: 'Tea',    price: 2.9 }
+  { id: '2', name: 'Tea', price: 2.9 },
 ];
 
 const resolvers = {
@@ -48,5 +47,5 @@ startStandaloneServer(server, {
   // allow Next.js dev origin
   context: async () => ({}),
 }).then(({ url }) => {
-  console.log(`✅ GraphQL ready at ${url}`);
+  console.log(`GraphQL ready at ${url}`);
 });
