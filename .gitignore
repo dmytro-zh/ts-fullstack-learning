@@ -34,6 +34,7 @@ lerna-debug.log*
 
 # env
 .env*
+!.env.example
 
 # IDE / OS
 .DS_Store
