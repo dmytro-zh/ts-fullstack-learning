@@ -1,1 +1,43 @@
-node_modules
+# dependencies
+node_modules/
+packages/**/node_modules/
+
+# builds
+dist/
+build/
+.next/
+out/
+apps/web/.next/
+apps/web/out/
+apps/web/test-results/
+packages/**/dist/
+coverage/
+test-results/
+
+# ts build info
+*.tsbuildinfo
+packages/**/tsconfig.tsbuildinfo
+
+# logs
+*.log
+pnpm-debug.log*
+npm-error.log
+yarn-error.log
+lerna-debug.log*
+.pnpm-debug.log*
+
+# cache
+.cache/
+.eslintcache
+.pnp.*
+.pnpm-store/
+
+# env
+.env*
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
