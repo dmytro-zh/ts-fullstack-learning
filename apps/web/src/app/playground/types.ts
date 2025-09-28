@@ -9,6 +9,12 @@ const defaultProductsData: ProductsData = {
   products: [
     { id: '1', name: 'Coffee', price: 3.5, inStock: true },
     { id: '2', name: 'Tea', price: 2.9, inStock: false },
+    { id: '3', name: 'Milk', price: 1.8, inStock: true },
+    { id: '4', name: 'Bread', price: 2.2, inStock: true },
+    { id: '5', name: 'Chocolate', price: 4.5, inStock: false },
+    { id: '6', name: 'Juice', price: 3.1, inStock: true },
+    { id: '7', name: 'Water', price: 1.0, inStock: true },
+    { id: '8', name: 'Cheese', price: 5.7, inStock: false },
   ],
 };
 
