@@ -33,8 +33,16 @@ lerna-debug.log*
 .pnpm-store/
 
 # env
-.env*
+.env
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/.env.test
+
+# keep example files
 !.env.example
+!**/.env.example
 
 # IDE / OS
 .DS_Store
