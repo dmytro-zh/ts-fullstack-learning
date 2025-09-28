@@ -13,7 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "@apollo/server": "^5.0.0",
-    "graphql": "^16.11.0"
+    "graphql": "^16.11.0",
+    "@ts-fullstack-learning/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20",
