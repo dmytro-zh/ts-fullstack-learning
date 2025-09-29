@@ -2,9 +2,9 @@
 import type { Product } from "@ts-fullstack-learning/shared";
 import { ProductsList } from './_components/ProductsList';
 const GRAPHQL_URL = process.env.GRAPHQL_URL ?? 'http://localhost:4000/graphql';
-const PRODUCTS_QUERY = /* GraphQL */ 'query Products { products { id name price } }';
+const PRODUCTS_QUERY = /* GraphQL */ 'query Products { products { id name price inStock} }';
 
-type ProductDTO = Pick<Product, "id" | "name" | "price">;
+type ProductDTO = Pick<Product, "id" | "name" | "price" | "inStock">;
 
 // Create a currency formatter once (server-side safe).
 
