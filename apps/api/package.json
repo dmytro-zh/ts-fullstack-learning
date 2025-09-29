@@ -5,19 +5,25 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "build": "tsc -p tsconfig.json"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "rimraf prisma/dev.db && pnpm run prisma:migrate --name init && pnpm run db:seed"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@apollo/server": "^5.0.0",
-    "graphql": "^16.11.0",
-    "@ts-fullstack-learning/shared": "workspace:*"
+    "@prisma/client": "^6.16.2",
+    "@ts-fullstack-learning/shared": "workspace:*",
+    "graphql": "^16.11.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "prisma": "^6.16.2",
     "tsx": "^4.20.5",
     "typescript": "^5"
   }
