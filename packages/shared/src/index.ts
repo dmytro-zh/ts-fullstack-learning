@@ -1,8 +1,10 @@
-// Shared domain types for the entire monorepo.
-export type Product = {
-  id: string;
-  name: string;
-  price: number;
-  // Optional for now; API schema does not include it yet.
-  inStock?: boolean;
-};
+import { z } from 'zod';
+
+export const ProductSchema = z.object({
+id: z.string(),
+name: z.string(),
+price: z.number(),
+inStock: z.boolean(),
+});
+
+export type Product = z.infer<typeof ProductSchema>;
