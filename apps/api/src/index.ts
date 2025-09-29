@@ -9,6 +9,7 @@ const typeDefs = /* GraphQL */ `
     id: ID!
     name: String!
     price: Float!
+    inStock: Boolean!
   }
 
   type Query {
@@ -17,7 +18,7 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
-    addProduct(name: String!, price: Float!): Product!
+    addProduct(name: String!, price: Float!, inStock: Boolean!): Product!
   }
 `;
 
@@ -38,8 +39,8 @@ const resolvers = {
     products: () => db,
   },
   Mutation: {
-    addProduct: (_: unknown, args: { name: string; price: number }) => {
-      const item: Product = { id: String(Date.now()), name: args.name, price: args.price };
+    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean}) => {
+      const item: Product = { id: String(Date.now()), name: args.name, price: args.price, inStock: args.inStock };
       db.push(item);
       return item;
     },
