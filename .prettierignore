@@ -1,0 +1,12 @@
+node_modules/
+.next/
+dist/
+build/
+coverage/
+test-results/
+apps/web/.next/
+apps/web/out/
+apps/web/test-results/
+packages/**/dist/
+pnpm-lock.yaml
+.pnpm-store/
