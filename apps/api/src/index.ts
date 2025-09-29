@@ -39,8 +39,13 @@ const resolvers = {
     products: () => db,
   },
   Mutation: {
-    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean}) => {
-      const item: Product = { id: String(Date.now()), name: args.name, price: args.price, inStock: args.inStock };
+    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean }) => {
+      const item: Product = {
+        id: String(Date.now()),
+        name: args.name,
+        price: args.price,
+        inStock: args.inStock,
+      };
       db.push(item);
       return item;
     },
