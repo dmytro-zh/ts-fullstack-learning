@@ -1,6 +1,6 @@
 import type { Product } from '@ts-fullstack-learning/shared';
 
-type ProductDTO = Pick<Product, 'id' | 'name' | 'price'>;
+type ProductDTO = Pick<Product, 'id' | 'name' | 'price' | 'inStock'>;
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
 export function ProductsList({ products }: { products: ProductDTO[] }) {
@@ -9,7 +9,7 @@ export function ProductsList({ products }: { products: ProductDTO[] }) {
     <ul>
       {products.map((p) => (
         <li key={p.id}>
-          {p.name} - {usd.format(p.price)}
+          {p.name} - {usd.format(p.price)} ({p.inStock ? 'in stock' : 'out of stock'})
         </li>
       ))}
     </ul>
