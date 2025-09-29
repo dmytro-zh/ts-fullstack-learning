@@ -12,5 +12,14 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.1.11"
   }
 }
