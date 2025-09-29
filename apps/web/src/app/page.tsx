@@ -6,7 +6,12 @@ import { z } from 'zod';
 
 const PRODUCTS_QUERY = /* GraphQL */ `
   query Products {
-    products { id name price inStock }
+    products {
+      id
+      name
+      price
+      inStock
+    }
   }
 `;
 
