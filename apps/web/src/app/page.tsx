@@ -3,6 +3,8 @@ import { ProductsList } from './_components/ProductsList';
 import { GraphQLClient } from 'graphql-request';
 import { getEnv } from '../lib/env';
 import { ProductsDocument, type ProductsQuery } from '../graphql/generated/graphql';
+import Link from 'next/link';
+
 
 // --- Data fetch ---
 async function fetchProducts() {
@@ -19,6 +21,7 @@ export default async function Home() {
   return (
     <main style={{ padding: 24 }}>
       <h1>Products</h1>
+      <Link href="/products">Add product</Link>
       <ProductsList products={products} />
     </main>
   );
