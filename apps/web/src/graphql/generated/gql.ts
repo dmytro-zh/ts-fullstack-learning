@@ -14,9 +14,12 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.AddProductDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.ProductsDocument;
 };
 const documents: Documents = {
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}':
+    types.AddProductDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}':
     types.ProductsDocument,
 };
@@ -35,6 +38,12 @@ const documents: Documents = {
  */
 export function gql(source: string): unknown;
 
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}',
+): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
