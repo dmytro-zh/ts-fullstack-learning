@@ -48,9 +48,12 @@ importers:
 
   apps/web:
     dependencies:
+      graphql:
+        specifier: ^16.11.0
+        version: 16.11.0
       graphql-request:
-        specifier: ^7.2.0
-        version: 7.2.0(graphql@16.11.0)
+        specifier: ^6.1.0
+        version: 6.1.0(graphql@16.11.0)
       next:
         specifier: 15.5.2
         version: 15.5.2(@babel/core@7.28.4)(@playwright/test@1.55.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -73,6 +76,9 @@ importers:
       '@graphql-codegen/client-preset':
         specifier: ^5.0.2
         version: 5.0.2(graphql@16.11.0)
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.11.0)
       '@playwright/test':
         specifier: ^1.55.0
         version: 1.55.0
@@ -2140,8 +2146,8 @@ packages:
       cosmiconfig-toml-loader:
         optional: true
 
-  graphql-request@7.2.0:
-    resolution: {integrity: sha512-0GR7eQHBFYz372u9lxS16cOtEekFlZYB2qOyq8wDvzRmdRSJ0mgUVX1tzNcIzk3G+4NY+mGtSz411wZdeDF/+A==}
+  graphql-request@6.1.0:
+    resolution: {integrity: sha512-p+XPfS4q7aIpKVcgmnZKhMNqhltk20hfXtkaIkTfjjmiKMJ5xrt5c743cL03y/K7y1rg3WrIC49xGiEQ4mxdNw==}
     peerDependencies:
       graphql: 14 - 16
 
@@ -5769,10 +5775,13 @@ snapshots:
       - uWebSockets.js
       - utf-8-validate
 
-  graphql-request@7.2.0(graphql@16.11.0):
+  graphql-request@6.1.0(graphql@16.11.0):
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
+      cross-fetch: 3.2.0
       graphql: 16.11.0
+    transitivePeerDependencies:
+      - encoding
 
   graphql-tag@2.12.6(graphql@16.11.0):
     dependencies:
