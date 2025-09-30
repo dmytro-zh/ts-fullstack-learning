@@ -19,7 +19,8 @@
     "@apollo/server": "^5.0.0",
     "@prisma/client": "^6.16.2",
     "@ts-fullstack-learning/shared": "workspace:*",
-    "graphql": "^16.11.0"
+    "graphql": "^16.11.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^20",
