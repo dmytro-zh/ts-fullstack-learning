@@ -29,6 +29,9 @@ importers:
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
+      zod:
+        specifier: ^4.1.11
+        version: 4.1.11
     devDependencies:
       '@types/node':
         specifier: ^20

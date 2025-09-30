@@ -2,7 +2,7 @@
 // Strict TS and ESM-ready.
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { PrismaClient } from '@prisma/client';
+import { ProductService } from './services/product.service';
 
 const typeDefs = /* GraphQL */ `
   type Product {
@@ -22,25 +22,16 @@ const typeDefs = /* GraphQL */ `
   }
 `;
 
-const prisma = new PrismaClient();
+const service = new ProductService();
 
 const resolvers = {
   Query: {
     health: () => 'OK',
-    products: () => prisma.product.findMany(),
+    products: () => service.getProducts(),
   },
   Mutation: {
-    addProduct: async (
-      _: unknown,
-      args: { name: string; price: number; inStock: boolean },
-    ) =>
-      prisma.product.create({
-        data: {
-          name: args.name,
-          price: args.price,
-          inStock: args.inStock,
-        },
-      }),
+    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean }) =>
+      service.addProduct(args),
   },
 };
 
