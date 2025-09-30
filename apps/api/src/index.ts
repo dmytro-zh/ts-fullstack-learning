@@ -1,8 +1,8 @@
 // Simple Apollo Server v4 using the standalone helper.
 // Strict TS and ESM-ready.
-import type { Product } from '@ts-fullstack-learning/shared';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { PrismaClient } from '@prisma/client';
 
 const typeDefs = /* GraphQL */ `
   type Product {
@@ -22,33 +22,25 @@ const typeDefs = /* GraphQL */ `
   }
 `;
 
-const db: Product[] = [
-  { id: '1', name: 'Coffee', price: 3.5, inStock: true },
-  { id: '2', name: 'Tea', price: 2.9, inStock: false },
-  { id: '3', name: 'Milk', price: 1.8, inStock: true },
-  { id: '4', name: 'Bread', price: 2.2, inStock: true },
-  { id: '5', name: 'Chocolate', price: 4.5, inStock: false },
-  { id: '6', name: 'Juice', price: 3.1, inStock: true },
-  { id: '7', name: 'Water', price: 1.0, inStock: true },
-  { id: '8', name: 'Cheese', price: 5.7, inStock: false },
-];
+const prisma = new PrismaClient();
 
 const resolvers = {
   Query: {
     health: () => 'OK',
-    products: () => db,
+    products: () => prisma.product.findMany(),
   },
   Mutation: {
-    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean }) => {
-      const item: Product = {
-        id: String(Date.now()),
-        name: args.name,
-        price: args.price,
-        inStock: args.inStock,
-      };
-      db.push(item);
-      return item;
-    },
+    addProduct: async (
+      _: unknown,
+      args: { name: string; price: number; inStock: boolean },
+    ) =>
+      prisma.product.create({
+        data: {
+          name: args.name,
+          price: args.price,
+          inStock: args.inStock,
+        },
+      }),
   },
 };
 
@@ -56,7 +48,6 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
-  // allow Next.js dev origin
   context: async () => ({}),
 }).then(({ url }) => {
   console.log(`GraphQL ready at ${url}`);
