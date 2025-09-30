@@ -2,16 +2,14 @@
 import { ProductsList } from './_components/ProductsList';
 import { GraphQLClient } from 'graphql-request';
 import { getEnv } from '../lib/env';
-import { getSdk } from '../graphql/generated';
+import { ProductsDocument, type ProductsQuery } from '../graphql/generated/graphql';
 
 // --- Data fetch ---
 async function fetchProducts() {
   const { GRAPHQL_URL } = getEnv();
   const client = new GraphQLClient(GRAPHQL_URL);
-  const sdk = getSdk(client);
-
-  const { products } = await sdk.Products();
-  return products;
+  const data = await client.request<ProductsQuery>(ProductsDocument);
+  return data.products;
 }
 
 // --- Page (SSR) ---
