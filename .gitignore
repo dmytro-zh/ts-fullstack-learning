@@ -50,3 +50,6 @@ lerna-debug.log*
 .idea/
 *.swp
 *.swo
+
+# Prisma local DB
+apps/api/prisma/prisma/*.db
