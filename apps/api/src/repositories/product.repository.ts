@@ -9,4 +9,8 @@ export class ProductRepository {
   create(data: Prisma.ProductCreateInput) {
     return prisma.product.create({ data });
   }
+
+  findById(id: string) {
+    return prisma.product.findUnique({ where: { id } });
+  }
 }
