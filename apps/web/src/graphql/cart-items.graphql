@@ -1,0 +1,12 @@
+query CartItems {
+  cartItems {
+    id
+    quantity
+    product {
+      id
+      name
+      price
+      inStock
+    }
+  }
+}

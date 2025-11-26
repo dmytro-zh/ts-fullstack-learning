@@ -14,14 +14,22 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  'mutation AddCartItem($productId: ID!, $quantity: Int!) {\n  addCartItem(productId: $productId, quantity: $quantity) {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}': typeof types.AddCartItemDocument;
   'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.AddProductDocument;
+  'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}': typeof types.CartItemsDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.ProductsDocument;
+  'mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}': typeof types.RemoveCartItemDocument;
 };
 const documents: Documents = {
+  'mutation AddCartItem($productId: ID!, $quantity: Int!) {\n  addCartItem(productId: $productId, quantity: $quantity) {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}':
+    types.AddCartItemDocument,
   'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}':
     types.AddProductDocument,
+  'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}':
+    types.CartItemsDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}':
     types.ProductsDocument,
+  'mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}': types.RemoveCartItemDocument,
 };
 
 /**
@@ -42,14 +50,32 @@ export function gql(source: string): unknown;
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
+  source: 'mutation AddCartItem($productId: ID!, $quantity: Int!) {\n  addCartItem(productId: $productId, quantity: $quantity) {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}',
+): (typeof documents)['mutation AddCartItem($productId: ID!, $quantity: Int!) {\n  addCartItem(productId: $productId, quantity: $quantity) {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
   source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}',
 ): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
+  source: 'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}',
+): (typeof documents)['query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
   source: 'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}',
 ): (typeof documents)['query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}',
+): (typeof documents)['mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}'];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};
