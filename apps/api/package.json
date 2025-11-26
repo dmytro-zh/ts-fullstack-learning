@@ -10,7 +10,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "rimraf prisma/dev.db && pnpm run prisma:migrate --name init && pnpm run db:seed"
+    "db:reset": "rimraf prisma/dev.db && pnpm run prisma:migrate --name init && pnpm run db:seed",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +27,7 @@
     "@types/node": "^20",
     "prisma": "^6.16.2",
     "tsx": "^4.20.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.14"
   }
 }
