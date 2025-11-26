@@ -22,15 +22,39 @@ export function ProductsList({ products }: { products: ProductDTO[] }) {
   };
 
   return (
-    <ul style={{ display: 'grid', gap: 8 }}>
+    <ul style={{ display: 'grid', gap: 12, padding: 0, listStyle: 'none', marginTop: 16 }}>
       {products.map((p) => (
-        <li key={p.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span>
+        <li
+          key={p.id}
+          data-testid="product-item"
+          style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 14px',
+            border: '1px solid #e5e7eb',
+            borderRadius: 10,
+            background: '#fff',
+            boxShadow: '0 4px 10px rgba(15, 23, 42, 0.06)',
+          }}
+        >
+          <span style={{ color: '#0f172a', fontSize: 15 }}>
             {p.name} - {usd.format(p.price)} ({p.inStock ? 'in stock' : 'out of stock'})
           </span>
           <button
             onClick={() => handleAdd(p.id)}
             disabled={isPending && pendingId === p.id}
+            data-testid="add-to-cart-btn"
+            style={{
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: '1px solid #1d4ed8',
+              background: isPending && pendingId === p.id ? '#dbeafe' : '#2563eb',
+              color: '#fff',
+              fontWeight: 600,
+              cursor: isPending && pendingId === p.id ? 'not-allowed' : 'pointer',
+            }}
           >
             {isPending && pendingId === p.id ? 'Adding…' : 'Add to cart'}
           </button>
