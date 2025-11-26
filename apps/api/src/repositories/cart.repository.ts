@@ -9,15 +9,23 @@ export class CartRepository {
   }
 
   findByProductId(productId: string) {
-    return prisma.cartItem.findFirst({ where: { productId } });
+    return prisma.cartItem.findFirst({ where: { productId }, include: { product: true } });
+  }
+
+  findById(id: string) {
+    return prisma.cartItem.findUnique({ where: { id }, include: { product: true } });
   }
 
   create(productId: string, quantity: number) {
-    return prisma.cartItem.create({ data: { productId, quantity } });
+    return prisma.cartItem.create({ data: { productId, quantity }, include: { product: true } });
   }
 
   updateQuantity(id: string, quantity: number) {
-    return prisma.cartItem.update({ where: { id }, data: { quantity } });
+    return prisma.cartItem.update({
+      where: { id },
+      data: { quantity },
+      include: { product: true },
+    });
   }
 
   delete(id: string) {
