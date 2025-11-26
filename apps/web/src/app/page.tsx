@@ -26,17 +26,68 @@ async function fetchData() {
 
 // --- Page (SSR) ---
 export default async function Home() {
-  const { products, cartItems } = await fetchData();
+  let products: ProductsQuery['products'] = [];
+  let cartItems: CartItemsQuery['cartItems'] = [];
+
+  try {
+    ({ products, cartItems } = await fetchData());
+  } catch {
+    return (
+      <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh', color: '#111827' }}>
+        Failed to load data.
+      </main>
+    );
+  }
 
   return (
-    <main style={{ padding: 24, display: 'grid', gap: 24 }}>
-      <section>
-        <h1>Products</h1>
-        <Link href="/products">Add product</Link>
-        <ProductsList products={products} />
-      </section>
-
-      <CartList items={cartItems} />
+    <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh' }}>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          display: 'grid',
+          gap: 24,
+          gridTemplateColumns: 'minmax(360px, 1.5fr) minmax(320px, 1fr)',
+        }}
+      >
+        <section
+          style={{
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 12,
+            padding: 20,
+            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+            color: '#111827',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 8,
+            }}
+          >
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Products</h1>
+            <Link href="/products" style={{ color: '#2563eb', fontWeight: 600 }}>
+              Add product
+            </Link>
+          </div>
+          <ProductsList products={products} />
+        </section>
+        <section
+          style={{
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 12,
+            padding: 20,
+            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+            color: '#111827',
+          }}
+        >
+          <CartList items={cartItems} />
+        </section>
+      </div>
     </main>
   );
 }

@@ -19,9 +19,9 @@ export function CartList({ items }: { items: CartItemDTO[] }) {
 
   if (items.length === 0) {
     return (
-      <section>
-        <h2>Cart</h2>
-        <p>Cart is empty.</p>
+      <section data-testid="cart-empty">
+        <h2 style={{ margin: 0, fontSize: 20, color: '#111827' }}>Cart</h2>
+        <p style={{ color: '#6b7280', marginTop: 8 }}>Cart is empty.</p>
       </section>
     );
   }
@@ -35,24 +35,49 @@ export function CartList({ items }: { items: CartItemDTO[] }) {
   };
 
   return (
-    <section>
-      <h2>Cart</h2>
-      <ul style={{ display: 'grid', gap: 8 }}>
+    <section data-testid="cart-section">
+      <h2 style={{ margin: 0, fontSize: 20, color: '#111827' }}>Cart</h2>
+      <ul style={{ display: 'grid', gap: 12, padding: 0, listStyle: 'none', marginTop: 12 }}>
         {items.map((item) => (
-          <li key={item.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span>
-              {item.product.name} × {item.quantity} = {usd.format(item.quantity * item.product.price)}
+          <li
+            key={item.id}
+            data-testid="cart-item"
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              background: '#fff',
+              boxShadow: '0 4px 10px rgba(15, 23, 42, 0.06)',
+            }}
+          >
+            <span style={{ color: '#0f172a' }}>
+              {item.product.name} × {item.quantity} ={' '}
+              {usd.format(item.quantity * item.product.price)}
             </span>
             <button
               onClick={() => handleRemove(item.id)}
               disabled={isPending && pendingId === item.id}
+              data-testid="remove-from-cart-btn"
+              style={{
+                padding: '6px 10px',
+                borderRadius: 6,
+                border: '1px solid #b91c1c',
+                background: isPending && pendingId === item.id ? '#fecdd3' : '#dc2626',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: isPending && pendingId === item.id ? 'not-allowed' : 'pointer',
+              }}
             >
               {isPending && pendingId === item.id ? 'Removing…' : 'Remove'}
             </button>
           </li>
         ))}
       </ul>
-      <p style={{ marginTop: 12 }}>Total: {usd.format(total)}</p>
+      <p style={{ marginTop: 12, fontWeight: 600, color: '#111827' }}>Total: {usd.format(total)}</p>
     </section>
   );
 }
