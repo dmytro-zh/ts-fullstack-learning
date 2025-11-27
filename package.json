@@ -9,12 +9,15 @@
     "lint:web": "pnpm -F web lint --if-present",
     "dev:web": "pnpm -F web dev",
     "dev:api": "pnpm -F api dev",
-    "build:api": "pnpm -F api build"
+    "build:api": "pnpm -F api build",
+    "test:pw": "playwright test",
+    "test:pw:ui": "playwright test --ui"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "prettier": "^3.6.2",
     "typescript": "^5"
   }
