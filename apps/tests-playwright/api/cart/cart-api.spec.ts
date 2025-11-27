@@ -23,7 +23,10 @@ test('@smoke api cart flow', async ({ request }) => {
   const name = `Test ${Date.now()}`;
   const addProduct = await request.post(URL, {
     headers: { 'content-type': 'application/json' },
-    data: { query: 'mutation ($n:String!,$p:Float!,$s:Boolean!){ addProduct(name:$n, price:$p, inStock:$s){ id name } }', variables: { n: name, p: 9.99, s: true } },
+    data: {
+      query: 'mutation ($n:String!,$p:Float!,$s:Boolean!){ addProduct(name:$n, price:$p, inStock:$s){ id name } }',
+      variables: { n: name, p: 9.99, s: true },
+    },
   });
   const productId = (await addProduct.json()).data.addProduct.id;
   expect(productId).toBeTruthy();
@@ -31,7 +34,10 @@ test('@smoke api cart flow', async ({ request }) => {
   // 2) addCartItem
   const addCart = await request.post(URL, {
     headers: { 'content-type': 'application/json' },
-    data: { query: 'mutation ($id:ID!,$q:Int!){ addCartItem(productId:$id, quantity:$q){ id quantity product { id } } }', variables: { id: productId, q: 2 } },
+    data: {
+      query: 'mutation ($id:ID!,$q:Int!){ addCartItem(productId:$id, quantity:$q){ id quantity product { id } } }',
+      variables: { id: productId, q: 2 },
+    },
   });
   const cartItemId = (await addCart.json()).data.addCartItem.id;
   expect(cartItemId).toBeTruthy();
