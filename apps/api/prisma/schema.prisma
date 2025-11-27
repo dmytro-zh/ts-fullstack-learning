@@ -13,6 +13,7 @@ model Product {
   price     Float
   inStock   Boolean  @default(true)
   cartItems CartItem[]
+  orderItems OrderItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -24,6 +25,29 @@ model CartItem {
   quantity  Int
   createdAt DateTime @default(now())
 
+  @@index([productId])
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  customerName String
+  email        String
+  total        Float
+  items        OrderItem[]
+  createdAt    DateTime    @default(now())
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  order           Order    @relation(fields: [orderId], references: [id])
+  orderId         String
+  product         Product  @relation(fields: [productId], references: [id])
+  productId       String
+  quantity        Int
+  priceAtPurchase Float
+  createdAt       DateTime @default(now())
+
+  @@index([orderId])
   @@index([productId])
 }
 
