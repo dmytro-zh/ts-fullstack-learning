@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e:ui": "playwright test --ui",
     "graphql:codegen": "graphql-codegen",
     "graphql:watch": "graphql-codegen --watch --verbose"
   },
