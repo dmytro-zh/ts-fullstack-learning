@@ -4,9 +4,7 @@ import { cartLocators } from './cart.locators';
 export class CartPage {
   constructor(private readonly page: Page) {}
 
-  async goto() {
-    await this.page.goto('/');
-  }
+  async goto() { await this.page.goto('/'); }
 
   async addFirstProduct() {
     const first = this.page.locator(cartLocators.productItem).first();

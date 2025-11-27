@@ -13,13 +13,14 @@ export default defineConfig({
   projects: [
     {
       name: 'ui',
+      testDir: 'apps/tests-playwright/e2e',
       testMatch: /.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'api',
       testDir: 'apps/tests-playwright/api',
-      use: { ...devices['Desktop Chrome'] },
+      use: { baseURL: process.env.API_URL ?? 'http://localhost:4000/' },
     },
     {
       name: 'a11y',
