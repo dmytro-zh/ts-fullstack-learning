@@ -2,6 +2,7 @@
 import { GraphQLClient } from 'graphql-request';
 import Link from 'next/link';
 import { ProductsList } from './_components/ProductsList';
+import { CheckoutForm } from './_components/CheckoutForm';
 import { CartList } from './_components/CartList';
 import { getEnv } from '../lib/env';
 import {
@@ -47,7 +48,7 @@ export default async function Home() {
           margin: '0 auto',
           display: 'grid',
           gap: 24,
-          gridTemplateColumns: 'minmax(360px, 1.5fr) minmax(320px, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
         }}
       >
         <section
@@ -75,6 +76,7 @@ export default async function Home() {
           </div>
           <ProductsList products={products} />
         </section>
+
         <section
           style={{
             background: '#fff',
@@ -86,6 +88,19 @@ export default async function Home() {
           }}
         >
           <CartList items={cartItems} />
+        </section>
+
+        <section
+          style={{
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 12,
+            padding: 20,
+            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+            color: '#111827',
+          }}
+        >
+          <CheckoutForm />
         </section>
       </div>
     </main>
