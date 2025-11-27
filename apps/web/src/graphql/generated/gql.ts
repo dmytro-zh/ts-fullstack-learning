@@ -17,6 +17,7 @@ type Documents = {
   'mutation AddCartItem($productId: ID!, $quantity: Int!) {\n  addCartItem(productId: $productId, quantity: $quantity) {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}': typeof types.AddCartItemDocument;
   'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!) {\n  addProduct(name: $name, price: $price, inStock: $inStock) {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.AddProductDocument;
   'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}': typeof types.CartItemsDocument;
+  'mutation Checkout($input: CheckoutInput!) {\n  checkout(input: $input) {\n    id\n    total\n    createdAt\n  }\n}': typeof types.CheckoutDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}': typeof types.ProductsDocument;
   'mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}': typeof types.RemoveCartItemDocument;
 };
@@ -27,6 +28,8 @@ const documents: Documents = {
     types.AddProductDocument,
   'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}':
     types.CartItemsDocument,
+  'mutation Checkout($input: CheckoutInput!) {\n  checkout(input: $input) {\n    id\n    total\n    createdAt\n  }\n}':
+    types.CheckoutDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n  }\n}':
     types.ProductsDocument,
   'mutation RemoveCartItem($id: ID!) {\n  removeCartItem(id: $id)\n}': types.RemoveCartItemDocument,
@@ -64,6 +67,12 @@ export function gql(
 export function gql(
   source: 'query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}',
 ): (typeof documents)['query CartItems {\n  cartItems {\n    id\n    quantity\n    product {\n      id\n      name\n      price\n      inStock\n    }\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation Checkout($input: CheckoutInput!) {\n  checkout(input: $input) {\n    id\n    total\n    createdAt\n  }\n}',
+): (typeof documents)['mutation Checkout($input: CheckoutInput!) {\n  checkout(input: $input) {\n    id\n    total\n    createdAt\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

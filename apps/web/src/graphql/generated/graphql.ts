@@ -28,10 +28,16 @@ export type CartItem = {
   quantity: Scalars['Int']['output'];
 };
 
+export type CheckoutInput = {
+  customerName: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addCartItem: CartItem;
   addProduct: Product;
+  checkout: Order;
   removeCartItem: Scalars['Boolean']['output'];
 };
 
@@ -46,8 +52,31 @@ export type MutationAddProductArgs = {
   price: Scalars['Float']['input'];
 };
 
+export type MutationCheckoutArgs = {
+  input: CheckoutInput;
+};
+
 export type MutationRemoveCartItemArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type Order = {
+  __typename?: 'Order';
+  createdAt: Scalars['String']['output'];
+  customerName: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  items: Array<OrderItem>;
+  total: Scalars['Float']['output'];
+};
+
+export type OrderItem = {
+  __typename?: 'OrderItem';
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  priceAtPurchase: Scalars['Float']['output'];
+  productId: Scalars['ID']['output'];
+  quantity: Scalars['Int']['output'];
 };
 
 export type Product = {
@@ -101,6 +130,15 @@ export type CartItemsQuery = {
     quantity: number;
     product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
   }>;
+};
+
+export type CheckoutMutationVariables = Exact<{
+  input: CheckoutInput;
+}>;
+
+export type CheckoutMutation = {
+  __typename?: 'Mutation';
+  checkout: { __typename?: 'Order'; id: string; total: number; createdAt: string };
 };
 
 export type ProductsQueryVariables = Exact<{ [key: string]: never }>;
@@ -301,6 +339,50 @@ export const CartItemsDocument = {
     },
   ],
 } as unknown as DocumentNode<CartItemsQuery, CartItemsQueryVariables>;
+export const CheckoutDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'Checkout' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CheckoutInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutMutation, CheckoutMutationVariables>;
 export const ProductsDocument = {
   kind: 'Document',
   definitions: [
