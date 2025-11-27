@@ -1,6 +1,22 @@
 import { test, expect } from '@playwright/test';
+import { prisma } from '../../../../apps/api/src/lib/prisma';
 
 const URL = process.env.API_URL ?? 'http://localhost:4000/';
+
+async function cleanupTestProducts() {
+  // Remove cart items and products created by API tests (names start with "Test ").
+  await prisma.cartItem.deleteMany({ where: { product: { name: { startsWith: 'Test ' } } } });
+  await prisma.product.deleteMany({ where: { name: { startsWith: 'Test ' } } });
+}
+
+test.beforeEach(async () => {
+  await cleanupTestProducts();
+});
+
+test.afterAll(async () => {
+  await cleanupTestProducts();
+  await prisma.$disconnect().catch(() => {});
+});
 
 test('@smoke api cart flow', async ({ request }) => {
   // 1) addProduct
