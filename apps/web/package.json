@@ -7,11 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "graphql:codegen": "graphql-codegen",
     "graphql:watch": "graphql-codegen --watch --verbose"
-},
+  },
   "dependencies": {
     "graphql": "^16.11.0",
     "graphql-request": "^6.1.0",
@@ -25,7 +24,6 @@
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/client-preset": "^5.0.2",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@playwright/test": "^1.55.0",
     "@ts-fullstack-learning/shared": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",
