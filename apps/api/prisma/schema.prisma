@@ -8,14 +8,16 @@ generator client {
 }
 
 model Product {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  price     Float
-  inStock   Boolean  @default(true)
-  cartItems CartItem[]
-  orderItems OrderItem[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(cuid())
+  name        String    @unique
+  price       Float
+  inStock     Boolean   @default(true)
+  store       Store?    @relation(fields: [storeId], references: [id])
+  storeId     String?
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model CartItem {
@@ -51,3 +53,11 @@ model OrderItem {
   @@index([productId])
 }
 
+model Store {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
