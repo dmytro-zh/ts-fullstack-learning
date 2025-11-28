@@ -11,9 +11,10 @@ export class StoreService {
   constructor(private readonly repo = new StoreRepository()) {}
 
   createStore(input: StoreInput) {
-    const data = storeInput.parse(input);
-    return this.repo.create(data);
-  }
+  const parsed = storeInput.parse(input);
+  const data = { ...parsed, email: parsed.email ?? null }; // email: string | null
+  return this.repo.create(data);
+}
 
   getStores() {
     return this.repo.findAll();
