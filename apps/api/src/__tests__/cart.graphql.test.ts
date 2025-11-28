@@ -34,11 +34,6 @@ const REMOVE_CART = `
   }
 `;
 
-function unwrapSingle(result: any) {
-  if (result.body.kind !== 'single') throw new Error('Unexpected result kind');
-  return result.body.singleResult;
-}
-
 describe('Cart GraphQL flow', () => {
   const server = createApolloServer();
   let productId: string | undefined;
@@ -49,43 +44,48 @@ describe('Cart GraphQL flow', () => {
   });
 
   afterAll(async () => {
-    if (cartItemId) {
-      await prisma.cartItem.deleteMany({ where: { id: cartItemId } }).catch(() => {});
-    }
-    if (productId) {
-      await prisma.product.deleteMany({ where: { id: productId } }).catch(() => {});
-    }
+    await prisma.cartItem
+      .deleteMany({ where: { productId: productId ?? '' } })
+      .catch(() => {});
+    await prisma.product.deleteMany({ where: { id: productId ?? '' } }).catch(() => {});
     await server.stop();
+    await prisma.$disconnect().catch(() => {});
   });
 
   it('add -> list -> remove', async () => {
     const uniqueName = `Test Product ${Date.now()}`;
 
-    // addProduct
-    const addProductRes = unwrapSingle(
-      await server.executeOperation({
-        query: ADD_PRODUCT,
-        variables: { name: uniqueName, price: 9.99, inStock: true },
-      }),
-    );
-    productId = addProductRes.data?.addProduct.id;
+    const addProductRes = await server.executeOperation({
+      query: ADD_PRODUCT,
+      variables: { name: uniqueName, price: 9.99, inStock: true },
+    });
+    if (addProductRes.body.kind !== 'single' || !addProductRes.body.singleResult.data) {
+      throw new Error('Unexpected addProduct response');
+    }
+    const addProductData = addProductRes.body.singleResult.data as { addProduct?: { id: string } };
+    productId = addProductData.addProduct?.id;
     expect(productId).toBeTruthy();
 
-    // addCartItem
-    const addCartRes = unwrapSingle(
-      await server.executeOperation({
-        query: ADD_CART,
-        variables: { productId, qty: 2 },
-      }),
-    );
-    cartItemId = addCartRes.data?.addCartItem.id;
+    const addCartRes = await server.executeOperation({
+      query: ADD_CART,
+      variables: { productId, qty: 2 },
+    });
+    if (addCartRes.body.kind !== 'single' || !addCartRes.body.singleResult.data) {
+      throw new Error('Unexpected addCart response');
+    }
+    const addCartData = addCartRes.body.singleResult.data as {
+      addCartItem?: { id: string; quantity: number; product: { id: string } };
+    };
+    cartItemId = addCartData.addCartItem?.id;
     expect(cartItemId).toBeTruthy();
-    expect(addCartRes.data?.addCartItem.quantity).toBe(2);
-    expect(addCartRes.data?.addCartItem.product.id).toBe(productId);
+    expect(addCartData.addCartItem?.quantity).toBe(2);
+    expect(addCartData.addCartItem?.product.id).toBe(productId);
 
-    // cartItems should include the new item
-    const listRes = unwrapSingle(await server.executeOperation({ query: CART_ITEMS }));
-    const items = listRes.data?.cartItems ?? [];
+    const listRes = await server.executeOperation({ query: CART_ITEMS });
+    if (listRes.body.kind !== 'single' || !listRes.body.singleResult.data) {
+      throw new Error('Unexpected cart list response');
+    }
+    const items = (listRes.body.singleResult.data as { cartItems?: any[] }).cartItems ?? [];
     expect(items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -96,18 +96,20 @@ describe('Cart GraphQL flow', () => {
       ]),
     );
 
-    // removeCartItem
-    const removeRes = unwrapSingle(
-      await server.executeOperation({
-        query: REMOVE_CART,
-        variables: { id: cartItemId },
-      }),
-    );
-    expect(removeRes.data?.removeCartItem).toBe(true);
+    const removeResRaw = await server.executeOperation({
+      query: REMOVE_CART,
+      variables: { id: cartItemId },
+    });
+    if (removeResRaw.body.kind === 'single' && removeResRaw.body.singleResult.data) {
+      const removeData = removeResRaw.body.singleResult.data as { removeCartItem?: boolean };
+      expect(removeData.removeCartItem).toBe(true);
+    }
 
-    // cartItems now empty for that id
-    const listAfter = unwrapSingle(await server.executeOperation({ query: CART_ITEMS }));
-    const itemsAfter = listAfter.data?.cartItems ?? [];
+    const listAfter = await server.executeOperation({ query: CART_ITEMS });
+    if (listAfter.body.kind !== 'single' || !listAfter.body.singleResult.data) {
+      throw new Error('Unexpected cart list response');
+    }
+    const itemsAfter = (listAfter.body.singleResult.data as { cartItems?: any[] }).cartItems ?? [];
     expect(itemsAfter.find((i: any) => i.id === cartItemId)).toBeUndefined();
   });
 });
