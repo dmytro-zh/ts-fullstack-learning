@@ -38,6 +38,7 @@ export type Mutation = {
   addCartItem: CartItem;
   addProduct: Product;
   checkout: Order;
+  createStore: Store;
   removeCartItem: Scalars['Boolean']['output'];
 };
 
@@ -54,6 +55,10 @@ export type MutationAddProductArgs = {
 
 export type MutationCheckoutArgs = {
   input: CheckoutInput;
+};
+
+export type MutationCreateStoreArgs = {
+  input: StoreInput;
 };
 
 export type MutationRemoveCartItemArgs = {
@@ -85,6 +90,7 @@ export type Product = {
   inStock: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
+  storeId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type Query = {
@@ -92,6 +98,22 @@ export type Query = {
   cartItems: Array<CartItem>;
   health: Scalars['String']['output'];
   products: Array<Product>;
+  stores: Array<Store>;
+};
+
+export type Store = {
+  __typename?: 'Store';
+  createdAt: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  products: Array<Product>;
+  updatedAt: Scalars['String']['output'];
+};
+
+export type StoreInput = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type AddCartItemMutationVariables = Exact<{
@@ -141,6 +163,15 @@ export type CheckoutMutation = {
   checkout: { __typename?: 'Order'; id: string; total: number; createdAt: string };
 };
 
+export type CreateStoreMutationVariables = Exact<{
+  input: StoreInput;
+}>;
+
+export type CreateStoreMutation = {
+  __typename?: 'Mutation';
+  createStore: { __typename?: 'Store'; id: string; name: string; email?: string | null };
+};
+
 export type ProductsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type ProductsQuery = {
@@ -159,6 +190,13 @@ export type RemoveCartItemMutationVariables = Exact<{
 }>;
 
 export type RemoveCartItemMutation = { __typename?: 'Mutation'; removeCartItem: boolean };
+
+export type StoresQueryVariables = Exact<{ [key: string]: never }>;
+
+export type StoresQuery = {
+  __typename?: 'Query';
+  stores: Array<{ __typename?: 'Store'; id: string; name: string; email?: string | null }>;
+};
 
 export const AddCartItemDocument = {
   kind: 'Document',
@@ -383,6 +421,50 @@ export const CheckoutDocument = {
     },
   ],
 } as unknown as DocumentNode<CheckoutMutation, CheckoutMutationVariables>;
+export const CreateStoreDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateStore' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'StoreInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createStore' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateStoreMutation, CreateStoreMutationVariables>;
 export const ProductsDocument = {
   kind: 'Document',
   definitions: [
@@ -447,3 +529,30 @@ export const RemoveCartItemDocument = {
     },
   ],
 } as unknown as DocumentNode<RemoveCartItemMutation, RemoveCartItemMutationVariables>;
+export const StoresDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Stores' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'stores' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<StoresQuery, StoresQueryVariables>;
