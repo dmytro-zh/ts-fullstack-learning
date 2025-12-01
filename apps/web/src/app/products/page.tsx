@@ -1,38 +1,55 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { GraphQLClient } from 'graphql-request';
+import { getEnv } from '../../lib/env';
 import { addProductAction } from '../actions/addProduct';
+import { StoresDocument, type StoresQuery } from '../../graphql/generated/graphql';
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [formState, setFormState] = useState({ name: '', price: '0', inStock: true });
+  const [stores, setStores] = useState<StoresQuery['stores']>([]);
+  const [formState, setFormState] = useState({ name: '', price: '0', inStock: true, storeId: '' });
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const loadStores = async () => {
+      try {
+        const { GRAPHQL_URL } = getEnv();
+        const client = new GraphQLClient(GRAPHQL_URL);
+        const data = await client.request<StoresQuery>(StoresDocument);
+        setStores(data.stores);
+      } catch {
+        setStores([]);
+      }
+    };
+    loadStores();
+  }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitting(true);
     setError(null);
-
     const priceNumber = Number(formState.price);
     if (Number.isNaN(priceNumber)) {
-      setSubmitting(false);
       return setError('Price must be a number');
     }
 
-    try {
-      await addProductAction({
-        name: formState.name,
-        price: priceNumber,
-        inStock: formState.inStock,
-      });
-      router.push('/');
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setSubmitting(false);
-    }
+    startTransition(async () => {
+      try {
+        await addProductAction({
+          name: formState.name,
+          price: priceNumber,
+          inStock: formState.inStock,
+          storeId: formState.storeId || undefined,
+        });
+        router.push('/');
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      }
+    });
   };
 
   return (
@@ -68,8 +85,23 @@ export default function AddProductPage() {
           In stock
         </label>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Saving…' : 'Add product'}
+        <label>
+          Store
+          <select
+            value={formState.storeId}
+            onChange={(e) => setFormState((prev) => ({ ...prev, storeId: e.target.value }))}
+          >
+            <option value="">No store</option>
+            {stores.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} {s.email ? `(${s.email})` : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button type="submit" disabled={isPending}>
+          {isPending ? 'Saving…' : 'Add product'}
         </button>
 
         {error && <p style={{ color: '#b00' }}>{error}</p>}
