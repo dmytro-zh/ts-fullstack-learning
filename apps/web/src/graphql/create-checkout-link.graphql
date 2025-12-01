@@ -1,0 +1,9 @@
+mutation CreateCheckoutLink($input: CheckoutLinkInput!) {
+  createCheckoutLink(input: $input) {
+    id
+    slug
+    product { id name }
+    store { id name }
+    active
+  }
+}

@@ -42,7 +42,8 @@ export function CheckoutForm() {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
-            background: '#f9fafb',
+            background: '#fff',
+            color: '#0f172a',
           }}
         />
       </label>
@@ -59,7 +60,8 @@ export function CheckoutForm() {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
-            background: '#f9fafb',
+            background: '#fff',
+            color: '#0f172a',
           }}
         />
       </label>
