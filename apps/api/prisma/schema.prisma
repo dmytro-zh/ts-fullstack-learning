@@ -16,6 +16,7 @@ model Product {
   storeId     String?
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  checkoutLinks CheckoutLink[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -58,6 +59,21 @@ model Store {
   name      String
   email     String?
   products  Product[]
+  checkoutLinks CheckoutLink[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model CheckoutLink {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  store     Store?   @relation(fields: [storeId], references: [id])
+  storeId   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([storeId])
 }
