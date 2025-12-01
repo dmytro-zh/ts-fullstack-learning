@@ -6,6 +6,8 @@ const createProductInput = ProductSchema.pick({
   name: true,
   price: true,
   inStock: true,
+}).extend({
+  storeId: z.string().optional(),
 });
 
 type CreateProductInput = z.infer<typeof createProductInput>;

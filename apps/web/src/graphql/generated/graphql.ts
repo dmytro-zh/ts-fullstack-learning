@@ -51,6 +51,7 @@ export type MutationAddProductArgs = {
   inStock: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
+  storeId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type MutationCheckoutArgs = {
@@ -135,11 +136,19 @@ export type AddProductMutationVariables = Exact<{
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
   inStock: Scalars['Boolean']['input'];
+  storeId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 export type AddProductMutation = {
   __typename?: 'Mutation';
-  addProduct: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
+  addProduct: {
+    __typename?: 'Product';
+    id: string;
+    name: string;
+    price: number;
+    inStock: boolean;
+    storeId?: string | null;
+  };
 };
 
 export type CartItemsQueryVariables = Exact<{ [key: string]: never }>;
@@ -299,6 +308,11 @@ export const AddProductDocument = {
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'Boolean' } },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -322,6 +336,11 @@ export const AddProductDocument = {
                 name: { kind: 'Name', value: 'inStock' },
                 value: { kind: 'Variable', name: { kind: 'Name', value: 'inStock' } },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'storeId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
+              },
             ],
             selectionSet: {
               kind: 'SelectionSet',
@@ -330,6 +349,7 @@ export const AddProductDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
               ],
             },
           },
