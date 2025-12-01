@@ -33,11 +33,28 @@ export type CheckoutInput = {
   email: Scalars['String']['input'];
 };
 
+export type CheckoutLink = {
+  __typename?: 'CheckoutLink';
+  active: Scalars['Boolean']['output'];
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  product: Product;
+  slug: Scalars['String']['output'];
+  store?: Maybe<Store>;
+};
+
+export type CheckoutLinkInput = {
+  productId: Scalars['ID']['input'];
+  slug: Scalars['String']['input'];
+  storeId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addCartItem: CartItem;
   addProduct: Product;
   checkout: Order;
+  createCheckoutLink: CheckoutLink;
   createStore: Store;
   removeCartItem: Scalars['Boolean']['output'];
 };
@@ -56,6 +73,10 @@ export type MutationAddProductArgs = {
 
 export type MutationCheckoutArgs = {
   input: CheckoutInput;
+};
+
+export type MutationCreateCheckoutLinkArgs = {
+  input: CheckoutLinkInput;
 };
 
 export type MutationCreateStoreArgs = {
@@ -97,9 +118,14 @@ export type Product = {
 export type Query = {
   __typename?: 'Query';
   cartItems: Array<CartItem>;
+  checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
   products: Array<Product>;
   stores: Array<Store>;
+};
+
+export type QueryCheckoutLinkArgs = {
+  slug: Scalars['String']['input'];
 };
 
 export type Store = {
@@ -163,6 +189,23 @@ export type CartItemsQuery = {
   }>;
 };
 
+export type CheckoutLinkQueryVariables = Exact<{
+  slug: Scalars['String']['input'];
+}>;
+
+export type CheckoutLinkQuery = {
+  __typename?: 'Query';
+  checkoutLink?: {
+    __typename?: 'CheckoutLink';
+    id: string;
+    slug: string;
+    active: boolean;
+    createdAt: string;
+    product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
+    store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
+  } | null;
+};
+
 export type CheckoutMutationVariables = Exact<{
   input: CheckoutInput;
 }>;
@@ -170,6 +213,22 @@ export type CheckoutMutationVariables = Exact<{
 export type CheckoutMutation = {
   __typename?: 'Mutation';
   checkout: { __typename?: 'Order'; id: string; total: number; createdAt: string };
+};
+
+export type CreateCheckoutLinkMutationVariables = Exact<{
+  input: CheckoutLinkInput;
+}>;
+
+export type CreateCheckoutLinkMutation = {
+  __typename?: 'Mutation';
+  createCheckoutLink: {
+    __typename?: 'CheckoutLink';
+    id: string;
+    slug: string;
+    active: boolean;
+    product: { __typename?: 'Product'; id: string; name: string };
+    store?: { __typename?: 'Store'; id: string; name: string } | null;
+  };
 };
 
 export type CreateStoreMutationVariables = Exact<{
@@ -397,6 +456,76 @@ export const CartItemsDocument = {
     },
   ],
 } as unknown as DocumentNode<CartItemsQuery, CartItemsQueryVariables>;
+export const CheckoutLinkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'CheckoutLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkoutLink' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'slug' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'product' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'price' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'store' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutLinkQuery, CheckoutLinkQueryVariables>;
 export const CheckoutDocument = {
   kind: 'Document',
   definitions: [
@@ -441,6 +570,72 @@ export const CheckoutDocument = {
     },
   ],
 } as unknown as DocumentNode<CheckoutMutation, CheckoutMutationVariables>;
+export const CreateCheckoutLinkDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateCheckoutLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CheckoutLinkInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createCheckoutLink' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'product' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'store' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateCheckoutLinkMutation, CreateCheckoutLinkMutationVariables>;
 export const CreateStoreDocument = {
   kind: 'Document',
   definitions: [

@@ -1,0 +1,10 @@
+query CheckoutLink($slug: String!) {
+  checkoutLink(slug: $slug) {
+    id
+    slug
+    active
+    product { id name price inStock }
+    store { id name email }
+    createdAt
+  }
+}
