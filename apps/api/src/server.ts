@@ -64,7 +64,7 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
-    addProduct(name: String!, price: Float!, inStock: Boolean!): Product!
+    addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID): Product!
     addCartItem(productId: ID!, quantity: Int!): CartItem!
     removeCartItem(id: ID!): Boolean!
     checkout(input: CheckoutInput!): Order!
@@ -85,7 +85,7 @@ const resolvers = {
     stores: () => storeService.getStores(),
   },
   Mutation: {
-    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean }) =>
+    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean; storeId?: string }) =>
       productService.addProduct(args),
     addCartItem: (_: unknown, args: { productId: string; quantity: number }) =>
       cartService.addCartItem(args),
