@@ -3,6 +3,7 @@ import { ProductService } from './services/product.service';
 import { CartService } from './services/cart.service';
 import { CheckoutService } from './services/checkout.service';
 import { StoreService } from './services/store.service';
+import { CheckoutLinkService } from './services/checkout-link.service';
 
 const typeDefs = /* GraphQL */ `
   type Product {
@@ -20,9 +21,24 @@ const typeDefs = /* GraphQL */ `
     product: Product!
   }
 
+  type CheckoutLink {
+    id: ID!
+    slug: String!
+    active: Boolean!
+    product: Product!
+    store: Store
+    createdAt: String!
+  }
+
   input CheckoutInput {
     customerName: String!
     email: String!
+  }
+
+  input CheckoutLinkInput {
+    slug: String!
+    productId: ID!
+    storeId: ID
   }
 
   input StoreInput {
@@ -61,6 +77,7 @@ const typeDefs = /* GraphQL */ `
     products: [Product!]!
     cartItems: [CartItem!]!
     stores: [Store!]!
+    checkoutLink(slug: String!): CheckoutLink
   }
 
   type Mutation {
@@ -69,6 +86,7 @@ const typeDefs = /* GraphQL */ `
     removeCartItem(id: ID!): Boolean!
     checkout(input: CheckoutInput!): Order!
     createStore(input: StoreInput!): Store!
+    createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
   }
 `;
 
@@ -76,6 +94,7 @@ const productService = new ProductService();
 const cartService = new CartService();
 const checkoutService = new CheckoutService();
 const storeService = new StoreService();
+const checkoutLinkService = new CheckoutLinkService();
 
 const resolvers = {
   Query: {
@@ -83,10 +102,14 @@ const resolvers = {
     products: () => productService.getProducts(),
     cartItems: () => cartService.getCartItems(),
     stores: () => storeService.getStores(),
+    checkoutLink: (_: unknown, args: { slug: string }) =>
+      checkoutLinkService.getBySlug(args.slug),
   },
   Mutation: {
-    addProduct: (_: unknown, args: { name: string; price: number; inStock: boolean; storeId?: string }) =>
-      productService.addProduct(args),
+    addProduct: (
+      _: unknown,
+      args: { name: string; price: number; inStock: boolean; storeId?: string },
+    ) => productService.addProduct(args),
     addCartItem: (_: unknown, args: { productId: string; quantity: number }) =>
       cartService.addCartItem(args),
     checkout: (_: unknown, args: { input: { customerName: string; email: string } }) =>
@@ -94,6 +117,8 @@ const resolvers = {
     removeCartItem: (_: unknown, args: { id: string }) => cartService.removeCartItem(args.id),
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),
+    createCheckoutLink: (_: unknown, args: { input: { slug: string; productId: string; storeId?: string } }) =>
+      checkoutLinkService.createLink(args.input),
   },
 };
 
