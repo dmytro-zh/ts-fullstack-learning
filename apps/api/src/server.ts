@@ -1,7 +1,5 @@
 import { ApolloServer } from '@apollo/server';
 import { ProductService } from './services/product.service';
-import { CartService } from './services/cart.service';
-import { CheckoutService } from './services/checkout.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
 
@@ -12,13 +10,6 @@ const typeDefs = /* GraphQL */ `
     price: Float!
     inStock: Boolean!
     storeId: ID
-  }
-
-  type CartItem {
-    id: ID!
-    quantity: Int!
-    createdAt: String!
-    product: Product!
   }
 
   type CheckoutLink {
@@ -35,11 +26,19 @@ const typeDefs = /* GraphQL */ `
     email: String!
   }
 
-  input CheckoutLinkInput {
+  input CheckoutByLinkInput {
     slug: String!
-    productId: ID!
-    storeId: ID
+    customerName: String!
+    email: String!
+    shippingNote: String
+    quantity: Int
   }
+
+  input CheckoutLinkInput {
+  slug: String!
+  productId: ID!
+  storeId: ID
+}
 
   input StoreInput {
     name: String!
@@ -55,44 +54,36 @@ const typeDefs = /* GraphQL */ `
     updatedAt: String!
   }
 
-  type OrderItem {
-    id: ID!
-    productId: ID!
-    quantity: Int!
-    priceAtPurchase: Float!
-    createdAt: String!
-  }
-
   type Order {
     id: ID!
     customerName: String!
     email: String!
     total: Float!
-    items: [OrderItem!]!
+    status: String!
+    checkoutLinkId: ID
+    storeId: ID
+    productId: ID!
+    quantity: Int!
+    shippingNote: String
     createdAt: String!
   }
 
   type Query {
     health: String!
     products: [Product!]!
-    cartItems: [CartItem!]!
     stores: [Store!]!
     checkoutLink(slug: String!): CheckoutLink
   }
 
   type Mutation {
     addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID): Product!
-    addCartItem(productId: ID!, quantity: Int!): CartItem!
-    removeCartItem(id: ID!): Boolean!
-    checkout(input: CheckoutInput!): Order!
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
+    checkoutByLink(input: CheckoutByLinkInput!): Order!
   }
 `;
 
 const productService = new ProductService();
-const cartService = new CartService();
-const checkoutService = new CheckoutService();
 const storeService = new StoreService();
 const checkoutLinkService = new CheckoutLinkService();
 
@@ -100,25 +91,32 @@ const resolvers = {
   Query: {
     health: () => 'OK',
     products: () => productService.getProducts(),
-    cartItems: () => cartService.getCartItems(),
     stores: () => storeService.getStores(),
-    checkoutLink: (_: unknown, args: { slug: string }) =>
-      checkoutLinkService.getBySlug(args.slug),
+    checkoutLink: (_: unknown, args: { slug: string }) => checkoutLinkService.getBySlug(args.slug),
   },
   Mutation: {
     addProduct: (
       _: unknown,
       args: { name: string; price: number; inStock: boolean; storeId?: string },
     ) => productService.addProduct(args),
-    addCartItem: (_: unknown, args: { productId: string; quantity: number }) =>
-      cartService.addCartItem(args),
-    checkout: (_: unknown, args: { input: { customerName: string; email: string } }) =>
-      checkoutService.checkout(args.input),
-    removeCartItem: (_: unknown, args: { id: string }) => cartService.removeCartItem(args.id),
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),
-    createCheckoutLink: (_: unknown, args: { input: { slug: string; productId: string; storeId?: string } }) =>
-      checkoutLinkService.createLink(args.input),
+    createCheckoutLink: (
+      _: unknown,
+      args: { input: { slug: string; productId: string; storeId?: string } },
+    ) => checkoutLinkService.createLink(args.input),
+    checkoutByLink: (
+      _: unknown,
+      args: {
+        input: {
+          slug: string;
+          customerName: string;
+          email: string;
+          shippingNote?: string;
+          quantity: number;
+        };
+      },
+    ) => checkoutLinkService.checkoutByLink(args.input),
   },
 };
 

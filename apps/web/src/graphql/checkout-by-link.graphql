@@ -1,0 +1,7 @@
+mutation CheckoutByLink($input: CheckoutByLinkInput!) {
+  checkoutByLink(input: $input) {
+    id
+    total
+    status
+  }
+}
