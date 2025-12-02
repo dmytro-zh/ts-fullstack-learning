@@ -2,13 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import type { CheckoutLinkQuery } from '../../../graphql/generated/graphql';
-import { checkoutAction } from '../../actions/checkout';
-import { addCartItemAction } from '../../actions/addCartItem';
+import { checkoutByLinkAction } from '../../actions/checkoutByLink';
 
 type CheckoutLinkData = NonNullable<CheckoutLinkQuery['checkoutLink']>;
 
 export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
-  const [form, setForm] = useState({ name: '', email: '' });
+  const [form, setForm] = useState({ name: '', email: '', quantity: 1, shippingNote: '' });
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +18,15 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
     setError(null);
     startTransition(async () => {
       try {
-        // кладём товар в корзину перед чек-аутом
-        await addCartItemAction({ productId: link.product.id, quantity: 1 });
-        const order = await checkoutAction({
+        const order = await checkoutByLinkAction({
+          slug: link.slug,
           customerName: form.name,
           email: form.email,
+          shippingNote: form.shippingNote || undefined,
+          quantity: form.quantity || 1,
         });
         setMessage(`Order ${order.id} created, total $${order.total.toFixed(2)}`);
-        setForm({ name: '', email: '' });
+        setForm({ name: '', email: '', quantity: 1, shippingNote: '' });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Checkout failed');
       }
@@ -73,6 +73,42 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
             required
             placeholder="you@example.com"
+            style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              background: '#fff',
+              color: '#0f172a',
+            }}
+          />
+        </label>
+
+        <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
+          <span style={{ color: '#111827' }}>Quantity</span>
+          <input
+            type="number"
+            min={1}
+            value={form.quantity}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, quantity: Math.max(1, Number(e.target.value) || 1) }))
+            }
+            style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              background: '#fff',
+              color: '#0f172a',
+            }}
+          />
+        </label>
+
+        <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
+          <span style={{ color: '#111827' }}>Shipping / notes</span>
+          <textarea
+            value={form.shippingNote}
+            onChange={(e) => setForm((p) => ({ ...p, shippingNote: e.target.value }))}
+            placeholder="Address or pickup instructions"
+            rows={3}
             style={{
               padding: '10px 12px',
               borderRadius: 8,

@@ -1,7 +1,0 @@
-mutation Checkout($input: CheckoutInput!) {
-  checkout(input: $input) {
-    id
-    total
-    createdAt
-  }
-}

@@ -15,8 +15,8 @@ model Product {
   store       Store?    @relation(fields: [storeId], references: [id])
   storeId     String?
   cartItems   CartItem[]
-  orderItems  OrderItem[]
   checkoutLinks CheckoutLink[]
+  orders      Order[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -31,27 +31,29 @@ model CartItem {
   @@index([productId])
 }
 
-model Order {
-  id           String      @id @default(cuid())
-  customerName String
-  email        String
-  total        Float
-  items        OrderItem[]
-  createdAt    DateTime    @default(now())
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  CANCELLED
 }
 
-model OrderItem {
-  id              String   @id @default(cuid())
-  order           Order    @relation(fields: [orderId], references: [id])
-  orderId         String
-  product         Product  @relation(fields: [productId], references: [id])
+model Order {
+  id              String      @id @default(cuid())
+  customerName    String
+  email           String
+  shippingNote    String?
+  quantity        Int         @default(1)
+  total           Float
+  status          OrderStatus @default(PENDING)
+  checkoutLinkId  String?
+  storeId         String?
   productId       String
-  quantity        Int
-  priceAtPurchase Float
-  createdAt       DateTime @default(now())
+  product         Product     @relation(fields: [productId], references: [id])
+  createdAt       DateTime    @default(now())
 
-  @@index([orderId])
-  @@index([productId])
+  @@index([checkoutLinkId])
+  @@index([storeId])
 }
 
 model Store {

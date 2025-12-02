@@ -1,37 +1,24 @@
-// SSR page: fetch products and cart items from GraphQL API and render lists.
+// SSR page: fetch products from GraphQL API and render a simple list.
 import { GraphQLClient } from 'graphql-request';
 import Link from 'next/link';
 import { ProductsList } from './_components/ProductsList';
-import { CheckoutForm } from './_components/CheckoutForm';
-import { CartList } from './_components/CartList';
 import { getEnv } from '../lib/env';
-import {
-  ProductsDocument,
-  type ProductsQuery,
-  CartItemsDocument,
-  type CartItemsQuery,
-} from '../graphql/generated/graphql';
+import { ProductsDocument, type ProductsQuery } from '../graphql/generated/graphql';
 
 // --- Data fetch ---
 async function fetchData() {
   const { GRAPHQL_URL } = getEnv();
   const client = new GraphQLClient(GRAPHQL_URL);
-
-  const [productsRes, cartRes] = await Promise.all([
-    client.request<ProductsQuery>(ProductsDocument),
-    client.request<CartItemsQuery>(CartItemsDocument),
-  ]);
-
-  return { products: productsRes.products, cartItems: cartRes.cartItems };
+  const productsRes = await client.request<ProductsQuery>(ProductsDocument);
+  return { products: productsRes.products };
 }
 
 // --- Page (SSR) ---
 export default async function Home() {
   let products: ProductsQuery['products'] = [];
-  let cartItems: CartItemsQuery['cartItems'] = [];
 
   try {
-    ({ products, cartItems } = await fetchData());
+    ({ products } = await fetchData());
   } catch {
     return (
       <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh', color: '#111827' }}>
@@ -77,31 +64,6 @@ export default async function Home() {
           <ProductsList products={products} />
         </section>
 
-        <section
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 12,
-            padding: 20,
-            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
-            color: '#111827',
-          }}
-        >
-          <CartList items={cartItems} />
-        </section>
-
-        <section
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 12,
-            padding: 20,
-            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
-            color: '#111827',
-          }}
-        >
-          <CheckoutForm />
-        </section>
       </div>
     </main>
   );
