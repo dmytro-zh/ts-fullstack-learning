@@ -3,8 +3,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@ts-fullstack-learning/shared": ["../../packages/shared/src"],
-      "@/*": ["./src/*"]
+      "@ts-fullstack-learning/shared": [
+        "../../packages/shared/src"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
     },
     "noEmit": true,
     "incremental": true,
@@ -17,7 +21,19 @@
       }
     ]
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"],
-  "exclude": ["node_modules", ".next"],
-  "references": [{ "path": "../../packages/shared" }]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared"
+    }
+  ]
 }

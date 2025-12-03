@@ -19,7 +19,12 @@ async function fetchData() {
   return { products: productsRes.products, stores: storesRes.stores };
 }
 
-export default async function CheckoutLinksPage() {
+type PageProps = { searchParams?: Record<string, string | string[] | undefined> };
+
+export default async function CheckoutLinksPage({ searchParams }: PageProps) {
+  const initialProductId =
+    typeof searchParams?.productId === 'string' ? searchParams.productId : undefined;
+
   try {
     const { products, stores } = await fetchData();
     return (
@@ -39,7 +44,11 @@ export default async function CheckoutLinksPage() {
           }}
         >
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout links</h1>
-          <CheckoutLinksForm products={products} stores={stores} />
+          <CheckoutLinksForm
+            products={products}
+            stores={stores}
+            initialProductId={initialProductId}
+          />
         </div>
       </main>
     );

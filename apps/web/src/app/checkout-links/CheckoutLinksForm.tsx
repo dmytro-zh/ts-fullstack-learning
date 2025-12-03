@@ -1,28 +1,51 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import type { ProductsQuery, StoresQuery } from '../../graphql/generated/graphql';
+import { useMemo, useState, useTransition } from 'react';
+import type { Product, Store } from '../../graphql/generated/graphql';
 import { createCheckoutLinkAction } from '../actions/createCheckoutLink';
 
+type ProductOption = Pick<Product, 'id' | 'name' | 'price' | 'storeId'>;
+type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
 type Props = {
-  products: ProductsQuery['products'];
-  stores: StoresQuery['stores'];
+  products: ProductOption[];
+  stores: StoreOption[];
+  initialProductId?: string | undefined;
 };
 
-export function CheckoutLinksForm({ products, stores }: Props) {
-  const [form, setForm] = useState<{ slug: string; productId: string; storeId: string }>({
-    slug: '',
-    productId: products[0]?.id ?? '',
-    storeId: stores[0]?.id ?? '',
+function slugify(storeName: string, productName: string) {
+  return `${storeName}-${productName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+export function CheckoutLinksForm({ products, stores, initialProductId }: Props) {
+  const defaultProduct = useMemo(
+    () => products.find((p) => p.id === initialProductId) ?? products[0],
+    [products, initialProductId],
+  );
+  const defaultStore = useMemo(
+    () => stores.find((s) => s.id === defaultProduct?.storeId) ?? stores[0],
+    [stores, defaultProduct],
+  );
+
+  const [form, setForm] = useState({
+    slug: defaultProduct && defaultStore ? slugify(defaultStore.name, defaultProduct.name) : '',
+    productId: defaultProduct?.id ?? '',
+    storeId: defaultStore?.id ?? '',
   });
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [linkUrl, setLinkUrl] = useState<string | null>(null);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
     setError(null);
+    setLinkUrl(null);
+
     startTransition(async () => {
       try {
         const link = await createCheckoutLinkAction({
@@ -30,12 +53,31 @@ export function CheckoutLinksForm({ products, stores }: Props) {
           productId: form.productId,
           storeId: form.storeId || undefined,
         });
-        setMessage(`Link created: slug=${link.slug}, product=${link.product.name}${link.store ? `, store=${link.store.name}` : ''}`);
-        setForm((p) => ({ ...p, slug: '' }));
+        const url = `${window.location.origin}/c/${link.slug}`;
+        setLinkUrl(url);
+        setMessage(`Link created: ${url}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create link');
       }
     });
+  };
+
+  const handleProductChange = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    const store = stores.find((s) => s.id === product?.storeId) ?? null;
+    setForm((p) => ({
+      ...p,
+      productId,
+      storeId: store?.id ?? '',
+      slug: product && store ? slugify(store.name, product.name) : p.slug,
+    }));
+  };
+
+  const copyLink = () => {
+    if (linkUrl) {
+      void navigator.clipboard.writeText(linkUrl);
+      setMessage(`Link copied: ${linkUrl}`);
+    }
   };
 
   return (
@@ -46,7 +88,7 @@ export function CheckoutLinksForm({ products, stores }: Props) {
           value={form.slug}
           onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
           required
-          placeholder="my-product-link"
+          placeholder="my-store-product"
           style={{
             padding: '10px 12px',
             borderRadius: 8,
@@ -61,7 +103,7 @@ export function CheckoutLinksForm({ products, stores }: Props) {
         <span style={{ color: '#111827' }}>Product</span>
         <select
           value={form.productId}
-          onChange={(e) => setForm((p) => ({ ...p, productId: e.target.value }))}
+          onChange={(e) => handleProductChange(e.target.value)}
           style={{
             padding: '10px 12px',
             borderRadius: 8,
@@ -102,7 +144,7 @@ export function CheckoutLinksForm({ products, stores }: Props) {
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !form.productId}
         style={{
           padding: '10px 12px',
           borderRadius: 8,
@@ -115,6 +157,23 @@ export function CheckoutLinksForm({ products, stores }: Props) {
       >
         {isPending ? 'Creating…' : 'Create checkout link'}
       </button>
+
+      {linkUrl && (
+        <button
+          type="button"
+          onClick={copyLink}
+          style={{
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
+            cursor: 'pointer',
+          }}
+        >
+          Copy link
+        </button>
+      )}
 
       {message && <p style={{ color: 'green', margin: 0 }}>{message}</p>}
       {error && <p style={{ color: '#b00', margin: 0 }}>{error}</p>}

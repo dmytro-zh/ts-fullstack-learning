@@ -4,5 +4,6 @@ query Products {
     name
     price
     inStock
+    storeId
   }
 }
