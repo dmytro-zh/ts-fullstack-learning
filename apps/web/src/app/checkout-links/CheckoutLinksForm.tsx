@@ -4,7 +4,13 @@ import { useMemo, useState, useTransition } from 'react';
 import type { Product, Store } from '../../graphql/generated/graphql';
 import { createCheckoutLinkAction } from '../actions/createCheckoutLink';
 
-type Props = { products: Product[]; stores: Store[]; initialProductId?: string };
+type ProductOption = Pick<Product, 'id' | 'name' | 'price' | 'storeId'>;
+type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
+type Props = {
+  products: ProductOption[];
+  stores: StoreOption[];
+  initialProductId?: string | undefined;
+};
 
 function slugify(storeName: string, productName: string) {
   return `${storeName}-${productName}`
@@ -25,10 +31,7 @@ export function CheckoutLinksForm({ products, stores, initialProductId }: Props)
   );
 
   const [form, setForm] = useState({
-    slug:
-      defaultProduct && defaultStore
-        ? slugify(defaultStore.name, defaultProduct.name)
-        : '',
+    slug: defaultProduct && defaultStore ? slugify(defaultStore.name, defaultProduct.name) : '',
     productId: defaultProduct?.id ?? '',
     storeId: defaultStore?.id ?? '',
   });
