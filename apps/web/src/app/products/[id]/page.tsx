@@ -17,7 +17,8 @@ async function fetchProduct(id: string) {
 type PageProps = { params: { id: string } };
 
 export default async function ProductPage({ params }: PageProps) {
-  const product = await fetchProduct(params.id);
+  const { id } = await params;        // дождались params
+  const product = await fetchProduct(id);
   if (!product) return notFound();
 
   return (
