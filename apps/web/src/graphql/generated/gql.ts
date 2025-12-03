@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.AddProductDocument;
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.AddProductDocument;
   'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}': typeof types.CheckoutByLinkDocument;
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    product {\n      id\n      name\n      price\n      inStock\n    }\n    store {\n      id\n      name\n      email\n    }\n    createdAt\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
@@ -23,7 +23,7 @@ type Documents = {
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
 };
 const documents: Documents = {
-  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
     types.AddProductDocument,
   'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}':
     types.CheckoutByLinkDocument,
@@ -56,8 +56,8 @@ export function gql(source: string): unknown;
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}',
-): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}'];
+  source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}',
+): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

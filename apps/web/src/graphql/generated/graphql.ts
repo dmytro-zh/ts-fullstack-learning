@@ -131,7 +131,7 @@ export type AddProductMutationVariables = Exact<{
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
   inStock: Scalars['Boolean']['input'];
-  storeId?: InputMaybe<Scalars['ID']['input']>;
+  storeId: Scalars['ID']['input'];
 }>;
 
 export type AddProductMutation = {
@@ -253,7 +253,10 @@ export const AddProductDocument = {
         {
           kind: 'VariableDefinition',
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
-          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
         },
       ],
       selectionSet: {
