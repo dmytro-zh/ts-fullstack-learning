@@ -12,6 +12,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
   const [price, setPrice] = useState(String(product.price));
   const [inStock, setInStock] = useState(product.inStock);
+  const [description, setDescription] = useState(product.description ?? '');
+  const [imageUrl, setImageUrl] = useState(product.imageUrl ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +26,13 @@ export function ProductDetails({ product }: { product: ProductData }) {
       return;
     }
     try {
-      await updateProductAction({ id: product.id, price: priceNumber, inStock });
+      await updateProductAction({
+        id: product.id,
+        price: priceNumber,
+        inStock,
+        description: description || undefined,
+        imageUrl: imageUrl || undefined,
+      });
       setMessage('Saved');
       router.refresh();
     } catch (err) {
@@ -33,17 +41,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
   };
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gap: 12,
-        maxWidth: 520,
-        border: '1px solid #e5e7eb',
-        padding: 16,
-        borderRadius: 12,
-      }}
-    >
-      <h1 style={{ margin: 0 }}>{product.name}</h1>
+    <div style={{ display: 'grid', gap: 12, maxWidth: 520, border: '1px solid #e5e7eb', padding: 16, borderRadius: 12 }}>
+      <h1>{product.name}</h1>
       <div style={{ color: '#374151' }}>
         Store:{' '}
         {product.store
@@ -56,17 +55,49 @@ export function ProductDetails({ product }: { product: ProductData }) {
 
       <label>
         Price
-        <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input
+          type="number"
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
       </label>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={inStock}
+          onChange={(e) => setInStock(e.target.checked)}
+        />
         In stock
       </label>
 
-      <button type="button" onClick={onSave}>
-        Save
-      </button>
+      <label>
+        Description
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+      </label>
+
+      <label>
+        Image URL
+        <input
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://..."
+        />
+      </label>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt="preview"
+          style={{ maxWidth: 240, borderRadius: 8, border: '1px solid #e5e7eb' }}
+        />
+      ) : null}
+
+      <button type="button" onClick={onSave}>Save</button>
 
       {message && <p style={{ color: 'green' }}>{message}</p>}
       {error && <p style={{ color: '#b00' }}>{error}</p>}

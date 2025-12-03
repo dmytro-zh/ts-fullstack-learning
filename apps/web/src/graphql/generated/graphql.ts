@@ -59,6 +59,8 @@ export type Mutation = {
 };
 
 export type MutationAddProductArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
   inStock: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
@@ -78,7 +80,9 @@ export type MutationCreateStoreArgs = {
 };
 
 export type MutationUpdateProductArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
   inStock: Scalars['Boolean']['input'];
   price: Scalars['Float']['input'];
 };
@@ -100,7 +104,9 @@ export type Order = {
 
 export type Product = {
   __typename?: 'Product';
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  imageUrl?: Maybe<Scalars['String']['output']>;
   inStock: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
@@ -145,6 +151,8 @@ export type AddProductMutationVariables = Exact<{
   price: Scalars['Float']['input'];
   inStock: Scalars['Boolean']['input'];
   storeId: Scalars['ID']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type AddProductMutation = {
@@ -156,6 +164,8 @@ export type AddProductMutation = {
     price: number;
     inStock: boolean;
     storeId?: string | null;
+    description?: string | null;
+    imageUrl?: string | null;
   };
 };
 
@@ -223,6 +233,8 @@ export type ProductByIdQuery = {
     price: number;
     inStock: boolean;
     storeId?: string | null;
+    description?: string | null;
+    imageUrl?: string | null;
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
   } | null;
 };
@@ -252,11 +264,20 @@ export type UpdateProductMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   price: Scalars['Float']['input'];
   inStock: Scalars['Boolean']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type UpdateProductMutation = {
   __typename?: 'Mutation';
-  updateProduct: { __typename?: 'Product'; id: string; price: number; inStock: boolean };
+  updateProduct: {
+    __typename?: 'Product';
+    id: string;
+    price: number;
+    inStock: boolean;
+    description?: string | null;
+    imageUrl?: string | null;
+  };
 };
 
 export const AddProductDocument = {
@@ -299,6 +320,16 @@ export const AddProductDocument = {
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'description' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -327,6 +358,16 @@ export const AddProductDocument = {
                 name: { kind: 'Name', value: 'storeId' },
                 value: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'description' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'description' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'imageUrl' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
+              },
             ],
             selectionSet: {
               kind: 'SelectionSet',
@@ -336,6 +377,8 @@ export const AddProductDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
               ],
             },
           },
@@ -606,6 +649,8 @@ export const ProductByIdDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'store' },
@@ -714,6 +759,16 @@ export const UpdateProductDocument = {
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'Boolean' } },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'description' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -737,6 +792,16 @@ export const UpdateProductDocument = {
                 name: { kind: 'Name', value: 'inStock' },
                 value: { kind: 'Variable', name: { kind: 'Name', value: 'inStock' } },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'description' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'description' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'imageUrl' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
+              },
             ],
             selectionSet: {
               kind: 'SelectionSet',
@@ -744,6 +809,8 @@ export const UpdateProductDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
               ],
             },
           },

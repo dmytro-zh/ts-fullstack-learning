@@ -5,6 +5,8 @@ query ProductById($id: ID!) {
     price
     inStock
     storeId
+    description
+    imageUrl
     store {
       id
       name
