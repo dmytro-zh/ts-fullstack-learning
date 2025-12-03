@@ -20,12 +20,12 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
-export type CartItem = {
-  __typename?: 'CartItem';
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  product: Product;
-  quantity: Scalars['Int']['output'];
+export type CheckoutByLinkInput = {
+  customerName: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+  quantity?: InputMaybe<Scalars['Int']['input']>;
+  shippingNote?: InputMaybe<Scalars['String']['input']>;
+  slug: Scalars['String']['input'];
 };
 
 export type CheckoutInput = {
@@ -51,17 +51,10 @@ export type CheckoutLinkInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addCartItem: CartItem;
   addProduct: Product;
-  checkout: Order;
+  checkoutByLink: Order;
   createCheckoutLink: CheckoutLink;
   createStore: Store;
-  removeCartItem: Scalars['Boolean']['output'];
-};
-
-export type MutationAddCartItemArgs = {
-  productId: Scalars['ID']['input'];
-  quantity: Scalars['Int']['input'];
 };
 
 export type MutationAddProductArgs = {
@@ -71,8 +64,8 @@ export type MutationAddProductArgs = {
   storeId?: InputMaybe<Scalars['ID']['input']>;
 };
 
-export type MutationCheckoutArgs = {
-  input: CheckoutInput;
+export type MutationCheckoutByLinkArgs = {
+  input: CheckoutByLinkInput;
 };
 
 export type MutationCreateCheckoutLinkArgs = {
@@ -83,27 +76,19 @@ export type MutationCreateStoreArgs = {
   input: StoreInput;
 };
 
-export type MutationRemoveCartItemArgs = {
-  id: Scalars['ID']['input'];
-};
-
 export type Order = {
   __typename?: 'Order';
+  checkoutLinkId?: Maybe<Scalars['ID']['output']>;
   createdAt: Scalars['String']['output'];
   customerName: Scalars['String']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  items: Array<OrderItem>;
-  total: Scalars['Float']['output'];
-};
-
-export type OrderItem = {
-  __typename?: 'OrderItem';
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  priceAtPurchase: Scalars['Float']['output'];
   productId: Scalars['ID']['output'];
   quantity: Scalars['Int']['output'];
+  shippingNote?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  storeId?: Maybe<Scalars['ID']['output']>;
+  total: Scalars['Float']['output'];
 };
 
 export type Product = {
@@ -117,7 +102,6 @@ export type Product = {
 
 export type Query = {
   __typename?: 'Query';
-  cartItems: Array<CartItem>;
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
   products: Array<Product>;
@@ -143,21 +127,6 @@ export type StoreInput = {
   name: Scalars['String']['input'];
 };
 
-export type AddCartItemMutationVariables = Exact<{
-  productId: Scalars['ID']['input'];
-  quantity: Scalars['Int']['input'];
-}>;
-
-export type AddCartItemMutation = {
-  __typename?: 'Mutation';
-  addCartItem: {
-    __typename?: 'CartItem';
-    id: string;
-    quantity: number;
-    product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
-  };
-};
-
 export type AddProductMutationVariables = Exact<{
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
@@ -177,16 +146,13 @@ export type AddProductMutation = {
   };
 };
 
-export type CartItemsQueryVariables = Exact<{ [key: string]: never }>;
+export type CheckoutByLinkMutationVariables = Exact<{
+  input: CheckoutByLinkInput;
+}>;
 
-export type CartItemsQuery = {
-  __typename?: 'Query';
-  cartItems: Array<{
-    __typename?: 'CartItem';
-    id: string;
-    quantity: number;
-    product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
-  }>;
+export type CheckoutByLinkMutation = {
+  __typename?: 'Mutation';
+  checkoutByLink: { __typename?: 'Order'; id: string; total: number; status: string };
 };
 
 export type CheckoutLinkQueryVariables = Exact<{
@@ -204,15 +170,6 @@ export type CheckoutLinkQuery = {
     product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
   } | null;
-};
-
-export type CheckoutMutationVariables = Exact<{
-  input: CheckoutInput;
-}>;
-
-export type CheckoutMutation = {
-  __typename?: 'Mutation';
-  checkout: { __typename?: 'Order'; id: string; total: number; createdAt: string };
 };
 
 export type CreateCheckoutLinkMutationVariables = Exact<{
@@ -250,14 +207,9 @@ export type ProductsQuery = {
     name: string;
     price: number;
     inStock: boolean;
+    storeId?: string | null;
   }>;
 };
-
-export type RemoveCartItemMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type RemoveCartItemMutation = { __typename?: 'Mutation'; removeCartItem: boolean };
 
 export type StoresQueryVariables = Exact<{ [key: string]: never }>;
 
@@ -266,75 +218,6 @@ export type StoresQuery = {
   stores: Array<{ __typename?: 'Store'; id: string; name: string; email?: string | null }>;
 };
 
-export const AddCartItemDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'AddCartItem' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'productId' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'quantity' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'addCartItem' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'productId' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'productId' } },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'quantity' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'quantity' } },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'product' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'price' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<AddCartItemMutation, AddCartItemMutationVariables>;
 export const AddProductDocument = {
   kind: 'Document',
   definitions: [
@@ -417,37 +300,42 @@ export const AddProductDocument = {
     },
   ],
 } as unknown as DocumentNode<AddProductMutation, AddProductMutationVariables>;
-export const CartItemsDocument = {
+export const CheckoutByLinkDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'CartItems' },
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CheckoutByLink' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CheckoutByLinkInput' } },
+          },
+        },
+      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'cartItems' },
+            name: { kind: 'Name', value: 'checkoutByLink' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'product' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'price' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
-                    ],
-                  },
-                },
+                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
               ],
             },
           },
@@ -455,7 +343,7 @@ export const CartItemsDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CartItemsQuery, CartItemsQueryVariables>;
+} as unknown as DocumentNode<CheckoutByLinkMutation, CheckoutByLinkMutationVariables>;
 export const CheckoutLinkDocument = {
   kind: 'Document',
   definitions: [
@@ -526,50 +414,6 @@ export const CheckoutLinkDocument = {
     },
   ],
 } as unknown as DocumentNode<CheckoutLinkQuery, CheckoutLinkQueryVariables>;
-export const CheckoutDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'Checkout' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CheckoutInput' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'checkout' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<CheckoutMutation, CheckoutMutationVariables>;
 export const CreateCheckoutLinkDocument = {
   kind: 'Document',
   definitions: [
@@ -700,6 +544,7 @@ export const ProductsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
               ],
             },
           },
@@ -708,42 +553,6 @@ export const ProductsDocument = {
     },
   ],
 } as unknown as DocumentNode<ProductsQuery, ProductsQueryVariables>;
-export const RemoveCartItemDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'RemoveCartItem' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'removeCartItem' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-              },
-            ],
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<RemoveCartItemMutation, RemoveCartItemMutationVariables>;
 export const StoresDocument = {
   kind: 'Document',
   definitions: [
