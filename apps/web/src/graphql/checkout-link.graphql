@@ -3,8 +3,19 @@ query CheckoutLink($slug: String!) {
     id
     slug
     active
-    product { id name price inStock }
-    store { id name email }
     createdAt
+    product {
+      id
+      name
+      price
+      inStock
+      description
+      imageUrl
+    }
+    store {
+      id
+      name
+      email
+    }
   }
 }

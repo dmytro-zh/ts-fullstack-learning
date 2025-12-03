@@ -190,7 +190,15 @@ export type CheckoutLinkQuery = {
     slug: string;
     active: boolean;
     createdAt: string;
-    product: { __typename?: 'Product'; id: string; name: string; price: number; inStock: boolean };
+    product: {
+      __typename?: 'Product';
+      id: string;
+      name: string;
+      price: number;
+      inStock: boolean;
+      description?: string | null;
+      imageUrl?: string | null;
+    };
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
   } | null;
 };
@@ -467,6 +475,7 @@ export const CheckoutLinkDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'active' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'product' },
@@ -477,6 +486,8 @@ export const CheckoutLinkDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
                     ],
                   },
                 },
@@ -492,7 +503,6 @@ export const CheckoutLinkDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
               ],
             },
           },

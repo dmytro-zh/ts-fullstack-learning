@@ -5,7 +5,6 @@ import { ProductsList } from './_components/ProductsList';
 import { getEnv } from '../lib/env';
 import { ProductsDocument, type ProductsQuery } from '../graphql/generated/graphql';
 
-// --- Data fetch ---
 async function fetchData() {
   const { GRAPHQL_URL } = getEnv();
   const client = new GraphQLClient(GRAPHQL_URL);
@@ -13,7 +12,6 @@ async function fetchData() {
   return { products: productsRes.products };
 }
 
-// --- Page (SSR) ---
 export default async function Home() {
   let products: ProductsQuery['products'] = [];
 
@@ -21,21 +19,30 @@ export default async function Home() {
     ({ products } = await fetchData());
   } catch {
     return (
-      <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh', color: '#111827' }}>
+      <main style={{ padding: 32, background: '#f5f5f6', minHeight: '100vh', color: '#111827' }}>
         Failed to load data.
       </main>
     );
   }
 
   return (
-    <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh' }}>
+    <main
+      style={{
+        padding: 32,
+        background: '#f5f5f6',
+        minHeight: '100vh',
+        width: '100vw',
+        boxSizing: 'border-box',
+        fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif',
+      }}
+    >
       <div
         style={{
           maxWidth: 1200,
           margin: '0 auto',
           display: 'grid',
           gap: 24,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
         }}
       >
         <section
@@ -53,17 +60,16 @@ export default async function Home() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 8,
+              marginBottom: 12,
             }}
           >
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Products</h1>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Products</h1>
             <Link href="/products" style={{ color: '#2563eb', fontWeight: 600 }}>
               Add product
             </Link>
           </div>
           <ProductsList products={products} />
         </section>
-
       </div>
     </main>
   );
