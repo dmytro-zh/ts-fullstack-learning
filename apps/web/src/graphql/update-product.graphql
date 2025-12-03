@@ -1,0 +1,7 @@
+mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {
+  updateProduct(id: $id, price: $price, inStock: $inStock) {
+    id
+    price
+    inStock
+  }
+}

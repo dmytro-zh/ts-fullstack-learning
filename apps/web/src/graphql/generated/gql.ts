@@ -19,8 +19,10 @@ type Documents = {
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    product {\n      id\n      name\n      price\n      inStock\n    }\n    store {\n      id\n      name\n      email\n    }\n    createdAt\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}': typeof types.CreateStoreDocument;
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
+  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}': typeof types.UpdateProductDocument;
 };
 const documents: Documents = {
   'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
@@ -33,9 +35,13 @@ const documents: Documents = {
     types.CreateCheckoutLinkDocument,
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}':
     types.CreateStoreDocument,
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
+    types.ProductByIdDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
     types.ProductsDocument,
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': types.StoresDocument,
+  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}':
+    types.UpdateProductDocument,
 };
 
 /**
@@ -86,6 +92,12 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
+  source: 'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}',
+): (typeof documents)['query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
   source: 'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}',
 ): (typeof documents)['query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}'];
 /**
@@ -94,6 +106,12 @@ export function gql(
 export function gql(
   source: 'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}',
 ): (typeof documents)['query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}',
+): (typeof documents)['mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}'];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

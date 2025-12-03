@@ -6,11 +6,26 @@ export class ProductRepository {
     return prisma.product.findMany();
   }
 
-  create(data: Prisma.ProductCreateInput) {
-    return prisma.product.create({ data });
+  findAllWithStore() {
+    return prisma.product.findMany({ include: { store: true } });
   }
 
   findById(id: string) {
     return prisma.product.findUnique({ where: { id } });
+  }
+
+  findByIdWithStore(id: string) {
+    return prisma.product.findUnique({ where: { id }, include: { store: true } });
+  }
+
+  create(data: Prisma.ProductCreateInput) {
+    return prisma.product.create({ data });
+  }
+
+  update(id: string, data: Pick<Prisma.ProductUpdateInput, 'price' | 'inStock'>) {
+    return prisma.product.update({
+      where: { id },
+      data,
+    });
   }
 }

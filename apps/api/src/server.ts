@@ -10,6 +10,7 @@ const typeDefs = /* GraphQL */ `
     price: Float!
     inStock: Boolean!
     storeId: ID
+    store: Store
   }
 
   type CheckoutLink {
@@ -35,10 +36,10 @@ const typeDefs = /* GraphQL */ `
   }
 
   input CheckoutLinkInput {
-  slug: String!
-  productId: ID!
-  storeId: ID
-}
+    slug: String!
+    productId: ID!
+    storeId: ID
+  }
 
   input StoreInput {
     name: String!
@@ -71,12 +72,14 @@ const typeDefs = /* GraphQL */ `
   type Query {
     health: String!
     products: [Product!]!
+    product(id: ID!): Product
     stores: [Store!]!
     checkoutLink(slug: String!): CheckoutLink
   }
 
   type Mutation {
     addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID): Product!
+    updateProduct(id: ID!, price: Float!, inStock: Boolean!): Product!
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
@@ -91,6 +94,7 @@ const resolvers = {
   Query: {
     health: () => 'OK',
     products: () => productService.getProducts(),
+    product: (_: unknown, args: { id: string }) => productService.getProduct(args.id),
     stores: () => storeService.getStores(),
     checkoutLink: (_: unknown, args: { slug: string }) => checkoutLinkService.getBySlug(args.slug),
   },
@@ -99,6 +103,8 @@ const resolvers = {
       _: unknown,
       args: { name: string; price: number; inStock: boolean; storeId?: string },
     ) => productService.addProduct(args),
+    updateProduct: (_: unknown, args: { id: string; price: number; inStock: boolean }) =>
+      productService.updateProduct(args),
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),
     createCheckoutLink: (
