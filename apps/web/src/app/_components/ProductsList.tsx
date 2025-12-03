@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { Product } from '@ts-fullstack-learning/shared';
+import Link from 'next/link';
 
 type ProductDTO = Pick<Product, 'id' | 'name' | 'price' | 'inStock'> & {
   storeId?: string | null;
@@ -33,9 +34,17 @@ export function ProductsList({ products }: { products: ProductDTO[] }) {
               boxShadow: '0 4px 10px rgba(15, 23, 42, 0.06)',
             }}
           >
-            <span style={{ color: '#0f172a', fontSize: 15 }}>
+            <Link
+              href={`/products/${p.id}`}
+              style={{
+                color: '#111827',
+                fontSize: 15,
+                textDecoration: 'underline',
+                fontWeight: 600,
+              }}
+            >
               {p.name} - {usd.format(p.price)} ({p.inStock ? 'in stock' : 'out of stock'})
-            </span>
+            </Link>
             <div style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
               <button
                 type="button"
@@ -49,9 +58,7 @@ export function ProductsList({ products }: { products: ProductDTO[] }) {
                   color: hasStore ? '#fff' : '#9ca3af',
                   cursor: hasStore ? 'pointer' : 'not-allowed',
                 }}
-                title={
-                  hasStore ? 'Create checkout link' : 'Attach a store to this product first'
-                }
+                title={hasStore ? 'Create checkout link' : 'Attach a store to this product first'}
               >
                 Create link
               </button>

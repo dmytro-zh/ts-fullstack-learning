@@ -55,6 +55,7 @@ export type Mutation = {
   checkoutByLink: Order;
   createCheckoutLink: CheckoutLink;
   createStore: Store;
+  updateProduct: Product;
 };
 
 export type MutationAddProductArgs = {
@@ -74,6 +75,12 @@ export type MutationCreateCheckoutLinkArgs = {
 
 export type MutationCreateStoreArgs = {
   input: StoreInput;
+};
+
+export type MutationUpdateProductArgs = {
+  id: Scalars['ID']['input'];
+  inStock: Scalars['Boolean']['input'];
+  price: Scalars['Float']['input'];
 };
 
 export type Order = {
@@ -97,6 +104,7 @@ export type Product = {
   inStock: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
+  store?: Maybe<Store>;
   storeId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -104,12 +112,17 @@ export type Query = {
   __typename?: 'Query';
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
+  product?: Maybe<Product>;
   products: Array<Product>;
   stores: Array<Store>;
 };
 
 export type QueryCheckoutLinkArgs = {
   slug: Scalars['String']['input'];
+};
+
+export type QueryProductArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type Store = {
@@ -197,6 +210,23 @@ export type CreateStoreMutation = {
   createStore: { __typename?: 'Store'; id: string; name: string; email?: string | null };
 };
 
+export type ProductByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type ProductByIdQuery = {
+  __typename?: 'Query';
+  product?: {
+    __typename?: 'Product';
+    id: string;
+    name: string;
+    price: number;
+    inStock: boolean;
+    storeId?: string | null;
+    store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
+  } | null;
+};
+
 export type ProductsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type ProductsQuery = {
@@ -216,6 +246,17 @@ export type StoresQueryVariables = Exact<{ [key: string]: never }>;
 export type StoresQuery = {
   __typename?: 'Query';
   stores: Array<{ __typename?: 'Store'; id: string; name: string; email?: string | null }>;
+};
+
+export type UpdateProductMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  price: Scalars['Float']['input'];
+  inStock: Scalars['Boolean']['input'];
+}>;
+
+export type UpdateProductMutation = {
+  __typename?: 'Mutation';
+  updateProduct: { __typename?: 'Product'; id: string; price: number; inStock: boolean };
 };
 
 export const AddProductDocument = {
@@ -527,6 +568,64 @@ export const CreateStoreDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateStoreMutation, CreateStoreMutationVariables>;
+export const ProductByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProductById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'product' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'price' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'store' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProductByIdQuery, ProductByIdQueryVariables>;
 export const ProductsDocument = {
   kind: 'Document',
   definitions: [
@@ -583,3 +682,73 @@ export const StoresDocument = {
     },
   ],
 } as unknown as DocumentNode<StoresQuery, StoresQueryVariables>;
+export const UpdateProductDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateProduct' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'price' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Float' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'inStock' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Boolean' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateProduct' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'price' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'price' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'inStock' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'inStock' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'price' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateProductMutation, UpdateProductMutationVariables>;
