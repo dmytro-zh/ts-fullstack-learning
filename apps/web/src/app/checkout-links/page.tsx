@@ -19,11 +19,14 @@ async function fetchData() {
   return { products: productsRes.products, stores: storesRes.stores };
 }
 
-type PageProps = { searchParams?: Record<string, string | string[] | undefined> };
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export default async function CheckoutLinksPage({ searchParams }: PageProps) {
+  const params = await searchParams;
   const initialProductId =
-    typeof searchParams?.productId === 'string' ? searchParams.productId : undefined;
+    typeof params?.productId === 'string' ? params.productId : undefined;
 
   try {
     const { products, stores } = await fetchData();
