@@ -19,6 +19,8 @@ model Product {
   orders      Order[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  description String?
+  imageUrl    String?
 }
 
 model CartItem {

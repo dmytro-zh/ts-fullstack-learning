@@ -22,7 +22,7 @@ export class ProductRepository {
     return prisma.product.create({ data });
   }
 
-  update(id: string, data: Pick<Prisma.ProductUpdateInput, 'price' | 'inStock'>) {
+    update(id: string, data: Prisma.ProductUpdateInput) {
     return prisma.product.update({
       where: { id },
       data,

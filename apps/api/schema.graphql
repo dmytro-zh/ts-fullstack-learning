@@ -1,0 +1,95 @@
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+  inStock: Boolean!
+  storeId: ID
+  store: Store
+  description: String
+  imageUrl: String
+}
+
+type CheckoutLink {
+  id: ID!
+  slug: String!
+  active: Boolean!
+  product: Product!
+  store: Store
+  createdAt: String!
+}
+
+input CheckoutInput {
+  customerName: String!
+  email: String!
+}
+
+input CheckoutByLinkInput {
+  slug: String!
+  customerName: String!
+  email: String!
+  shippingNote: String
+  quantity: Int
+}
+
+input CheckoutLinkInput {
+  slug: String!
+  productId: ID!
+  storeId: ID
+}
+
+input StoreInput {
+  name: String!
+  email: String
+}
+
+type Store {
+  id: ID!
+  name: String!
+  email: String
+  products: [Product!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Order {
+  id: ID!
+  customerName: String!
+  email: String!
+  total: Float!
+  status: String!
+  checkoutLinkId: ID
+  storeId: ID
+  productId: ID!
+  quantity: Int!
+  shippingNote: String
+  createdAt: String!
+}
+
+type Query {
+  health: String!
+  products: [Product!]!
+  product(id: ID!): Product
+  stores: [Store!]!
+  checkoutLink(slug: String!): CheckoutLink
+}
+
+type Mutation {
+  addProduct(
+    name: String!
+    price: Float!
+    inStock: Boolean!
+    storeId: ID
+    description: String
+    imageUrl: String
+  ): Product!
+  updateProduct(
+    id: ID!
+    price: Float!
+    inStock: Boolean!
+    description: String
+    imageUrl: String
+  ): Product!
+  createStore(input: StoreInput!): Store!
+  createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
+  checkoutByLink(input: CheckoutByLinkInput!): Order!
+}
