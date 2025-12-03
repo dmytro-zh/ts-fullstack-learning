@@ -11,6 +11,8 @@ const typeDefs = /* GraphQL */ `
     inStock: Boolean!
     storeId: ID
     store: Store
+    description: String
+    imageUrl: String
   }
 
   type CheckoutLink {
@@ -78,8 +80,8 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
-    addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID): Product!
-    updateProduct(id: ID!, price: Float!, inStock: Boolean!): Product!
+    addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID, description: String, imageUrl: String): Product!
+    updateProduct(id: ID!, price: Float!, inStock: Boolean!, description: String, imageUrl: String): Product!
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
@@ -101,10 +103,25 @@ const resolvers = {
   Mutation: {
     addProduct: (
       _: unknown,
-      args: { name: string; price: number; inStock: boolean; storeId?: string },
+      args: {
+        name: string;
+        price: number;
+        inStock: boolean;
+        storeId?: string;
+        description?: string;
+        imageUrl?: string;
+      },
     ) => productService.addProduct(args),
-    updateProduct: (_: unknown, args: { id: string; price: number; inStock: boolean }) =>
-      productService.updateProduct(args),
+    updateProduct: (
+      _: unknown,
+      args: {
+        id: string;
+        price: number;
+        inStock: boolean;
+        description?: string;
+        imageUrl?: string;
+      },
+    ) => productService.updateProduct(args),
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),
     createCheckoutLink: (

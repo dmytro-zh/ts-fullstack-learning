@@ -13,6 +13,8 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
     price: '0',
     inStock: true,
     storeId: stores[0]?.id ?? '',
+    description: '',
+    imageUrl: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +40,8 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         price: priceNumber,
         inStock: form.inStock,
         storeId: form.storeId,
+        description: form.description || undefined,
+        imageUrl: form.imageUrl || undefined,
       });
       router.push('/');
       router.refresh();
@@ -48,7 +52,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
   };
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, maxWidth: 360 }}>
+    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, maxWidth: 420 }}>
       <label>
         Name
         <input
@@ -69,11 +73,20 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         />
       </label>
 
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={form.inStock}
+          onChange={(e) => setForm((prev) => ({ ...prev, inStock: e.target.checked }))}
+        />
+        In stock
+      </label>
+
       <label>
         Store
         <select
           value={form.storeId}
-          onChange={(e) => setForm((p) => ({ ...p, storeId: e.target.value }))}
+          onChange={(e) => setForm((prev) => ({ ...prev, storeId: e.target.value }))}
           required
         >
           <option value="">Select store</option>
@@ -85,14 +98,30 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         </select>
       </label>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <input
-          type="checkbox"
-          checked={form.inStock}
-          onChange={(e) => setForm((prev) => ({ ...prev, inStock: e.target.checked }))}
+      <label>
+        Description
+        <textarea
+          value={form.description}
+          onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+          rows={3}
         />
-        In stock
       </label>
+
+      <label>
+        Image URL
+        <input
+          value={form.imageUrl}
+          onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
+          placeholder="https://..."
+        />
+      </label>
+      {form.imageUrl ? (
+        <img
+          src={form.imageUrl}
+          alt="preview"
+          style={{ maxWidth: 200, borderRadius: 8, border: '1px solid #e5e7eb' }}
+        />
+      ) : null}
 
       <button type="submit" disabled={submitting}>
         {submitting ? 'Saving…' : 'Add product'}

@@ -1,7 +1,21 @@
-mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {
-  updateProduct(id: $id, price: $price, inStock: $inStock) {
+mutation UpdateProduct(
+  $id: ID!
+  $price: Float!
+  $inStock: Boolean!
+  $description: String
+  $imageUrl: String
+) {
+  updateProduct(
+    id: $id
+    price: $price
+    inStock: $inStock
+    description: $description
+    imageUrl: $imageUrl
+  ) {
     id
     price
     inStock
+    description
+    imageUrl
   }
 }

@@ -14,18 +14,18 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.AddProductDocument;
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!, $description: String, $imageUrl: String) {\n  addProduct(\n    name: $name\n    price: $price\n    inStock: $inStock\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n  }\n}': typeof types.AddProductDocument;
   'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}': typeof types.CheckoutByLinkDocument;
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    product {\n      id\n      name\n      price\n      inStock\n    }\n    store {\n      id\n      name\n      email\n    }\n    createdAt\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}': typeof types.CreateStoreDocument;
-  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
-  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}': typeof types.UpdateProductDocument;
+  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}': typeof types.UpdateProductDocument;
 };
 const documents: Documents = {
-  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
+  'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!, $description: String, $imageUrl: String) {\n  addProduct(\n    name: $name\n    price: $price\n    inStock: $inStock\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n  }\n}':
     types.AddProductDocument,
   'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}':
     types.CheckoutByLinkDocument,
@@ -35,12 +35,12 @@ const documents: Documents = {
     types.CreateCheckoutLinkDocument,
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}':
     types.CreateStoreDocument,
-  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
     types.ProductByIdDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
     types.ProductsDocument,
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': types.StoresDocument,
-  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}':
+  'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}':
     types.UpdateProductDocument,
 };
 
@@ -62,8 +62,8 @@ export function gql(source: string): unknown;
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}',
-): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {\n  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}'];
+  source: 'mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!, $description: String, $imageUrl: String) {\n  addProduct(\n    name: $name\n    price: $price\n    inStock: $inStock\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n  }\n}',
+): (typeof documents)['mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!, $description: String, $imageUrl: String) {\n  addProduct(\n    name: $name\n    price: $price\n    inStock: $inStock\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -92,8 +92,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}',
-): (typeof documents)['query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    store {\n      id\n      name\n      email\n    }\n  }\n}'];
+  source: 'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}',
+): (typeof documents)['query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -110,8 +110,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}',
-): (typeof documents)['mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!) {\n  updateProduct(id: $id, price: $price, inStock: $inStock) {\n    id\n    price\n    inStock\n  }\n}'];
+  source: 'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}',
+): (typeof documents)['mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}'];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

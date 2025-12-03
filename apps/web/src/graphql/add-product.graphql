@@ -1,9 +1,25 @@
-mutation AddProduct($name: String!, $price: Float!, $inStock: Boolean!, $storeId: ID!) {
-  addProduct(name: $name, price: $price, inStock: $inStock, storeId: $storeId) {
+mutation AddProduct(
+  $name: String!
+  $price: Float!
+  $inStock: Boolean!
+  $storeId: ID!
+  $description: String
+  $imageUrl: String
+) {
+  addProduct(
+    name: $name
+    price: $price
+    inStock: $inStock
+    storeId: $storeId
+    description: $description
+    imageUrl: $imageUrl
+  ) {
     id
     name
     price
     inStock
     storeId
+    description
+    imageUrl
   }
 }
