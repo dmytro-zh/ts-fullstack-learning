@@ -23,7 +23,8 @@ export type Scalars = {
 export type CheckoutByLinkInput = {
   customerName: Scalars['String']['input'];
   email: Scalars['String']['input'];
-  quantity?: InputMaybe<Scalars['Int']['input']>;
+  quantity: Scalars['Int']['input'];
+  shippingAddress: Scalars['String']['input'];
   shippingNote?: InputMaybe<Scalars['String']['input']>;
   slug: Scalars['String']['input'];
 };
@@ -55,6 +56,7 @@ export type Mutation = {
   checkoutByLink: Order;
   createCheckoutLink: CheckoutLink;
   createStore: Store;
+  updateOrderStatus: Order;
   updateProduct: Product;
 };
 
@@ -64,7 +66,7 @@ export type MutationAddProductArgs = {
   inStock: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
-  storeId?: InputMaybe<Scalars['ID']['input']>;
+  storeId: Scalars['ID']['input'];
 };
 
 export type MutationCheckoutByLinkArgs = {
@@ -77,6 +79,11 @@ export type MutationCreateCheckoutLinkArgs = {
 
 export type MutationCreateStoreArgs = {
   input: StoreInput;
+};
+
+export type MutationUpdateOrderStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: OrderStatus;
 };
 
 export type MutationUpdateProductArgs = {
@@ -98,12 +105,25 @@ export type Order = {
   product: Product;
   productId: Scalars['ID']['output'];
   quantity: Scalars['Int']['output'];
+  shippingAddress: Scalars['String']['output'];
   shippingNote?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
+  status: OrderStatus;
   store?: Maybe<Store>;
   storeId?: Maybe<Scalars['ID']['output']>;
   total: Scalars['Float']['output'];
 };
+
+export enum OrderStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  New = 'NEW',
+  Paid = 'PAID',
+  Pending = 'PENDING',
+  PendingPayment = 'PENDING_PAYMENT',
+  Processing = 'PROCESSING',
+  Refunded = 'REFUNDED',
+  Shipped = 'SHIPPED',
+}
 
 export type Product = {
   __typename?: 'Product';
@@ -183,7 +203,7 @@ export type CheckoutByLinkMutationVariables = Exact<{
 
 export type CheckoutByLinkMutation = {
   __typename?: 'Mutation';
-  checkoutByLink: { __typename?: 'Order'; id: string; total: number; status: string };
+  checkoutByLink: { __typename?: 'Order'; id: string; total: number; status: OrderStatus };
 };
 
 export type CheckoutLinkQueryVariables = Exact<{
@@ -245,7 +265,7 @@ export type OrdersByStoreQuery = {
   orders: Array<{
     __typename?: 'Order';
     id: string;
-    status: string;
+    status: OrderStatus;
     total: number;
     quantity: number;
     shippingNote?: string | null;
@@ -295,6 +315,16 @@ export type StoresQueryVariables = Exact<{ [key: string]: never }>;
 export type StoresQuery = {
   __typename?: 'Query';
   stores: Array<{ __typename?: 'Store'; id: string; name: string; email?: string | null }>;
+};
+
+export type UpdateOrderStatusMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  status: OrderStatus;
+}>;
+
+export type UpdateOrderStatusMutation = {
+  __typename?: 'Mutation';
+  updateOrderStatus: { __typename?: 'Order'; id: string; status: OrderStatus };
 };
 
 export type UpdateProductMutationVariables = Exact<{
@@ -835,6 +865,62 @@ export const StoresDocument = {
     },
   ],
 } as unknown as DocumentNode<StoresQuery, StoresQueryVariables>;
+export const UpdateOrderStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateOrderStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'OrderStatus' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateOrderStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'status' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'status' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateOrderStatusMutation, UpdateOrderStatusMutationVariables>;
 export const UpdateProductDocument = {
   kind: 'Document',
   definitions: [

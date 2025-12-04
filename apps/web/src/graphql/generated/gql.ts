@@ -23,6 +23,7 @@ type Documents = {
   'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
+  'mutation UpdateOrderStatus($id: ID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    status\n  }\n}': typeof types.UpdateOrderStatusDocument;
   'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}': typeof types.UpdateProductDocument;
 };
 const documents: Documents = {
@@ -43,6 +44,8 @@ const documents: Documents = {
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
     types.ProductsDocument,
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': types.StoresDocument,
+  'mutation UpdateOrderStatus($id: ID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    status\n  }\n}':
+    types.UpdateOrderStatusDocument,
   'mutation UpdateProduct($id: ID!, $price: Float!, $inStock: Boolean!, $description: String, $imageUrl: String) {\n  updateProduct(\n    id: $id\n    price: $price\n    inStock: $inStock\n    description: $description\n    imageUrl: $imageUrl\n  ) {\n    id\n    price\n    inStock\n    description\n    imageUrl\n  }\n}':
     types.UpdateProductDocument,
 };
@@ -115,6 +118,12 @@ export function gql(
 export function gql(
   source: 'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}',
 ): (typeof documents)['query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation UpdateOrderStatus($id: ID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    status\n  }\n}',
+): (typeof documents)['mutation UpdateOrderStatus($id: ID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    status\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
