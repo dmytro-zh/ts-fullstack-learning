@@ -9,6 +9,8 @@ type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
 export function AddProductForm({ stores }: { stores: StoreOption[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: '',
     price: '0',
@@ -21,15 +23,17 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setMessage(null);
 
-    // поддерживаем и "10.5", и "10,5"
-    const priceNumber = Number(form.price.replace(',', '.'));
-
+    const priceNumber = Number(form.price);
     if (Number.isNaN(priceNumber)) {
-      return setError('Price must be a number');
+      setError('Price must be a number');
+      return;
     }
+
     if (!form.storeId) {
-      return setError('Store is required');
+      setError('Store is required');
+      return;
     }
 
     startTransition(async () => {
@@ -42,6 +46,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           description: form.description || undefined,
           imageUrl: form.imageUrl || undefined,
         });
+
         setForm((p) => ({
           ...p,
           name: '',
@@ -49,14 +54,51 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           description: '',
           imageUrl: '',
         }));
+
+        setMessage(
+          'Product has been created. You can now use it on the home page and in checkout links.',
+        );
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to save');
+        setError(err instanceof Error ? err.message : 'Failed to save product');
       }
     });
   };
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
+      {/* success / error messages */}
+      {error && (
+        <p
+          style={{
+            margin: 0,
+            padding: '8px 10px',
+            borderRadius: 8,
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca',
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </p>
+      )}
+
+      {message && (
+        <p
+          style={{
+            margin: 0,
+            padding: '8px 10px',
+            borderRadius: 8,
+            background: '#ecfdf3',
+            color: '#166534',
+            border: '1px solid #bbf7d0',
+            fontSize: 13,
+          }}
+        >
+          {message}
+        </p>
+      )}
+
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Name</span>
         <input
@@ -68,6 +110,9 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
+            caretColor: '#2563eb',
           }}
         />
       </label>
@@ -75,16 +120,18 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Price</span>
         <input
-          type="text"
-          inputMode="decimal"
+          type="number"
+          step="0.01"
           value={form.price}
           onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
           required
-          placeholder="49.99"
           style={{
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
+            caretColor: '#2563eb',
           }}
         />
       </label>
@@ -99,6 +146,8 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
           }}
         >
           <option value="">Select store</option>
@@ -109,7 +158,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           ))}
         </select>
         {stores.length === 0 && (
-          <small style={{ color: '#b00' }}>Create a store first at /stores</small>
+          <small style={{ color: '#b00' }}>Create a store first at /stores.</small>
         )}
       </label>
 
@@ -124,6 +173,8 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
           }}
         />
       </label>
@@ -138,6 +189,9 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
+            background: '#f9fafb',
+            color: '#0f172a',
+            caretColor: '#2563eb',
           }}
         />
       </label>
@@ -146,11 +200,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         <img
           src={form.imageUrl}
           alt="preview"
-          style={{
-            maxWidth: 220,
-            borderRadius: 8,
-            border: '1px solid #e5e7eb',
-          }}
+          style={{ maxWidth: 220, borderRadius: 8, border: '1px solid #e5e7eb' }}
         />
       )}
 
@@ -178,8 +228,6 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
       >
         {isPending ? 'Saving…' : 'Add product'}
       </button>
-
-      {error && <p style={{ color: '#b00', margin: 0 }}>{error}</p>}
     </form>
   );
 }
