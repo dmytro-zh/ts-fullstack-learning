@@ -5,6 +5,18 @@ import { CheckoutLinkService } from './services/checkout-link.service';
 import { OrderService } from './services/order.service';
 
 const typeDefs = /* GraphQL */ `
+  enum OrderStatus {
+    NEW
+    PENDING
+    PENDING_PAYMENT
+    PAID
+    PROCESSING
+    SHIPPED
+    COMPLETED
+    CANCELLED
+    REFUNDED
+  }
+
   type Product {
     id: ID!
     name: String!
@@ -25,6 +37,7 @@ const typeDefs = /* GraphQL */ `
     createdAt: String!
   }
 
+  # пока не используем, можно потом удалить
   input CheckoutInput {
     customerName: String!
     email: String!
@@ -34,8 +47,9 @@ const typeDefs = /* GraphQL */ `
     slug: String!
     customerName: String!
     email: String!
+    quantity: Int!
+    shippingAddress: String!
     shippingNote: String
-    quantity: Int
   }
 
   input CheckoutLinkInput {
@@ -63,7 +77,7 @@ const typeDefs = /* GraphQL */ `
     customerName: String!
     email: String!
     total: Float!
-    status: String!
+    status: OrderStatus!
     checkoutLinkId: ID
     checkoutLink: CheckoutLink
     storeId: ID
@@ -72,6 +86,7 @@ const typeDefs = /* GraphQL */ `
     product: Product!
     quantity: Int!
     shippingNote: String
+    shippingAddress: String!
     createdAt: String!
   }
 
@@ -89,10 +104,11 @@ const typeDefs = /* GraphQL */ `
       name: String!
       price: Float!
       inStock: Boolean!
-      storeId: ID
+      storeId: ID!
       description: String
       imageUrl: String
     ): Product!
+
     updateProduct(
       id: ID!
       price: Float!
@@ -100,9 +116,11 @@ const typeDefs = /* GraphQL */ `
       description: String
       imageUrl: String
     ): Product!
+
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
+    updateOrderStatus(id: ID!, status: OrderStatus!): Order!
   }
 `;
 
@@ -117,7 +135,8 @@ const resolvers = {
     products: () => productService.getProducts(),
     product: (_: unknown, args: { id: string }) => productService.getProduct(args.id),
     stores: () => storeService.getStores(),
-    checkoutLink: (_: unknown, args: { slug: string }) => checkoutLinkService.getBySlug(args.slug),
+    checkoutLink: (_: unknown, args: { slug: string }) =>
+      checkoutLinkService.getBySlug(args.slug),
     orders: (_: unknown, args: { storeId: string }) => orderService.getByStore(args.storeId),
   },
   Mutation: {
@@ -127,11 +146,12 @@ const resolvers = {
         name: string;
         price: number;
         inStock: boolean;
-        storeId?: string;
+        storeId: string;
         description?: string;
         imageUrl?: string;
       },
     ) => productService.addProduct(args),
+
     updateProduct: (
       _: unknown,
       args: {
@@ -142,12 +162,15 @@ const resolvers = {
         imageUrl?: string;
       },
     ) => productService.updateProduct(args),
+
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),
+
     createCheckoutLink: (
       _: unknown,
       args: { input: { slug: string; productId: string; storeId?: string } },
     ) => checkoutLinkService.createLink(args.input),
+
     checkoutByLink: (
       _: unknown,
       args: {
@@ -155,11 +178,15 @@ const resolvers = {
           slug: string;
           customerName: string;
           email: string;
-          shippingNote?: string;
           quantity: number;
+          shippingAddress: string;
+          shippingNote?: string;
         };
       },
     ) => checkoutLinkService.checkoutByLink(args.input),
+
+    updateOrderStatus: (_: unknown, args: { id: string; status: string }) =>
+      orderService.updateStatus(args.id, args.status),
   },
 };
 

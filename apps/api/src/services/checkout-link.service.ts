@@ -1,7 +1,7 @@
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
-import { prisma } from '../lib/prisma';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -14,8 +14,9 @@ const checkoutByLinkInput = z.object({
   slug: z.string().min(1),
   customerName: z.string().min(1),
   email: z.string().email(),
+  quantity: z.number().int().min(1),
+  shippingAddress: z.string().min(5),
   shippingNote: z.string().optional(),
-  quantity: z.number().int().min(1).default(1),
 });
 type CheckoutByLinkInput = z.infer<typeof checkoutByLinkInput>;
 
@@ -29,7 +30,26 @@ export class CheckoutLinkService {
     const { slug, productId, storeId } = linkInput.parse(input);
 
     const product = await this.productRepo.findById(productId);
-    if (!product) throw new Error('Product not found');
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const existing = await this.repo.findBySlug(slug);
+
+    if (existing) {
+      const sameProduct = existing.productId === productId;
+      const sameStore =
+        (existing.storeId ?? null) === (storeId ?? null);
+
+      if (sameProduct && sameStore) {
+        if (!existing.active) {
+          return this.repo.update(existing.id, { active: true });
+        }
+        return existing;
+      }
+
+      throw new Error('Checkout link slug is already taken');
+    }
 
     return this.repo.create({
       slug,
@@ -43,7 +63,15 @@ export class CheckoutLinkService {
   }
 
   async checkoutByLink(input: CheckoutByLinkInput) {
-    const { slug, customerName, email, shippingNote, quantity } = checkoutByLinkInput.parse(input);
+    const parsed = checkoutByLinkInput.parse(input);
+    const {
+      slug,
+      customerName,
+      email,
+      quantity,
+      shippingAddress,
+      shippingNote,
+    } = parsed;
 
     const link = await this.repo.findBySlug(slug);
     if (!link || !link.active) {
@@ -61,10 +89,11 @@ export class CheckoutLinkService {
       data: {
         customerName,
         email,
-        shippingNote: shippingNote ?? null,
         quantity,
         total,
-        status: 'PENDING',
+        shippingAddress,
+        shippingNote: shippingNote ?? null,
+        status: 'PAID',
         checkoutLinkId: link.id,
         storeId: link.storeId ?? null,
         productId: product.id,

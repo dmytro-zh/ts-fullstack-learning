@@ -13,12 +13,13 @@ const CHECKOUT_BY_LINK = /* GraphQL */ `
   }
 `;
 
-type CheckoutByLinkInput = {
+export type CheckoutByLinkInput = {
   slug: string;
   customerName: string;
   email: string;
-  shippingNote?: string | undefined;
-  quantity?: number | undefined;
+  quantity: number;
+  shippingAddress: string;
+  shippingNote?: string;
 };
 
 type CheckoutByLinkPayload = {

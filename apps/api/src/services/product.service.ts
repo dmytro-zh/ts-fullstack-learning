@@ -1,12 +1,20 @@
 import { ProductSchema } from '@ts-fullstack-learning/shared';
 import { z } from 'zod';
-import { ProductRepository } from '../repositories/product.repository';
 import type { Prisma } from '@prisma/client';
+import { ProductRepository } from '../repositories/product.repository';
 
-const createProductInput = ProductSchema.pick({ name: true, price: true, inStock: true }).extend({
-  storeId: z.string().optional(),
+const createProductInput = ProductSchema.pick({
+  name: true,
+  price: true,
+  inStock: true,
+}).extend({
+  storeId: z.string().min(1),
   description: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal('')),
 });
 
 const updateProductInput = z.object({
@@ -14,11 +22,21 @@ const updateProductInput = z.object({
   price: z.number(),
   inStock: z.boolean(),
   description: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal('')),
 });
 
 type CreateProductInput = z.infer<typeof createProductInput>;
 type UpdateProductInput = z.infer<typeof updateProductInput>;
+
+function normalizeNullable(value?: string | null) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
 
 export class ProductService {
   constructor(private readonly repo = new ProductRepository()) {}
@@ -33,24 +51,31 @@ export class ProductService {
 
   async addProduct(input: CreateProductInput) {
     const data = createProductInput.parse(input);
+
     return this.repo.create({
       name: data.name,
       price: data.price,
       inStock: data.inStock,
-      description: data.description || null,
-      imageUrl: data.imageUrl || null,
-      ...(data.storeId ? { store: { connect: { id: data.storeId } } } : {}),
+      description: normalizeNullable(data.description),
+      imageUrl: normalizeNullable(data.imageUrl),
+      store: {
+        connect: {
+          id: data.storeId,
+        },
+      },
     });
   }
 
   async updateProduct(input: UpdateProductInput) {
     const data = updateProductInput.parse(input);
+
     const updateData: Prisma.ProductUpdateInput = {
       price: data.price,
       inStock: data.inStock,
-      description: data.description ?? null,
-      imageUrl: data.imageUrl ?? null,
+      description: normalizeNullable(data.description),
+      imageUrl: normalizeNullable(data.imageUrl),
     };
+
     return this.repo.update(data.id, updateData);
   }
 }

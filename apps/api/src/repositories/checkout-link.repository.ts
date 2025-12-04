@@ -15,4 +15,12 @@ export class CheckoutLinkRepository {
       include: { product: true, store: true },
     });
   }
+
+  update(id: string, data: Prisma.CheckoutLinkUpdateInput) {
+    return prisma.checkoutLink.update({
+      where: { id },
+      data,
+      include: { product: true, store: true },
+    });
+  }
 }

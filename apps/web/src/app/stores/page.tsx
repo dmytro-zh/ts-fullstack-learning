@@ -1,12 +1,12 @@
 import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getEnv } from '../../lib/env';
 import {
   StoresDocument,
   type StoresQuery,
-  CreateStoreDocument,
-  type CreateStoreMutationVariables,
 } from '../../graphql/generated/graphql';
+import { createStoreAction as createStoreMutation } from '../actions/createStore';
 
 async function fetchStores() {
   const { GRAPHQL_URL } = getEnv();
@@ -15,13 +15,38 @@ async function fetchStores() {
   return res.stores;
 }
 
-async function createStore(input: CreateStoreMutationVariables['input']) {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
-  await client.request(CreateStoreDocument, { input });
+async function createStoreAction(formData: FormData) {
+  'use server';
+
+  const rawName = String(formData.get('name') ?? '');
+  const rawEmail = String(formData.get('email') ?? '');
+
+  const name = rawName.trim();
+  const email = rawEmail.trim();
+
+  if (!name) {
+    redirect('/stores?error=1');
+  }
+
+  try {
+    await createStoreMutation({ name, email: email || undefined });
+  } catch (err) {
+    console.error('Failed to create store', err);
+    redirect('/stores?error=1');
+  }
+
+  redirect('/stores?created=1');
 }
 
-export default async function StoresPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function StoresPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const wasCreated = params.created === '1';
+  const hasError = !wasCreated && params.error === '1';
+
   const stores = await fetchStores();
 
   return (
@@ -51,15 +76,39 @@ export default async function StoresPage() {
       >
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Create store</h1>
 
-        <form
-          action={async (formData: FormData) => {
-            'use server';
-            const name = String(formData.get('name') ?? '');
-            const email = String(formData.get('email') ?? '');
-            await createStore({ name, email: email || undefined });
-          }}
-          style={{ display: 'grid', gap: 12 }}
-        >
+        {wasCreated && (
+          <p
+            style={{
+              margin: 0,
+              padding: '8px 10px',
+              borderRadius: 8,
+              background: '#ecfdf3',
+              border: '1px solid #bbf7d0',
+              color: '#15803d',
+              fontSize: 13,
+            }}
+          >
+            Store has been created. You can now attach products to this store and receive orders.
+          </p>
+        )}
+
+        {hasError && (
+          <p
+            style={{
+              margin: 0,
+              padding: '8px 10px',
+              borderRadius: 8,
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#b91c1c',
+              fontSize: 13,
+            }}
+          >
+            Failed to create store. Please try again.
+          </p>
+        )}
+
+        <form action={createStoreAction} style={{ display: 'grid', gap: 12 }}>
           <label style={{ display: 'grid', gap: 6, fontWeight: 600 }}>
             Name
             <input
@@ -129,39 +178,44 @@ export default async function StoresPage() {
             <ul
               style={{
                 margin: 0,
-                padding: 0,
-                listStyle: 'none',
+                paddingLeft: 18,
                 display: 'grid',
                 gap: 6,
               }}
             >
               {stores.map((s) => (
-                <li
-                  key={s.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 10px',
-                    borderRadius: 10,
-                    border: '1px solid #e5e7eb',
-                    background: '#f9fafb',
-                  }}
-                >
-                  <span>
-                    {s.name} {s.email ? `(${s.email})` : ''}
-                  </span>
-
-                  <Link
-                    href={`/orders?storeId=${s.id}`}
+                <li key={s.id} style={{ color: '#111827' }}>
+                  <div
                     style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#2563eb',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 12,
                     }}
                   >
-                    View orders
-                  </Link>
+                    <span>
+                      {s.name}
+                      {s.email ? ` (${s.email})` : ''}
+                    </span>
+
+                    <Link
+                      href={`/orders?storeId=${s.id}`}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 999,
+                        border: '1px solid #2563eb',
+                        background: '#2563eb',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      View orders
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
