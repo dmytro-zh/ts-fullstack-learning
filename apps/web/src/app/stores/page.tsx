@@ -1,5 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import { getEnv } from '../../lib/env';
+import Link from 'next/link';
 import {
   StoresDocument,
   type StoresQuery,
@@ -125,10 +126,42 @@ export default async function StoresPage() {
           {stores.length === 0 ? (
             <p style={{ margin: 0, color: '#6b7280' }}>No stores yet.</p>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+            <ul
+              style={{
+                margin: 0,
+                padding: 0,
+                listStyle: 'none',
+                display: 'grid',
+                gap: 6,
+              }}
+            >
               {stores.map((s) => (
-                <li key={s.id} style={{ color: '#111827' }}>
-                  {s.name} {s.email ? `(${s.email})` : ''}
+                <li
+                  key={s.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    border: '1px solid #e5e7eb',
+                    background: '#f9fafb',
+                  }}
+                >
+                  <span>
+                    {s.name} {s.email ? `(${s.email})` : ''}
+                  </span>
+
+                  <Link
+                    href={`/orders?storeId=${s.id}`}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: '#2563eb',
+                    }}
+                  >
+                    View orders
+                  </Link>
                 </li>
               ))}
             </ul>
