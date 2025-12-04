@@ -19,6 +19,7 @@ type Documents = {
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    createdAt\n    product {\n      id\n      name\n      price\n      inStock\n      description\n      imageUrl\n    }\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}': typeof types.CreateStoreDocument;
+  'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}': typeof types.OrdersByStoreDocument;
   'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
@@ -35,6 +36,8 @@ const documents: Documents = {
     types.CreateCheckoutLinkDocument,
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}':
     types.CreateStoreDocument,
+  'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}':
+    types.OrdersByStoreDocument,
   'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
     types.ProductByIdDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n  }\n}':
@@ -88,6 +91,12 @@ export function gql(
 export function gql(
   source: 'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}',
 ): (typeof documents)['mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}',
+): (typeof documents)['query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

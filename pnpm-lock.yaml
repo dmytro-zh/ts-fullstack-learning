@@ -29,6 +29,9 @@ importers:
       '@apollo/server':
         specifier: ^5.0.0
         version: 5.0.0(graphql@16.11.0)
+      '@apollo/utils.withrequired':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@prisma/client':
         specifier: ^6.16.2
         version: 6.16.2(prisma@6.16.2(typescript@5.9.2))(typescript@5.9.2)

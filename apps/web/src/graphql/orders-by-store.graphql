@@ -1,0 +1,14 @@
+query OrdersByStore($storeId: ID!) {
+  orders(storeId: $storeId) {
+    id
+    status
+    total
+    quantity
+    shippingNote
+    createdAt
+    customerName
+    email
+    product { id name price }
+    checkoutLink { slug }
+  }
+}

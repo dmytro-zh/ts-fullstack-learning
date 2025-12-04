@@ -89,15 +89,18 @@ export type MutationUpdateProductArgs = {
 
 export type Order = {
   __typename?: 'Order';
+  checkoutLink?: Maybe<CheckoutLink>;
   checkoutLinkId?: Maybe<Scalars['ID']['output']>;
   createdAt: Scalars['String']['output'];
   customerName: Scalars['String']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  product: Product;
   productId: Scalars['ID']['output'];
   quantity: Scalars['Int']['output'];
   shippingNote?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
+  store?: Maybe<Store>;
   storeId?: Maybe<Scalars['ID']['output']>;
   total: Scalars['Float']['output'];
 };
@@ -118,6 +121,7 @@ export type Query = {
   __typename?: 'Query';
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
+  orders: Array<Order>;
   product?: Maybe<Product>;
   products: Array<Product>;
   stores: Array<Store>;
@@ -125,6 +129,10 @@ export type Query = {
 
 export type QueryCheckoutLinkArgs = {
   slug: Scalars['String']['input'];
+};
+
+export type QueryOrdersArgs = {
+  storeId: Scalars['ID']['input'];
 };
 
 export type QueryProductArgs = {
@@ -226,6 +234,27 @@ export type CreateStoreMutationVariables = Exact<{
 export type CreateStoreMutation = {
   __typename?: 'Mutation';
   createStore: { __typename?: 'Store'; id: string; name: string; email?: string | null };
+};
+
+export type OrdersByStoreQueryVariables = Exact<{
+  storeId: Scalars['ID']['input'];
+}>;
+
+export type OrdersByStoreQuery = {
+  __typename?: 'Query';
+  orders: Array<{
+    __typename?: 'Order';
+    id: string;
+    status: string;
+    total: number;
+    quantity: number;
+    shippingNote?: string | null;
+    createdAt: string;
+    customerName: string;
+    email: string;
+    product: { __typename?: 'Product'; id: string; name: string; price: number };
+    checkoutLink?: { __typename?: 'CheckoutLink'; slug: string } | null;
+  }>;
 };
 
 export type ProductByIdQueryVariables = Exact<{
@@ -621,6 +650,75 @@ export const CreateStoreDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateStoreMutation, CreateStoreMutationVariables>;
+export const OrdersByStoreDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'OrdersByStore' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'orders' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'storeId' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'storeId' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shippingNote' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'customerName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'product' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'price' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'checkoutLink' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [{ kind: 'Field', name: { kind: 'Name', value: 'slug' } }],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<OrdersByStoreQuery, OrdersByStoreQueryVariables>;
 export const ProductByIdDocument = {
   kind: 'Document',
   definitions: [

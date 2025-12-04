@@ -14,15 +14,26 @@ async function fetchProduct(id: string) {
   return data.product ?? null;
 }
 
-type PageProps = { params: { id: string } };
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
 
 export default async function ProductPage({ params }: PageProps) {
-  const { id } = await params;        // дождались params
+  const { id } = await params;
   const product = await fetchProduct(id);
-  if (!product) return notFound();
+
+  if (!product) {
+    notFound();
+  }
 
   return (
-    <main style={{ padding: 24 }}>
+    <main
+      style={{
+        padding: 32,
+        background: '#f7f7f8',
+        minHeight: '100vh',
+      }}
+    >
       <ProductDetails product={product} />
     </main>
   );

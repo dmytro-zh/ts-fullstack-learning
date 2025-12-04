@@ -2,6 +2,7 @@ import { ApolloServer } from '@apollo/server';
 import { ProductService } from './services/product.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
+import { OrderService } from './services/order.service';
 
 const typeDefs = /* GraphQL */ `
   type Product {
@@ -64,8 +65,11 @@ const typeDefs = /* GraphQL */ `
     total: Float!
     status: String!
     checkoutLinkId: ID
+    checkoutLink: CheckoutLink
     storeId: ID
+    store: Store
     productId: ID!
+    product: Product!
     quantity: Int!
     shippingNote: String
     createdAt: String!
@@ -77,11 +81,25 @@ const typeDefs = /* GraphQL */ `
     product(id: ID!): Product
     stores: [Store!]!
     checkoutLink(slug: String!): CheckoutLink
+    orders(storeId: ID!): [Order!]!
   }
 
   type Mutation {
-    addProduct(name: String!, price: Float!, inStock: Boolean!, storeId: ID, description: String, imageUrl: String): Product!
-    updateProduct(id: ID!, price: Float!, inStock: Boolean!, description: String, imageUrl: String): Product!
+    addProduct(
+      name: String!
+      price: Float!
+      inStock: Boolean!
+      storeId: ID
+      description: String
+      imageUrl: String
+    ): Product!
+    updateProduct(
+      id: ID!
+      price: Float!
+      inStock: Boolean!
+      description: String
+      imageUrl: String
+    ): Product!
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
@@ -91,6 +109,7 @@ const typeDefs = /* GraphQL */ `
 const productService = new ProductService();
 const storeService = new StoreService();
 const checkoutLinkService = new CheckoutLinkService();
+const orderService = new OrderService();
 
 const resolvers = {
   Query: {
@@ -99,6 +118,7 @@ const resolvers = {
     product: (_: unknown, args: { id: string }) => productService.getProduct(args.id),
     stores: () => storeService.getStores(),
     checkoutLink: (_: unknown, args: { slug: string }) => checkoutLinkService.getBySlug(args.slug),
+    orders: (_: unknown, args: { storeId: string }) => orderService.getByStore(args.storeId),
   },
   Mutation: {
     addProduct: (

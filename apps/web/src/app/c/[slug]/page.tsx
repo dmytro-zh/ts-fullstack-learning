@@ -18,8 +18,13 @@ async function fetchCheckoutLink(slug: string) {
   return data.checkoutLink;
 }
 
-export default async function PublicCheckoutPage({ params }: { params: { slug: string } }) {
-  const link = await fetchCheckoutLink(params.slug);
+type PageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export default async function PublicCheckoutPage({ params }: PageProps) {
+  const { slug } = await params;
+  const link = await fetchCheckoutLink(slug);
 
   if (!link || !link.active) {
     return (
