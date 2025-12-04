@@ -8,19 +8,19 @@ generator client {
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  price       Float
-  inStock     Boolean   @default(true)
-  store       Store?    @relation(fields: [storeId], references: [id])
-  storeId     String?
-  cartItems   CartItem[]
+  id            String        @id @default(cuid())
+  name          String        @unique
+  price         Float
+  inStock       Boolean       @default(true)
+  store         Store         @relation(fields: [storeId], references: [id])
+  storeId       String
+  cartItems     CartItem[]
   checkoutLinks CheckoutLink[]
-  orders      Order[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  description String?
-  imageUrl    String?
+  orders        Order[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  description   String?
+  imageUrl      String?
 }
 
 model CartItem {
@@ -34,10 +34,15 @@ model CartItem {
 }
 
 enum OrderStatus {
+  NEW
   PENDING
+  PENDING_PAYMENT
   PAID
+  PROCESSING
   SHIPPED
+  COMPLETED
   CANCELLED
+  REFUNDED
 }
 
 model Order {
@@ -47,25 +52,26 @@ model Order {
   shippingNote    String?
   quantity        Int         @default(1)
   total           Float
-  status          OrderStatus @default(PENDING)
+  status          OrderStatus @default(NEW)
   checkoutLinkId  String?
   storeId         String?
   productId       String
   product         Product     @relation(fields: [productId], references: [id])
   createdAt       DateTime    @default(now())
+  shippingAddress String?
 
   @@index([checkoutLinkId])
   @@index([storeId])
 }
 
 model Store {
-  id        String    @id @default(cuid())
-  name      String
-  email     String?
-  products  Product[]
+  id            String        @id @default(cuid())
+  name          String
+  email         String?
+  products      Product[]
   checkoutLinks CheckoutLink[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model CheckoutLink {

@@ -3,27 +3,55 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const demoStoreId = 'demo-store';
+
+  const store = await prisma.store.upsert({
+    where: { id: demoStoreId },
+    update: {},
+    create: {
+      id: demoStoreId,
+      name: 'Demo store',
+      email: 'demo@example.com',
+    },
+  });
+
   const products = [
-    { name: 'Coffee',    price: 3.5, inStock: true },
-    { name: 'Tea',       price: 2.9, inStock: false },
-    { name: 'Milk',      price: 1.8, inStock: true },
-    { name: 'Bread',     price: 2.2, inStock: true },
+    {
+      name: 'Cozy Red Hoodie',
+      price: 59.9,
+      inStock: true,
+    },
+    {
+      name: 'Ocean Blue Mug',
+      price: 19.5,
+      inStock: true,
+    },
   ];
 
   for (const product of products) {
     await prisma.product.upsert({
       where: { name: product.name },
-      update: product,
-      create: product,
+      update: {
+        price: product.price,
+        inStock: product.inStock,
+        storeId: store.id,
+      },
+      create: {
+        name: product.name,
+        price: product.price,
+        inStock: product.inStock,
+        store: { connect: { id: store.id } },
+      },
     });
   }
 }
 
 main()
-  .catch((err) => {
-    console.error(err);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
+  
