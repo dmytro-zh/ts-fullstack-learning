@@ -7,6 +7,7 @@ type Product {
   store: Store
   description: String
   imageUrl: String
+  createdAt: String!
 }
 
 type CheckoutLink {
@@ -56,7 +57,7 @@ type Order {
   customerName: String!
   email: String!
   total: Float!
-  status: String!
+  status: OrderStatus!
   checkoutLinkId: ID
   storeId: ID
   productId: ID!

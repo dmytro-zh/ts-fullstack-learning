@@ -26,6 +26,7 @@ const typeDefs = /* GraphQL */ `
     store: Store
     description: String
     imageUrl: String
+    createdAt: String!
   }
 
   type CheckoutLink {
