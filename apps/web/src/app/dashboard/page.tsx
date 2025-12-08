@@ -149,6 +149,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const hasProducts = storeProducts.length > 0;
   const hasOrders = storeOrders.length > 0;
 
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+  const storeProductCount =
+    activeStore != null ? allProducts.filter((p) => p.storeId === activeStore.id).length : 0;
+
+  const recentOrders = dashboardData?.orders
+    ? dashboardData.orders.filter((o) => {
+        const ts = getTimestamp(o.createdAt);
+        if (!ts) return false;
+        const diff = now - ts;
+        return diff >= 0 && diff <= thirtyDaysMs;
+      })
+    : [];
+
+  const recentOrdersCount = recentOrders.length;
+  const recentRevenue = recentOrders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+
   return (
     <main
       style={{
@@ -375,6 +393,122 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 gap: 16,
               }}
             >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.9)',
+                    background: '#ffffff',
+                    padding: 12,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Products
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {storeProductCount}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Total in this store
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.9)',
+                    background: '#ffffff',
+                    padding: 12,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Orders (30 days)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {recentOrdersCount}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Recent orders
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.9)',
+                    background: '#ffffff',
+                    padding: 12,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Revenue (30 days)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                    }}
+                  >
+                    ${recentRevenue.toFixed(2)}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Paid orders total
+                  </span>
+                </div>
+              </div>
+
               <div
                 style={{
                   borderRadius: 20,
