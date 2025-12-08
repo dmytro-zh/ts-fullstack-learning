@@ -1,0 +1,29 @@
+query StoresOverview {
+  stores {
+    id
+    name
+  }
+}
+
+query StoreDashboard($storeId: ID!) {
+  products {
+    id
+    name
+    price
+    inStock
+    storeId
+    createdAt
+  }
+
+  orders(storeId: $storeId) {
+    id
+    total
+    createdAt
+    status
+    quantity
+    product {
+      id
+      name
+    }
+  }
+}
