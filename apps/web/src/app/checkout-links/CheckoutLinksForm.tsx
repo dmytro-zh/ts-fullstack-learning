@@ -6,10 +6,12 @@ import { createCheckoutLinkAction } from '../actions/createCheckoutLink';
 
 type ProductOption = Pick<Product, 'id' | 'name' | 'price' | 'storeId'>;
 type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
+
 type Props = {
   products: ProductOption[];
   stores: StoreOption[];
   initialProductId?: string | undefined;
+  initialStoreId?: string | undefined;
 };
 
 function slugify(storeName: string, productName: string) {
@@ -20,25 +22,74 @@ function slugify(storeName: string, productName: string) {
     .slice(0, 60);
 }
 
-export function CheckoutLinksForm({ products, stores, initialProductId }: Props) {
-  const defaultProduct = useMemo(
-    () => products.find((p) => p.id === initialProductId) ?? products[0],
-    [products, initialProductId],
-  );
-  const defaultStore = useMemo(
-    () => stores.find((s) => s.id === defaultProduct?.storeId) ?? stores[0],
-    [stores, defaultProduct],
-  );
+export function CheckoutLinksForm({
+  products,
+  stores,
+  initialProductId,
+  initialStoreId,
+}: Props) {
+  const initialProduct = useMemo(() => {
+    if (initialProductId) {
+      return (
+        products.find(p => p.id === initialProductId) ??
+        products[0]
+      );
+    }
+    if (initialStoreId) {
+      return (
+        products.find(p => p.storeId === initialStoreId) ??
+        products[0]
+      );
+    }
+    return products[0];
+  }, [products, initialProductId, initialStoreId]);
+
+  const initialStore = useMemo(() => {
+    if (initialStoreId) {
+      return (
+        stores.find(s => s.id === initialStoreId) ??
+        (initialProduct
+          ? stores.find(s => s.id === initialProduct.storeId) ?? stores[0]
+          : stores[0])
+      );
+    }
+    if (initialProduct) {
+      return (
+        stores.find(s => s.id === initialProduct.storeId) ??
+        stores[0]
+      );
+    }
+    return stores[0];
+  }, [stores, initialStoreId, initialProduct]);
+
+  const storeLocked = Boolean(initialStoreId);
+  const productLocked = Boolean(initialProductId);
 
   const [form, setForm] = useState({
-    slug: defaultProduct && defaultStore ? slugify(defaultStore.name, defaultProduct.name) : '',
-    productId: defaultProduct?.id ?? '',
-    storeId: defaultStore?.id ?? '',
+    slug:
+      initialStore && initialProduct
+        ? slugify(initialStore.name, initialProduct.name)
+        : '',
+    productId: initialProduct?.id ?? '',
+    storeId: initialStore?.id ?? '',
   });
+
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
+
+  const filteredProducts = useMemo(() => {
+    if (storeLocked && form.storeId) {
+      return products.filter(p => p.storeId === form.storeId);
+    }
+    return products;
+  }, [products, storeLocked, form.storeId]);
+
+  const currentProduct =
+    filteredProducts.find(p => p.id === form.productId) ??
+    filteredProducts[0] ??
+    products[0];
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,19 +108,28 @@ export function CheckoutLinksForm({ products, stores, initialProductId }: Props)
         setLinkUrl(url);
         setMessage(`Link created: ${url}`);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create link');
+        setError(
+          err instanceof Error ? err.message : 'Failed to create link',
+        );
       }
     });
   };
 
   const handleProductChange = (productId: string) => {
-    const product = products.find((p) => p.id === productId);
-    const store = stores.find((s) => s.id === product?.storeId) ?? null;
-    setForm((p) => ({
+    const product = filteredProducts.find(p => p.id === productId);
+    const store =
+      stores.find(s => s.id === product?.storeId) ?? null;
+    setForm(p => ({
       ...p,
       productId,
-      storeId: store?.id ?? '',
-      slug: product && store ? slugify(store.name, product.name) : p.slug,
+      storeId: storeLocked ? p.storeId : store?.id ?? p.storeId,
+      slug:
+        product && (storeLocked ? initialStore : store)
+          ? slugify(
+              (storeLocked ? initialStore : store)!.name,
+              product.name,
+            )
+          : p.slug,
     }));
   };
 
@@ -86,7 +146,9 @@ export function CheckoutLinksForm({ products, stores, initialProductId }: Props)
         <span style={{ color: '#111827' }}>Slug</span>
         <input
           value={form.slug}
-          onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
+          onChange={e =>
+            setForm(p => ({ ...p, slug: e.target.value }))
+          }
           required
           placeholder="my-store-product"
           style={{
@@ -101,40 +163,58 @@ export function CheckoutLinksForm({ products, stores, initialProductId }: Props)
 
       <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
         <span style={{ color: '#111827' }}>Product</span>
-        <select
-          value={form.productId}
-          onChange={(e) => handleProductChange(e.target.value)}
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#fff',
-            color: '#0f172a',
-          }}
-        >
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} (${p.price.toFixed(2)})
-            </option>
-          ))}
-        </select>
+        {productLocked && currentProduct ? (
+          <input
+            value={`${currentProduct.name} ($${currentProduct.price.toFixed(
+              2,
+            )})`}
+            disabled
+            style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              background: '#f9fafb',
+              color: '#0f172a',
+            }}
+          />
+        ) : (
+          <select
+            value={form.productId}
+            onChange={e => handleProductChange(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              background: '#fff',
+              color: '#0f172a',
+            }}
+          >
+            {filteredProducts.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} (${p.price.toFixed(2)})
+              </option>
+            ))}
+          </select>
+        )}
       </label>
 
       <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
-        <span style={{ color: '#111827' }}>Store (optional)</span>
+        <span style={{ color: '#111827' }}>Store</span>
         <select
           value={form.storeId}
-          onChange={(e) => setForm((p) => ({ ...p, storeId: e.target.value }))}
+          onChange={e =>
+            setForm(p => ({ ...p, storeId: e.target.value }))
+          }
+          disabled={storeLocked}
           style={{
             padding: '10px 12px',
             borderRadius: 8,
             border: '1px solid #d1d5db',
-            background: '#fff',
+            background: storeLocked ? '#f9fafb' : '#fff',
             color: '#0f172a',
           }}
         >
-          <option value="">No store</option>
-          {stores.map((s) => (
+          {stores.map(s => (
             <option key={s.id} value={s.id}>
               {s.name} {s.email ? `(${s.email})` : ''}
             </option>
@@ -175,8 +255,12 @@ export function CheckoutLinksForm({ products, stores, initialProductId }: Props)
         </button>
       )}
 
-      {message && <p style={{ color: 'green', margin: 0 }}>{message}</p>}
-      {error && <p style={{ color: '#b00', margin: 0 }}>{error}</p>}
+      {message && (
+        <p style={{ color: 'green', margin: 0 }}>{message}</p>
+      )}
+      {error && (
+        <p style={{ color: '#b00', margin: 0 }}>{error}</p>
+      )}
     </form>
   );
 }

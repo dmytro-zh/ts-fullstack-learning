@@ -27,6 +27,8 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const initialProductId =
     typeof params?.productId === 'string' ? params.productId : undefined;
+  const initialStoreId =
+    typeof params?.store === 'string' ? params.store : undefined;
 
   try {
     const { products, stores } = await fetchData();
@@ -46,18 +48,28 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
             color: '#111827',
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout links</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+            Checkout links
+          </h1>
           <CheckoutLinksForm
             products={products}
             stores={stores}
             initialProductId={initialProductId}
+            initialStoreId={initialStoreId}
           />
         </div>
       </main>
     );
   } catch {
     return (
-      <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh', color: '#111827' }}>
+      <main
+        style={{
+          padding: 32,
+          background: '#f7f7f8',
+          minHeight: '100vh',
+          color: '#111827',
+        }}
+      >
         Failed to load data.
       </main>
     );

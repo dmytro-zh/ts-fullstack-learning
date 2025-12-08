@@ -63,6 +63,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
     color: '#0f172a',
   };
 
+  const storeId = product.store?.id ?? null;
+
   return (
     <div
       style={{
@@ -78,7 +80,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         color: '#0f172a',
       }}
     >
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 26 }}>{product.name}</h1>
@@ -90,14 +91,19 @@ export function ProductDetails({ product }: { product: ProductData }) {
           </p>
         </div>
         <Link
-          href={`/checkout-links?productId=${product.id}`}
+          href={
+            storeId
+              ? `/checkout-links?productId=${encodeURIComponent(
+                  product.id,
+                )}&store=${encodeURIComponent(storeId)}`
+              : `/checkout-links?productId=${encodeURIComponent(product.id)}`
+          }
           style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
         >
           Create checkout link
         </Link>
       </div>
 
-      {/* Price */}
       <label style={labelStyle}>
         Price
         <input
@@ -110,7 +116,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         />
       </label>
 
-      {/* Custom checkbox */}
       <label
         style={{
           display: 'flex',
@@ -153,7 +158,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         <span>In stock</span>
       </label>
 
-      {/* Description */}
       <label style={labelStyle}>
         Description
         <textarea
@@ -169,7 +173,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         />
       </label>
 
-      {/* Image URL */}
       <label style={labelStyle}>
         Image URL
         <input
@@ -180,7 +183,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         />
       </label>
 
-      {/* Preview */}
       {imageUrl ? (
         <div style={{ display: 'grid', gap: 6 }}>
           <span style={{ fontWeight: 600 }}>Preview</span>
@@ -197,7 +199,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
         </div>
       ) : null}
 
-      {/* Save */}
       <button
         type="button"
         onClick={onSave}

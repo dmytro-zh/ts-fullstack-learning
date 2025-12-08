@@ -7,22 +7,34 @@ export class ProductRepository {
   }
 
   findAllWithStore() {
-    return prisma.product.findMany({ include: { store: true } });
+    return prisma.product.findMany({
+      include: { store: true },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
   findById(id: string) {
-    return prisma.product.findUnique({ where: { id } });
+    return prisma.product.findUnique({
+      where: { id },
+    });
   }
 
   findByIdWithStore(id: string) {
-    return prisma.product.findUnique({ where: { id }, include: { store: true } });
+    return prisma.product.findUnique({
+      where: { id },
+      include: { store: true },
+    });
   }
 
   create(data: Prisma.ProductCreateInput) {
-    return prisma.product.create({ data });
+    return prisma.product.create({
+      data,
+    });
   }
 
-    update(id: string, data: Prisma.ProductUpdateInput) {
+  update(id: string, data: Prisma.ProductUpdateInput) {
     return prisma.product.update({
       where: { id },
       data,

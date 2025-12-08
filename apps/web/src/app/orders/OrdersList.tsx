@@ -69,9 +69,8 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
   const handleStatusChange = (orderId: string, nextStatus: OrderStatusEnum) => {
     setError(null);
 
-    // optimistic update on client
-    setOrders((prev) =>
-      prev.map((o) =>
+    setOrders(prev =>
+      prev.map(o =>
         o.id === orderId
           ? {
               ...o,
@@ -86,9 +85,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
         await updateOrderStatusAction({ id: orderId, status: nextStatus });
       } catch (err) {
         setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to update order status',
+          err instanceof Error ? err.message : 'Failed to update order status',
         );
       }
     });
@@ -113,10 +110,11 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           gap: 12,
         }}
       >
-        {orders.map((o) => {
+        {orders.map(o => {
           const currentStatus = o.status ?? OrderStatus.New;
           const colors = statusColors(currentStatus);
           const createdAt = new Date(o.createdAt).toLocaleString();
+          const quantity = o.quantity ?? 1;
 
           return (
             <li
@@ -141,7 +139,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
               >
                 <div style={{ display: 'grid', gap: 4 }}>
                   <strong style={{ color: '#111827' }}>
-                    {o.product.name} × {o.quantity}
+                    {o.product.name} × {quantity}
                   </strong>
                   <span style={{ fontSize: 13, color: '#6b7280' }}>
                     {createdAt}
@@ -172,7 +170,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
 
                   <select
                     value={currentStatus}
-                    onChange={(e) =>
+                    onChange={e =>
                       handleStatusChange(
                         o.id,
                         e.target.value as OrderStatusEnum,
@@ -189,7 +187,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
                       cursor: isPending ? 'wait' : 'pointer',
                     }}
                   >
-                    {STATUS_OPTIONS.map((status) => (
+                    {STATUS_OPTIONS.map(status => (
                       <option key={status} value={status}>
                         {STATUS_LABELS[status]}
                       </option>

@@ -2,28 +2,31 @@ import Link from 'next/link';
 import { GraphQLClient } from 'graphql-request';
 import { getEnv } from '../../../lib/env';
 import {
-  ProductByIdDocument,
-  type ProductByIdQuery,
+  StoresOverviewDocument,
+  type StoresOverviewQuery,
 } from '../../../graphql/generated/graphql';
-import { ProductDetails } from './ProductDetails';
+import { AddProductForm } from '../AddProductForm';
 
-type ProductPageProps = {
-  params: { id: string };
+type NewProductPageProps = {
+  searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-async function fetchProduct(id: string): Promise<ProductByIdQuery> {
+async function fetchStores(): Promise<StoresOverviewQuery> {
   const { GRAPHQL_URL } = getEnv();
   const client = new GraphQLClient(GRAPHQL_URL);
-  return client.request<ProductByIdQuery>(ProductByIdDocument, { id });
+  return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = params;
+export default async function NewProductPage({
+  searchParams,
+}: NewProductPageProps) {
+  const storeParam = searchParams?.store;
+  const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
-  let data: ProductByIdQuery;
+  let storesData: StoresOverviewQuery;
 
   try {
-    data = await fetchProduct(id);
+    storesData = await fetchStores();
   } catch {
     return (
       <main
@@ -40,97 +43,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
             margin: '0 auto',
           }}
         >
-          Failed to load product.
+          Failed to load stores for product creation.
         </div>
       </main>
     );
   }
 
-  const product = data.product;
+  const stores = storesData.stores ?? [];
 
-  if (!product) {
-    return (
-      <main
-        style={{
-          padding: '32px 16px 40px',
-          minHeight: '100vh',
-          boxSizing: 'border-box',
-          color: '#020617',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-            display: 'grid',
-            gap: 12,
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 24,
-              letterSpacing: -0.03,
-            }}
-          >
-            Product not found
-          </h1>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 13,
-              color: '#4b5563',
-            }}
-          >
-            It might have been removed or does not belong here.
-          </p>
-          <div
-            style={{
-              marginTop: 10,
-              display: 'flex',
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
-            {data.productStoreId && (
-              <Link
-                href={`/products?store=${encodeURIComponent(
-                  data.productStoreId,
-                )}`}
-                style={{
-                  padding: '7px 13px',
-                  borderRadius: 999,
-                  border: '1px solid rgba(209,213,219,0.9)',
-                  background: '#f9fafb',
-                  fontSize: 12,
-                  color: '#111827',
-                  textDecoration: 'none',
-                }}
-              >
-                Back to products
-              </Link>
-            )}
-            <Link
-              href="/dashboard"
-              style={{
-                padding: '7px 13px',
-                borderRadius: 999,
-                border: '1px solid rgba(209,213,219,0.9)',
-                background: '#f9fafb',
-                fontSize: 12,
-                color: '#111827',
-                textDecoration: 'none',
-              }}
-            >
-              Back to dashboard
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  const storeId = product.store?.id;
+  const orderedStores =
+    storeId && stores.length > 0
+      ? [...stores].sort((a, b) => {
+          if (a.id === storeId) return -1;
+          if (b.id === storeId) return 1;
+          return 0;
+        })
+      : stores;
 
   return (
     <main
@@ -146,7 +74,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           maxWidth: 1120,
           margin: '0 auto',
           display: 'grid',
-          gap: 18,
+          gap: 20,
         }}
       >
         <header
@@ -170,7 +98,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 color: '#6b7280',
               }}
             >
-              Product
+              New product
             </div>
             <h1
               style={{
@@ -179,7 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 letterSpacing: -0.03,
               }}
             >
-              {product.name}
+              Add a product to this tiny store.
             </h1>
             <p
               style={{
@@ -188,9 +116,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 color: '#6b7280',
               }}
             >
-              {product.store
-                ? product.store.name
-                : 'Store'}
+              Give it a clear name and price. It will be ready for checkout links right
+              away.
             </p>
           </div>
 
@@ -235,7 +162,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </header>
 
-        <ProductDetails product={product} />
+        <section
+          style={{
+            borderRadius: 22,
+            border: '1px solid rgba(209,213,219,0.95)',
+            background: '#ffffff',
+            padding: 24,
+            boxShadow: '0 18px 40px rgba(15,23,42,0.06)',
+          }}
+        >
+          <AddProductForm stores={orderedStores} />
+        </section>
       </div>
     </main>
   );

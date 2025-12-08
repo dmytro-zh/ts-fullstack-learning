@@ -1,0 +1,13 @@
+query StoreOrders($storeId: ID!) {
+  orders(storeId: $storeId) {
+    id
+    total
+    createdAt
+    status
+    quantity
+    product {
+      id
+      name
+    }
+  }
+}

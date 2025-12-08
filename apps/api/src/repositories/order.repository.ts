@@ -7,10 +7,13 @@ export class OrderRepository {
       where: {
         storeId,
         status: {
-          notIn: [
-            $Enums.OrderStatus.NEW,
-            $Enums.OrderStatus.PENDING,
-            $Enums.OrderStatus.PENDING_PAYMENT,
+          in: [
+            $Enums.OrderStatus.PAID,
+            $Enums.OrderStatus.PROCESSING,
+            $Enums.OrderStatus.SHIPPED,
+            $Enums.OrderStatus.COMPLETED,
+            $Enums.OrderStatus.CANCELLED,
+            $Enums.OrderStatus.REFUNDED,
           ],
         },
       },
