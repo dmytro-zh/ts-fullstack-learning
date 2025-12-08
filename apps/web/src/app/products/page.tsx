@@ -263,86 +263,96 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 gap: 8,
               }}
             >
-              {products.map(product => (
-                <div
-                  key={product.id}
-                  style={{
-                    borderRadius: 14,
-                    border: '1px solid rgba(229,231,235,0.95)',
-                    background: '#f9fafb',
-                    padding: '9px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                  }}
-                >
+              {products.map(product => {
+                const inStock = product.inStock === true;
+                const stockText = inStock
+                  ? product.quantity > 0
+                    ? `${product.quantity} in stock`
+                    : 'In stock'
+                  : 'Out of stock';
+                const stockColor = inStock ? '#16a34a' : '#b91c1c';
+
+                return (
                   <div
+                    key={product.id}
                     style={{
-                      display: 'grid',
-                      gap: 2,
-                    }}
-                  >
-                    <Link
-                      href={`/products/${encodeURIComponent(
-                        product.id,
-                      )}?store=${encodeURIComponent(storeId)}`}
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: '#111827',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      {product.name}
-                    </Link>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: '#6b7280',
-                      }}
-                    >
-                      In stock · Ready for a checkout link
-                    </span>
-                  </div>
-                  <div
-                    style={{
+                      borderRadius: 14,
+                      border: '1px solid rgba(229,231,235,0.95)',
+                      background: '#f9fafb',
+                      padding: '9px 12px',
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'space-between',
                       gap: 10,
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        fontSize: 13,
-                        fontWeight: 600,
+                        display: 'grid',
+                        gap: 2,
                       }}
                     >
-                      ${product.price.toFixed(2)}
-                    </span>
-                    <Link
-                      href={`/checkout-links?store=${encodeURIComponent(
-                        storeId,
-                      )}&productId=${encodeURIComponent(product.id)}`}
+                      <Link
+                        href={`/products/${encodeURIComponent(
+                          product.id,
+                        )}?store=${encodeURIComponent(storeId)}`}
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: '#111827',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {product.name}
+                      </Link>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: stockColor,
+                        }}
+                      >
+                        {stockText}
+                      </span>
+                    </div>
+                    <div
                       style={{
-                        padding: '6px 11px',
-                        borderRadius: 999,
-                        border: '1px solid #1d4ed8',
-                        background:
-                          'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                        fontSize: 11,
-                        fontWeight: 500,
-                        color: '#f9fafb',
-                        textDecoration: 'none',
-                        whiteSpace: 'nowrap',
-                        boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
                       }}
                     >
-                      Create link
-                    </Link>
+                      <span
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}
+                      >
+                        ${product.price.toFixed(2)}
+                      </span>
+                      <Link
+                        href={`/checkout-links?store=${encodeURIComponent(
+                          storeId,
+                        )}&productId=${encodeURIComponent(product.id)}`}
+                        style={{
+                          padding: '6px 11px',
+                          borderRadius: 999,
+                          border: '1px solid #1d4ed8',
+                          background:
+                            'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                          fontSize: 11,
+                          fontWeight: 500,
+                          color: '#f9fafb',
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
+                        }}
+                      >
+                        Create link
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

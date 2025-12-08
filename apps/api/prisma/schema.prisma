@@ -21,6 +21,7 @@ model Product {
   updatedAt     DateTime      @updatedAt
   description   String?
   imageUrl      String?
+  quantity  Int      @default(0)
 }
 
 model CartItem {

@@ -27,6 +27,7 @@ const typeDefs = /* GraphQL */ `
     description: String
     imageUrl: String
     createdAt: String!
+    quantity: Int!
   }
 
   type CheckoutLink {
@@ -108,6 +109,7 @@ const typeDefs = /* GraphQL */ `
       storeId: ID!
       description: String
       imageUrl: String
+      quantity: Int
     ): Product!
 
     updateProduct(
@@ -116,6 +118,7 @@ const typeDefs = /* GraphQL */ `
       inStock: Boolean!
       description: String
       imageUrl: String
+      quantity: Int
     ): Product!
 
     createStore(input: StoreInput!): Store!
@@ -150,6 +153,7 @@ const resolvers = {
         storeId: string;
         description?: string;
         imageUrl?: string;
+        quantity?: number;
       },
     ) => productService.addProduct(args),
 
@@ -161,6 +165,7 @@ const resolvers = {
         inStock: boolean;
         description?: string;
         imageUrl?: string;
+        quantity?: number;
       },
     ) => productService.updateProduct(args),
 

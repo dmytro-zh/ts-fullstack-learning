@@ -14,6 +14,9 @@ export function ProductDetails({ product }: { product: ProductData }) {
   const [inStock, setInStock] = useState(product.inStock);
   const [description, setDescription] = useState(product.description ?? '');
   const [imageUrl, setImageUrl] = useState(product.imageUrl ?? '');
+  const [quantity, setQuantity] = useState(
+    String(product.quantity ?? 0),
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +30,16 @@ export function ProductDetails({ product }: { product: ProductData }) {
       return;
     }
 
+    const quantityNumber = Number(quantity);
+    if (
+      Number.isNaN(quantityNumber) ||
+      !Number.isInteger(quantityNumber) ||
+      quantityNumber < 0
+    ) {
+      setError('Quantity must be a non-negative integer');
+      return;
+    }
+
     try {
       await updateProductAction({
         id: product.id,
@@ -34,6 +47,7 @@ export function ProductDetails({ product }: { product: ProductData }) {
         inStock,
         description: description || undefined,
         imageUrl: imageUrl || undefined,
+        quantity: quantityNumber,
       });
       setMessage('Saved');
       router.refresh();
@@ -112,6 +126,30 @@ export function ProductDetails({ product }: { product: ProductData }) {
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="49.99"
+          style={inputBaseStyle}
+        />
+      </label>
+
+      <label style={labelStyle}>
+        Quantity
+        <input
+          type="number"
+          min={0}
+          step={1}
+          inputMode="numeric"
+          value={quantity}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === '') {
+              setQuantity('');
+              return;
+            }
+            const numeric = Number(value);
+            if (!Number.isNaN(numeric) && numeric >= 0) {
+              setQuantity(String(Math.floor(numeric)));
+            }
+          }}
+          placeholder="0"
           style={inputBaseStyle}
         />
       </label>

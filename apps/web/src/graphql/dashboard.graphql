@@ -13,6 +13,7 @@ query StoreDashboard($storeId: ID!) {
     inStock
     storeId
     createdAt
+    quantity
   }
 
   orders(storeId: $storeId) {
