@@ -64,9 +64,34 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
     });
   };
 
+  const fieldBase: React.CSSProperties = {
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1px solid #d1d5db',
+    background: '#f9fafb',
+    color: '#0f172a',
+    caretColor: '#2563eb',
+    width: '100%',
+    boxSizing: 'border-box',
+    fontSize: 14,
+  };
+
+  const labelBase: React.CSSProperties = {
+    display: 'grid',
+    gap: 6,
+    fontSize: 13,
+    fontWeight: 500,
+  };
+
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
-      {/* success / error messages */}
+    <form
+      onSubmit={onSubmit}
+      style={{
+        display: 'grid',
+        gap: 16,
+        width: '100%',
+      }}
+    >
       {error && (
         <p
           style={{
@@ -99,25 +124,18 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         </p>
       )}
 
-      <label style={{ display: 'grid', gap: 4 }}>
+      <label style={labelBase}>
         <span>Name</span>
         <input
           value={form.name}
           onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
           required
           placeholder="Blue hoodie"
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#f9fafb',
-            color: '#0f172a',
-            caretColor: '#2563eb',
-          }}
+          style={fieldBase}
         />
       </label>
 
-      <label style={{ display: 'grid', gap: 4 }}>
+      <label style={labelBase}>
         <span>Price</span>
         <input
           type="number"
@@ -125,30 +143,17 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           value={form.price}
           onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
           required
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#f9fafb',
-            color: '#0f172a',
-            caretColor: '#2563eb',
-          }}
+          style={fieldBase}
         />
       </label>
 
-      <label style={{ display: 'grid', gap: 4 }}>
+      <label style={labelBase}>
         <span>Store (required)</span>
         <select
           value={form.storeId}
           onChange={(e) => setForm((p) => ({ ...p, storeId: e.target.value }))}
           required
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#f9fafb',
-            color: '#0f172a',
-          }}
+          style={fieldBase}
         >
           <option value="">Select store</option>
           {stores.map((s) => (
@@ -158,11 +163,13 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           ))}
         </select>
         {stores.length === 0 && (
-          <small style={{ color: '#b00' }}>Create a store first at /stores.</small>
+          <small style={{ color: '#b00', fontSize: 12 }}>
+            Create a store first at /stores.
+          </small>
         )}
       </label>
 
-      <label style={{ display: 'grid', gap: 4 }}>
+      <label style={labelBase}>
         <span>Description (optional)</span>
         <textarea
           value={form.description}
@@ -170,29 +177,19 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           rows={4}
           placeholder="Soft cotton hoodie with embroidered logo."
           style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#f9fafb',
-            color: '#0f172a',
+            ...fieldBase,
+            resize: 'vertical',
           }}
         />
       </label>
 
-      <label style={{ display: 'grid', gap: 4 }}>
+      <label style={labelBase}>
         <span>Image URL (optional)</span>
         <input
           value={form.imageUrl}
           onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
           placeholder="https://example.com/image.jpg"
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid #d1d5db',
-            background: '#f9fafb',
-            color: '#0f172a',
-            caretColor: '#2563eb',
-          }}
+          style={fieldBase}
         />
       </label>
 
@@ -200,11 +197,22 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         <img
           src={form.imageUrl}
           alt="preview"
-          style={{ maxWidth: 220, borderRadius: 8, border: '1px solid #e5e7eb' }}
+          style={{
+            maxWidth: '100%',
+            borderRadius: 8,
+            border: '1px solid #e5e7eb',
+          }}
         />
       )}
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: 13,
+        }}
+      >
         <input
           type="checkbox"
           checked={form.inStock}
@@ -217,13 +225,15 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         type="submit"
         disabled={isPending || !form.storeId}
         style={{
-          padding: '10px 12px',
-          borderRadius: 8,
+          padding: '12px 16px',
+          borderRadius: 999,
           border: '1px solid #1d4ed8',
           background: !form.storeId ? '#e5e7eb' : isPending ? '#dbeafe' : '#2563eb',
-          color: !form.storeId ? '#9ca3af' : '#fff',
+          color: !form.storeId ? '#9ca3af' : '#ffffff',
           fontWeight: 700,
           cursor: !form.storeId ? 'not-allowed' : isPending ? 'wait' : 'pointer',
+          fontSize: 14,
+          marginTop: 4,
         }}
       >
         {isPending ? 'Saving…' : 'Add product'}
