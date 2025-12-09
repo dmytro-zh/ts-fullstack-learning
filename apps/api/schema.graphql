@@ -8,6 +8,7 @@ type Product {
   description: String
   imageUrl: String
   createdAt: String!
+  quantity: Int!
 }
 
 type CheckoutLink {
@@ -82,6 +83,7 @@ type Mutation {
     storeId: ID
     description: String
     imageUrl: String
+    quantity: Int
   ): Product!
   updateProduct(
     id: ID!
@@ -89,6 +91,7 @@ type Mutation {
     inStock: Boolean!
     description: String
     imageUrl: String
+    quantity: Int
   ): Product!
   createStore(input: StoreInput!): Store!
   createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!

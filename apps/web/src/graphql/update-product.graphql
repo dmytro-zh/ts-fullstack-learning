@@ -4,6 +4,7 @@ mutation UpdateProduct(
   $inStock: Boolean!
   $description: String
   $imageUrl: String
+  $quantity: Int!
 ) {
   updateProduct(
     id: $id
@@ -11,11 +12,14 @@ mutation UpdateProduct(
     inStock: $inStock
     description: $description
     imageUrl: $imageUrl
+    quantity: $quantity
   ) {
     id
+    name
     price
     inStock
     description
     imageUrl
+    quantity
   }
 }

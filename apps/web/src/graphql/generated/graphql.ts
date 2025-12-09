@@ -66,6 +66,7 @@ export type MutationAddProductArgs = {
   inStock: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
+  quantity?: InputMaybe<Scalars['Int']['input']>;
   storeId: Scalars['ID']['input'];
 };
 
@@ -92,6 +93,7 @@ export type MutationUpdateProductArgs = {
   imageUrl?: InputMaybe<Scalars['String']['input']>;
   inStock: Scalars['Boolean']['input'];
   price: Scalars['Float']['input'];
+  quantity?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type Order = {
@@ -134,6 +136,7 @@ export type Product = {
   inStock: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
+  quantity: Scalars['Int']['output'];
   store?: Maybe<Store>;
   storeId?: Maybe<Scalars['ID']['output']>;
 };
@@ -278,10 +281,12 @@ export type StoreDashboardQuery = {
     inStock: boolean;
     storeId?: string | null;
     createdAt: string;
+    quantity: number;
   }>;
   orders: Array<{
     __typename?: 'Order';
     id: string;
+    productId: string;
     total: number;
     createdAt: string;
     status: OrderStatus;
@@ -343,6 +348,7 @@ export type ProductByIdQuery = {
     storeId?: string | null;
     description?: string | null;
     imageUrl?: string | null;
+    quantity: number;
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
   } | null;
 };
@@ -358,6 +364,7 @@ export type ProductsQuery = {
     price: number;
     inStock: boolean;
     storeId?: string | null;
+    quantity: number;
   }>;
 };
 
@@ -384,6 +391,7 @@ export type UpdateProductMutationVariables = Exact<{
   inStock: Scalars['Boolean']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   imageUrl?: InputMaybe<Scalars['String']['input']>;
+  quantity: Scalars['Int']['input'];
 }>;
 
 export type UpdateProductMutation = {
@@ -391,10 +399,12 @@ export type UpdateProductMutation = {
   updateProduct: {
     __typename?: 'Product';
     id: string;
+    name: string;
     price: number;
     inStock: boolean;
     description?: string | null;
     imageUrl?: string | null;
+    quantity: number;
   };
 };
 
@@ -789,6 +799,7 @@ export const StoreDashboardDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
               ],
             },
           },
@@ -806,6 +817,7 @@ export const StoreDashboardDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'productId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'total' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
@@ -995,6 +1007,7 @@ export const ProductByIdDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'store' },
@@ -1036,6 +1049,7 @@ export const ProductsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
               ],
             },
           },
@@ -1169,6 +1183,14 @@ export const UpdateProductDocument = {
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
           type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'quantity' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -1202,15 +1224,22 @@ export const UpdateProductDocument = {
                 name: { kind: 'Name', value: 'imageUrl' },
                 value: { kind: 'Variable', name: { kind: 'Name', value: 'imageUrl' } },
               },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'quantity' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'quantity' } },
+              },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'price' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
               ],
             },
           },

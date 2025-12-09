@@ -38,8 +38,7 @@ export class CheckoutLinkService {
 
     if (existing) {
       const sameProduct = existing.productId === productId;
-      const sameStore =
-        (existing.storeId ?? null) === (storeId ?? null);
+      const sameStore = (existing.storeId ?? null) === (storeId ?? null);
 
       if (sameProduct && sameStore) {
         if (!existing.active) {
@@ -64,40 +63,56 @@ export class CheckoutLinkService {
 
   async checkoutByLink(input: CheckoutByLinkInput) {
     const parsed = checkoutByLinkInput.parse(input);
-    const {
-      slug,
-      customerName,
-      email,
-      quantity,
-      shippingAddress,
-      shippingNote,
-    } = parsed;
+    const { slug, customerName, email, quantity, shippingAddress, shippingNote } = parsed;
 
-    const link = await this.repo.findBySlug(slug);
-    if (!link || !link.active) {
-      throw new Error('Checkout link not found or inactive');
-    }
+    return prisma.$transaction(async (tx) => {
+      const link = await tx.checkoutLink.findUnique({
+        where: { slug },
+        include: {
+          product: true,
+        },
+      });
 
-    const product = await this.productRepo.findById(link.productId);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+      if (!link || !link.active || !link.product) {
+        throw new Error('Checkout link not found or inactive');
+      }
 
-    const total = product.price * quantity;
+      const product = link.product;
 
-    return prisma.order.create({
-      data: {
-        customerName,
-        email,
-        quantity,
-        total,
-        shippingAddress,
-        shippingNote: shippingNote ?? null,
-        status: 'PAID',
-        checkoutLinkId: link.id,
-        storeId: link.storeId ?? null,
-        productId: product.id,
-      },
+      if (
+        !product.inStock ||
+        product.quantity <= 0 ||
+        product.quantity < quantity
+      ) {
+        throw new Error('Product is out of stock');
+      }
+
+      const newQuantity = product.quantity - quantity;
+
+      await tx.product.update({
+        where: { id: product.id },
+        data: {
+          quantity: newQuantity,
+          inStock: newQuantity > 0 ? product.inStock : false,
+        },
+      });
+
+      const total = product.price * quantity;
+
+      return tx.order.create({
+        data: {
+          customerName,
+          email,
+          quantity,
+          total,
+          shippingAddress,
+          shippingNote: shippingNote ?? null,
+          status: 'PAID',
+          checkoutLinkId: link.id,
+          storeId: link.storeId ?? null,
+          productId: product.id,
+        },
+      });
     });
   }
 }

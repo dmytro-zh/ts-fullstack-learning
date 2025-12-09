@@ -13,10 +13,12 @@ query StoreDashboard($storeId: ID!) {
     inStock
     storeId
     createdAt
+    quantity
   }
 
   orders(storeId: $storeId) {
     id
+    productId
     total
     createdAt
     status

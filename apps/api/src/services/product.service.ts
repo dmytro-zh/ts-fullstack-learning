@@ -15,6 +15,7 @@ const createProductInput = ProductSchema.pick({
     .url()
     .optional()
     .or(z.literal('')),
+  quantity: z.number().int().min(0).optional(),
 });
 
 const updateProductInput = z.object({
@@ -27,6 +28,7 @@ const updateProductInput = z.object({
     .url()
     .optional()
     .or(z.literal('')),
+  quantity: z.number().int().min(0).optional(),
 });
 
 type CreateProductInput = z.infer<typeof createProductInput>;
@@ -51,11 +53,15 @@ export class ProductService {
 
   async addProduct(input: CreateProductInput) {
     const data = createProductInput.parse(input);
+    const quantity = data.quantity ?? 0;
+    const inStock =
+      quantity > 0 ? data.inStock : false;
 
     return this.repo.create({
       name: data.name,
       price: data.price,
-      inStock: data.inStock,
+      inStock,
+      quantity,
       description: normalizeNullable(data.description),
       imageUrl: normalizeNullable(data.imageUrl),
       store: {
@@ -75,6 +81,13 @@ export class ProductService {
       description: normalizeNullable(data.description),
       imageUrl: normalizeNullable(data.imageUrl),
     };
+
+    if (typeof data.quantity === 'number') {
+      updateData.quantity = data.quantity;
+      if (data.quantity <= 0) {
+        updateData.inStock = false;
+      }
+    }
 
     return this.repo.update(data.id, updateData);
   }

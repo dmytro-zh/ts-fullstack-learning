@@ -132,22 +132,75 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const allProducts = dashboardData?.products ?? [];
+  const allOrders = dashboardData?.orders ?? [];
+
+  const productsForStore = activeStore
+    ? allProducts.filter((p) => p.storeId === activeStore.id)
+    : [];
+
   const storeProducts =
     activeStore != null
-      ? allProducts
-          .filter((p) => p.storeId === activeStore.id)
+      ? productsForStore
+          .slice()
           .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
           .slice(0, 3)
       : [];
 
-  const storeOrders = dashboardData?.orders
-    ? [...dashboardData.orders]
-        .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
-        .slice(0, 3)
-    : [];
+  const storeOrders = allOrders
+    .slice()
+    .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
+    .slice(0, 3);
 
   const hasProducts = storeProducts.length > 0;
   const hasOrders = storeOrders.length > 0;
+
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const thirtyDaysAgo = now - thirtyDaysMs;
+
+  const recentOrders = allOrders.filter((o) => getTimestamp(o.createdAt) >= thirtyDaysAgo);
+  const recentOrdersCount = recentOrders.length;
+  const recentRevenue = recentOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalProductsCount = productsForStore.length;
+
+  const formattedRevenue30d = `$${recentRevenue.toFixed(2)}`;
+
+  type ProductStats = {
+    productId: string;
+    name: string;
+    ordersCount: number;
+    unitsSold: number;
+    revenue: number;
+  };
+
+  const productStatsMap = new Map<string, ProductStats>();
+
+  for (const order of recentOrders) {
+    const productId = order.productId;
+    if (!productId) continue;
+
+    const existing = productStatsMap.get(productId);
+    const quantity = order.quantity ?? 1;
+    const total = order.total;
+
+    if (!existing) {
+      productStatsMap.set(productId, {
+        productId,
+        name: order.product?.name ?? 'Product',
+        ordersCount: 1,
+        unitsSold: quantity,
+        revenue: total,
+      });
+    } else {
+      existing.ordersCount += 1;
+      existing.unitsSold += quantity;
+      existing.revenue += total;
+    }
+  }
+
+  const productStats = Array.from(productStatsMap.values());
+  const bestSellingProduct =
+    productStats.length > 0 ? productStats.slice().sort((a, b) => b.revenue - a.revenue)[0] : null;
 
   return (
     <main
@@ -375,6 +428,232 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 gap: 16,
               }}
             >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.95)',
+                    background: '#ffffff',
+                    padding: 14,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Revenue (30d)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
+                    }}
+                  >
+                    {formattedRevenue30d}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Last 30 days of paid orders
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.95)',
+                    background: '#ffffff',
+                    padding: 14,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Orders (30d)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
+                    }}
+                  >
+                    {recentOrdersCount}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Paid orders for this store
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.95)',
+                    background: '#ffffff',
+                    padding: 14,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Products
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
+                    }}
+                  >
+                    {totalProductsCount}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    All products in this store
+                  </span>
+                </div>
+              </div>
+
+              {/* Best seller (30d) */}
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid rgba(209,213,219,0.95)',
+                  background: '#ffffff',
+                  padding: 16,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                {bestSellingProduct ? (
+                  <>
+                    {/* Левая колонка: лейбл + товар + pcs / orders */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Best seller (30d)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {bestSellingProduct.name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#4b5563',
+                        }}
+                      >
+                        {bestSellingProduct.unitsSold} pcs · {bestSellingProduct.ordersCount} orders
+                      </span>
+                    </div>
+
+                    {/* Правая колонка: сумма + подпись */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 2,
+                        textAlign: 'right',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ${bestSellingProduct.revenue.toFixed(2)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Revenue in 30 days
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Пустое состояние, тот же layout, но текст вместо цифр */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Best seller (30d)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#4b5563',
+                        }}
+                      >
+                        No paid orders in the last 30 days yet.
+                      </span>
+                    </div>
+
+                    <div />
+                  </>
+                )}
+              </div>
+
               <div
                 style={{
                   borderRadius: 20,
