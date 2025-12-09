@@ -3,6 +3,9 @@ import { ProductService } from './services/product.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
 import { OrderService } from './services/order.service';
+import { formatGraphQLError } from './errors/format-graphql-error';
+import { DomainError } from './errors/domain-error';
+import { ERROR_CODES } from './errors/codes';
 
 const typeDefs = /* GraphQL */ `
   enum OrderStatus {
@@ -39,7 +42,6 @@ const typeDefs = /* GraphQL */ `
     createdAt: String!
   }
 
-  # пока не используем, можно потом удалить
   input CheckoutInput {
     customerName: String!
     email: String!
@@ -139,8 +141,19 @@ const resolvers = {
     products: () => productService.getProducts(),
     product: (_: unknown, args: { id: string }) => productService.getProduct(args.id),
     stores: () => storeService.getStores(),
-    checkoutLink: (_: unknown, args: { slug: string }) =>
-      checkoutLinkService.getBySlug(args.slug),
+    checkoutLink: async (_: unknown, args: { slug: string }) => {
+      const link = await checkoutLinkService.getBySlug(args.slug);
+
+      if (!link || !link.active) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
+
+      return link;
+    },
     orders: (_: unknown, args: { storeId: string }) => orderService.getByStore(args.storeId),
   },
   Mutation: {
@@ -197,5 +210,9 @@ const resolvers = {
 };
 
 export function createApolloServer() {
-  return new ApolloServer({ typeDefs, resolvers });
+  return new ApolloServer({
+    typeDefs,
+    resolvers,
+    formatError: formatGraphQLError,
+  });
 }
