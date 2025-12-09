@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
+import { DomainError } from '../errors/domain-error';
+import { ERROR_CODES } from '../errors/codes';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -31,7 +33,9 @@ export class CheckoutLinkService {
 
     const product = await this.productRepo.findById(productId);
     if (!product) {
-      throw new Error('Product not found');
+      throw new DomainError(ERROR_CODES.PRODUCT_NOT_FOUND, 'Product not found', {
+        field: 'productId',
+      });
     }
 
     const existing = await this.repo.findBySlug(slug);
@@ -47,7 +51,11 @@ export class CheckoutLinkService {
         return existing;
       }
 
-      throw new Error('Checkout link slug is already taken');
+      throw new DomainError(
+        ERROR_CODES.INVALID_CHECKOUT_INPUT,
+        'Checkout link slug is already taken',
+        { field: 'slug' },
+      );
     }
 
     return this.repo.create({
@@ -74,17 +82,19 @@ export class CheckoutLinkService {
       });
 
       if (!link || !link.active || !link.product) {
-        throw new Error('Checkout link not found or inactive');
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
       }
 
       const product = link.product;
 
-      if (
-        !product.inStock ||
-        product.quantity <= 0 ||
-        product.quantity < quantity
-      ) {
-        throw new Error('Product is out of stock');
+      if (!product.inStock || product.quantity <= 0 || product.quantity < quantity) {
+        throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Product is out of stock', {
+          field: 'quantity',
+        });
       }
 
       const newQuantity = product.quantity - quantity;
