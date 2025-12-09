@@ -132,40 +132,38 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const allProducts = dashboardData?.products ?? [];
+  const allOrders = dashboardData?.orders ?? [];
+
+  const productsForStore = activeStore
+    ? allProducts.filter((p) => p.storeId === activeStore.id)
+    : [];
+
   const storeProducts =
     activeStore != null
-      ? allProducts
-          .filter((p) => p.storeId === activeStore.id)
+      ? productsForStore
+          .slice()
           .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
           .slice(0, 3)
       : [];
 
-  const storeOrders = dashboardData?.orders
-    ? [...dashboardData.orders]
-        .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
-        .slice(0, 3)
-    : [];
+  const storeOrders = allOrders
+    .slice()
+    .sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt))
+    .slice(0, 3);
 
   const hasProducts = storeProducts.length > 0;
   const hasOrders = storeOrders.length > 0;
 
   const now = Date.now();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const thirtyDaysAgo = now - thirtyDaysMs;
 
-  const storeProductCount =
-    activeStore != null ? allProducts.filter((p) => p.storeId === activeStore.id).length : 0;
-
-  const recentOrders = dashboardData?.orders
-    ? dashboardData.orders.filter((o) => {
-        const ts = getTimestamp(o.createdAt);
-        if (!ts) return false;
-        const diff = now - ts;
-        return diff >= 0 && diff <= thirtyDaysMs;
-      })
-    : [];
-
+  const recentOrders = allOrders.filter((o) => getTimestamp(o.createdAt) >= thirtyDaysAgo);
   const recentOrdersCount = recentOrders.length;
-  const recentRevenue = recentOrders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+  const recentRevenue = recentOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalProductsCount = productsForStore.length;
+
+  const formattedRevenue30d = `$${recentRevenue.toFixed(2)}`;
 
   return (
     <main
@@ -403,9 +401,83 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <div
                   style={{
                     borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.9)',
+                    border: '1px solid rgba(209,213,219,0.95)',
                     background: '#ffffff',
-                    padding: 12,
+                    padding: 14,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Revenue (30d)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
+                    }}
+                  >
+                    {formattedRevenue30d}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Last 30 days of paid orders
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.95)',
+                    background: '#ffffff',
+                    padding: 14,
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Orders (30d)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
+                    }}
+                  >
+                    {recentOrdersCount}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: '#9ca3af',
+                    }}
+                  >
+                    Paid orders for this store
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: '1px solid rgba(209,213,219,0.95)',
+                    background: '#ffffff',
+                    padding: 14,
                     display: 'grid',
                     gap: 4,
                   }}
@@ -420,11 +492,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   </span>
                   <span
                     style={{
-                      fontSize: 18,
-                      fontWeight: 600,
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: -0.03,
                     }}
                   >
-                    {storeProductCount}
+                    {totalProductsCount}
                   </span>
                   <span
                     style={{
@@ -432,79 +505,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       color: '#9ca3af',
                     }}
                   >
-                    Total in this store
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.9)',
-                    background: '#ffffff',
-                    padding: 12,
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Orders (30 days)
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {recentOrdersCount}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}
-                  >
-                    Recent orders
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.9)',
-                    background: '#ffffff',
-                    padding: 12,
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Revenue (30 days)
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                    }}
-                  >
-                    ${recentRevenue.toFixed(2)}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}
-                  >
-                    Paid orders total
+                    All products in this store
                   </span>
                 </div>
               </div>
