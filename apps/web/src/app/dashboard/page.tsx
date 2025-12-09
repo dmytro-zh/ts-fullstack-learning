@@ -165,6 +165,43 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const formattedRevenue30d = `$${recentRevenue.toFixed(2)}`;
 
+  type ProductStats = {
+    productId: string;
+    name: string;
+    ordersCount: number;
+    unitsSold: number;
+    revenue: number;
+  };
+
+  const productStatsMap = new Map<string, ProductStats>();
+
+  for (const order of recentOrders) {
+    const productId = order.productId;
+    if (!productId) continue;
+
+    const existing = productStatsMap.get(productId);
+    const quantity = order.quantity ?? 1;
+    const total = order.total;
+
+    if (!existing) {
+      productStatsMap.set(productId, {
+        productId,
+        name: order.product?.name ?? 'Product',
+        ordersCount: 1,
+        unitsSold: quantity,
+        revenue: total,
+      });
+    } else {
+      existing.ordersCount += 1;
+      existing.unitsSold += quantity;
+      existing.revenue += total;
+    }
+  }
+
+  const productStats = Array.from(productStatsMap.values());
+  const bestSellingProduct =
+    productStats.length > 0 ? productStats.slice().sort((a, b) => b.revenue - a.revenue)[0] : null;
+
   return (
     <main
       style={{
@@ -508,6 +545,113 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     All products in this store
                   </span>
                 </div>
+              </div>
+
+              {/* Best seller (30d) */}
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid rgba(209,213,219,0.95)',
+                  background: '#ffffff',
+                  padding: 16,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                {bestSellingProduct ? (
+                  <>
+                    {/* Левая колонка: лейбл + товар + pcs / orders */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Best seller (30d)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {bestSellingProduct.name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#4b5563',
+                        }}
+                      >
+                        {bestSellingProduct.unitsSold} pcs · {bestSellingProduct.ordersCount} orders
+                      </span>
+                    </div>
+
+                    {/* Правая колонка: сумма + подпись */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 2,
+                        textAlign: 'right',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ${bestSellingProduct.revenue.toFixed(2)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Revenue in 30 days
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Пустое состояние, тот же layout, но текст вместо цифр */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#6b7280',
+                        }}
+                      >
+                        Best seller (30d)
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: '#4b5563',
+                        }}
+                      >
+                        No paid orders in the last 30 days yet.
+                      </span>
+                    </div>
+
+                    <div />
+                  </>
+                )}
               </div>
 
               <div

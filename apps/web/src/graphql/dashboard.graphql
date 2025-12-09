@@ -18,6 +18,7 @@ query StoreDashboard($storeId: ID!) {
 
   orders(storeId: $storeId) {
     id
+    productId
     total
     createdAt
     status

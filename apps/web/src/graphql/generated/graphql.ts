@@ -286,6 +286,7 @@ export type StoreDashboardQuery = {
   orders: Array<{
     __typename?: 'Order';
     id: string;
+    productId: string;
     total: number;
     createdAt: string;
     status: OrderStatus;
@@ -816,6 +817,7 @@ export const StoreDashboardDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'productId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'total' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
