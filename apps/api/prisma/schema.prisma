@@ -73,6 +73,9 @@ model Store {
   checkoutLinks CheckoutLink[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  ownerId       String        @default("demo-owner-1")
+
+  @@index([ownerId])
 }
 
 model CheckoutLink {

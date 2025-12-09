@@ -69,6 +69,7 @@ const typeDefs = /* GraphQL */ `
 
   type Store {
     id: ID!
+    ownerId: ID!
     name: String!
     email: String
     products: [Product!]!

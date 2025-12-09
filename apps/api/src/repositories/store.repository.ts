@@ -1,16 +1,28 @@
 import { prisma } from '../lib/prisma';
-import type { Prisma } from '@prisma/client';
+
+type CreateStoreData = {
+  name: string;
+  email: string | null;
+  ownerId: string;
+};
 
 export class StoreRepository {
-  create(data: Prisma.StoreCreateInput) {
-    return prisma.store.create({ data });
+  create(data: CreateStoreData) {
+    return prisma.store.create({
+      data,
+    });
   }
 
-  findAll() {
-    return prisma.store.findMany({ include: { products: true } });
+  findAllByOwner(ownerId: string) {
+    return prisma.store.findMany({
+      where: { ownerId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  findById(id: string) {
-    return prisma.store.findUnique({ where: { id }, include: { products: true } });
+  findByIdForOwner(id: string, ownerId: string) {
+    return prisma.store.findFirst({
+      where: { id, ownerId },
+    });
   }
 }
