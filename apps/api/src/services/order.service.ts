@@ -24,6 +24,11 @@ export class OrderService {
     return this.repo.findByStore(id);
   }
 
+  getById(orderId: string) {
+    const id = orderIdSchema.parse(orderId);
+    return this.repo.findById(id);
+  }
+
   updateStatus(orderId: string, status: string) {
     const id = orderIdSchema.parse(orderId);
     const nextStatus = orderStatusSchema.parse(status) as $Enums.OrderStatus;

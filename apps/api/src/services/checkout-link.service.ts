@@ -122,6 +122,9 @@ export class CheckoutLinkService {
           storeId: link.storeId ?? null,
           productId: product.id,
         },
+        include: {
+          product: true,
+        },
       });
     });
   }

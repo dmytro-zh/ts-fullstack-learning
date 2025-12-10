@@ -24,6 +24,15 @@ export class OrderRepository {
     });
   }
 
+  findById(orderId: string) {
+    return prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        product: { select: { id: true, name: true, price: true } },
+      },
+    });
+  }
+
   updateStatus(orderId: string, status: $Enums.OrderStatus) {
     return prisma.order.update({
       where: { id: orderId },

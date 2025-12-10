@@ -8,7 +8,10 @@ const CHECKOUT_BY_LINK = /* GraphQL */ `
     checkoutByLink(input: $input) {
       id
       total
-      status
+      quantity
+      product { name }
+      email
+      shippingAddress
     }
   }
 `;
@@ -23,7 +26,14 @@ export type CheckoutByLinkInput = {
 };
 
 type CheckoutByLinkPayload = {
-  checkoutByLink: { id: string; total: number; status: string };
+  checkoutByLink: {
+    id: string;
+    total: number;
+    quantity: number;
+    product: { name: string };
+    email: string;
+    shippingAddress: string;
+  };
 };
 
 export async function checkoutByLinkAction(input: CheckoutByLinkInput) {

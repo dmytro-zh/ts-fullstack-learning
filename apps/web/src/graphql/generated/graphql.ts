@@ -145,6 +145,7 @@ export type Query = {
   __typename?: 'Query';
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
+  order?: Maybe<Order>;
   orders: Array<Order>;
   product?: Maybe<Product>;
   products: Array<Product>;
@@ -153,6 +154,10 @@ export type Query = {
 
 export type QueryCheckoutLinkArgs = {
   slug: Scalars['String']['input'];
+};
+
+export type QueryOrderArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryOrdersArgs = {
@@ -169,6 +174,7 @@ export type Store = {
   email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  ownerId: Scalars['ID']['output'];
   products: Array<Product>;
   updatedAt: Scalars['String']['output'];
 };
