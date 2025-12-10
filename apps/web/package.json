@@ -11,6 +11,7 @@
     "graphql:watch": "graphql-codegen --watch --verbose"
   },
   "dependencies": {
+    "framer-motion": "^12.23.26",
     "graphql": "^16.11.0",
     "graphql-request": "^6.1.0",
     "next": "15.5.7",
