@@ -102,6 +102,7 @@ const typeDefs = /* GraphQL */ `
     stores: [Store!]!
     checkoutLink(slug: String!): CheckoutLink
     orders(storeId: ID!): [Order!]!
+    order(id: ID!): Order
   }
 
   type Mutation {
@@ -156,6 +157,7 @@ const resolvers = {
       return link;
     },
     orders: (_: unknown, args: { storeId: string }) => orderService.getByStore(args.storeId),
+    order: (_: unknown, args: { id: string }) => orderService.getById(args.id),
   },
   Mutation: {
     addProduct: (

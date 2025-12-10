@@ -2,10 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import type { CheckoutLinkQuery } from '../../../graphql/generated/graphql';
-import {
-  checkoutByLinkAction,
-  type CheckoutByLinkInput,
-} from '../../actions/checkoutByLink';
+import { checkoutByLinkAction, type CheckoutByLinkInput } from '../../actions/checkoutByLink';
 
 type CheckoutLinkData = NonNullable<CheckoutLinkQuery['checkoutLink']>;
 
@@ -57,7 +54,8 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
 
         const order = await checkoutByLinkAction(payload);
 
-        setMessage(`Order ${order.id} created, total $${order.total.toFixed(2)}`);
+        window.location.href = `/thank-you/${order.id}`;
+        return;
         setForm({
           name: '',
           email: '',
