@@ -27,10 +27,7 @@ async function fetchStoreOrders(storeId: string): Promise<StoreOrdersQuery> {
   return client.request<StoreOrdersQuery>(StoreOrdersDocument, { storeId });
 }
 
-export default async function OrderDetailsPage({
-  params,
-  searchParams,
-}: OrderDetailsPageProps) {
+export default async function OrderDetailsPage({ params, searchParams }: OrderDetailsPageProps) {
   const { orderId } = params;
   const storeParam = searchParams?.store;
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
@@ -216,27 +213,35 @@ export default async function OrderDetailsPage({
   }
 
   // Quantity with safe fallback for old orders
-  const quantity = (order as any).quantity ?? 1;
+  const quantity = order.quantity ?? 1;
 
-  // Status label + color from GraphQL field
-  const rawStatus = (order as any).status ?? 'PAID';
+  // Status label + color from backend enum
+  const rawStatusKey = (order.status ?? 'PAID') as string;
 
   const statusLabelMap: Record<string, string> = {
-    PENDING: 'Pending',
+    NEW: 'New',
+    PENDING_PAYMENT: 'Pending payment',
     PAID: 'Paid',
-    CANCELED: 'Canceled',
+    PROCESSING: 'Processing',
+    SHIPPED: 'Shipped',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Canceled',
     REFUNDED: 'Refunded',
   };
 
   const statusColorMap: Record<string, string> = {
-    PENDING: '#ca8a04',
+    NEW: '#6b7280',
+    PENDING_PAYMENT: '#ca8a04',
     PAID: '#16a34a',
-    CANCELED: '#b91c1c',
+    PROCESSING: '#0284c7',
+    SHIPPED: '#4f46e5',
+    COMPLETED: '#15803d',
+    CANCELLED: '#b91c1c',
     REFUNDED: '#0f766e',
   };
 
-  const statusLabel = statusLabelMap[rawStatus] ?? 'Paid';
-  const statusColor = statusColorMap[rawStatus] ?? '#16a34a';
+  const statusLabel = statusLabelMap[rawStatusKey] ?? 'Paid';
+  const statusColor = statusColorMap[rawStatusKey] ?? '#16a34a';
 
   return (
     <main
@@ -404,8 +409,7 @@ export default async function OrderDetailsPage({
               <span
                 style={{
                   fontSize: 13,
-                  fontFamily:
-                    'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                   wordBreak: 'break-all',
                 }}
               >

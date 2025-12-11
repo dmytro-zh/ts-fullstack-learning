@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import type { Store } from '../../graphql/generated/graphql';
 import { addProductAction } from '../actions/addProduct';
@@ -163,9 +164,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           ))}
         </select>
         {stores.length === 0 && (
-          <small style={{ color: '#b00', fontSize: 12 }}>
-            Create a store first at /stores.
-          </small>
+          <small style={{ color: '#b00', fontSize: 12 }}>Create a store first at /stores.</small>
         )}
       </label>
 
@@ -194,15 +193,27 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
       </label>
 
       {form.imageUrl && (
-        <img
-          src={form.imageUrl}
-          alt="preview"
+        <div
           style={{
             maxWidth: '100%',
             borderRadius: 8,
             border: '1px solid #e5e7eb',
+            overflow: 'hidden',
           }}
-        />
+        >
+          <Image
+            src={form.imageUrl}
+            alt="preview"
+            width={400}
+            height={400}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
       )}
 
       <label
