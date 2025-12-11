@@ -5,21 +5,33 @@
   "main": "index.js",
   "scripts": {
     "typecheck": "pnpm -F @ts-fullstack-learning/shared run build && pnpm -F api exec tsc -p tsconfig.json --noEmit && pnpm -F web exec tsc -p tsconfig.json --noEmit",
-    "format": "prettier . --write",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format",
     "lint:web": "pnpm -F web lint --if-present",
     "dev:web": "pnpm -F web dev",
     "dev:api": "pnpm -F api dev",
     "build:api": "pnpm -F api build",
     "test:pw": "playwright test",
-    "test:pw:ui": "playwright test --ui"
+    "test:pw:ui": "playwright test --ui",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "lint-staged": {
+    "apps/web/src/**/*.{ts,tsx,js,jsx}": [
+      "pnpm -F web lint"
+    ],
+    "*.{json,md,css,scss,mdx}": [
+      "pnpm format"
+    ]
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.57.0",
     "@types/node": "^20.19.13",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
     "typescript": "^5"
   }

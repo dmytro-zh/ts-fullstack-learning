@@ -18,10 +18,22 @@ const ORDER_QUERY = /* GraphQL */ `
   }
 `;
 
+type OrderResponse = {
+  order: {
+    id: string;
+    total: number;
+    quantity: number;
+    email: string;
+    customerName: string;
+    shippingAddress: string;
+    product: { name: string };
+  };
+};
+
 async function fetchOrder(id: string) {
   const { GRAPHQL_URL } = getEnv();
   const client = new GraphQLClient(GRAPHQL_URL);
-  const data = (await client.request(ORDER_QUERY, { id })) as any;
+  const data = await client.request<OrderResponse>(ORDER_QUERY, { id });
   return data.order;
 }
 
