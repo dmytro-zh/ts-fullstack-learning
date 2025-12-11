@@ -13,15 +13,14 @@
     "build:api": "pnpm -F api build",
     "test:pw": "playwright test",
     "test:pw:ui": "playwright test --ui",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "pnpm lint",
-      "pnpm format"
+    "apps/web/src/**/*.{ts,tsx,js,jsx}": [
+      "pnpm -F web lint"
     ],
     "*.{json,md,css,scss,mdx}": [
       "pnpm format"
