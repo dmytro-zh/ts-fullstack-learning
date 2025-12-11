@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import type { CheckoutLinkQuery } from '../../../graphql/generated/graphql';
 import { checkoutByLinkAction, type CheckoutByLinkInput } from '../../actions/checkoutByLink';
@@ -94,10 +95,18 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
         )}
         {p.description && <p style={{ margin: 0, color: '#111827' }}>{p.description}</p>}
         {p.imageUrl ? (
-          <img
+          <Image
             src={p.imageUrl}
             alt={p.name}
-            style={{ maxWidth: 260, borderRadius: 8, border: '1px solid #e5e7eb' }}
+            width={260}
+            height={260}
+            style={{
+              maxWidth: 260,
+              height: 'auto',
+              borderRadius: 8,
+              border: '1px solid #e5e7eb',
+              objectFit: 'cover',
+            }}
           />
         ) : null}
       </div>

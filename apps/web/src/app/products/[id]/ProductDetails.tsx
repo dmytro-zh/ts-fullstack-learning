@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,9 +15,7 @@ export function ProductDetails({ product }: { product: ProductData }) {
   const [inStock, setInStock] = useState(product.inStock);
   const [description, setDescription] = useState(product.description ?? '');
   const [imageUrl, setImageUrl] = useState(product.imageUrl ?? '');
-  const [quantity, setQuantity] = useState(
-    String(product.quantity ?? 0),
-  );
+  const [quantity, setQuantity] = useState(String(product.quantity ?? 0));
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,11 +30,7 @@ export function ProductDetails({ product }: { product: ProductData }) {
     }
 
     const quantityNumber = Number(quantity);
-    if (
-      Number.isNaN(quantityNumber) ||
-      !Number.isInteger(quantityNumber) ||
-      quantityNumber < 0
-    ) {
+    if (Number.isNaN(quantityNumber) || !Number.isInteger(quantityNumber) || quantityNumber < 0) {
       setError('Quantity must be a non-negative integer');
       return;
     }
@@ -224,16 +219,28 @@ export function ProductDetails({ product }: { product: ProductData }) {
       {imageUrl ? (
         <div style={{ display: 'grid', gap: 6 }}>
           <span style={{ fontWeight: 600 }}>Preview</span>
-          <img
-            src={imageUrl}
-            alt={product.name}
+          <div
             style={{
               maxWidth: '100%',
               borderRadius: 10,
               border: '1px solid #e5e7eb',
+              overflow: 'hidden',
               display: 'block',
             }}
-          />
+          >
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              width={600}
+              height={400}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
         </div>
       ) : null}
 
