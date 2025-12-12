@@ -8,13 +8,8 @@ import { UpdateProductDocument } from '../../graphql/generated/graphql';
 const schema = z.object({
   id: z.string().min(1),
   price: z.number(),
-  inStock: z.boolean(),
   description: z.string().optional(),
-  imageUrl: z
-    .string()
-    .url()
-    .optional()
-    .or(z.literal('')),
+  imageUrl: z.string().url().optional().or(z.literal('')),
   quantity: z.number().int().min(0),
 });
 
@@ -28,9 +23,8 @@ export async function updateProductAction(input: UpdateProductInput) {
   await client.request(UpdateProductDocument, {
     id: data.id,
     price: data.price,
-    inStock: data.inStock,
-    description: data.description,
-    imageUrl: data.imageUrl,
+    description: data.description || null,
+    imageUrl: data.imageUrl || null,
     quantity: data.quantity,
   });
 }

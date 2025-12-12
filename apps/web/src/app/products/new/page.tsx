@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { GraphQLClient } from 'graphql-request';
 import { getEnv } from '../../../lib/env';
-import {
-  StoresOverviewDocument,
-  type StoresOverviewQuery,
-} from '../../../graphql/generated/graphql';
+import { StoresOverviewDocument, type StoresOverviewQuery } from '../../../graphql/generated/graphql';
 import { AddProductForm } from '../AddProductForm';
 
+type SearchParams = Record<string, string | string[] | undefined>;
+
 type NewProductPageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<SearchParams>;
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
@@ -17,10 +16,9 @@ async function fetchStores(): Promise<StoresOverviewQuery> {
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
-export default async function NewProductPage({
-  searchParams,
-}: NewProductPageProps) {
-  const storeParam = searchParams?.store;
+export default async function NewProductPage({ searchParams }: NewProductPageProps) {
+  const resolvedSearchParams: SearchParams = await (searchParams ?? Promise.resolve<SearchParams>({}));
+  const storeParam = resolvedSearchParams['store'];
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
   let storesData: StoresOverviewQuery;
@@ -116,8 +114,7 @@ export default async function NewProductPage({
                 color: '#6b7280',
               }}
             >
-              Give it a clear name and price. It will be ready for checkout links right
-              away.
+              Give it a clear name and price. It will be ready for checkout links right away.
             </p>
           </div>
 

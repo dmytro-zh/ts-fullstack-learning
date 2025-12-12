@@ -15,10 +15,10 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
   const [form, setForm] = useState({
     name: '',
     price: '0',
-    inStock: true,
     storeId: stores[0]?.id ?? '',
     description: '',
     imageUrl: '',
+    quantity: '0',
   });
 
   const onSubmit = (e: React.FormEvent) => {
@@ -32,6 +32,12 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
       return;
     }
 
+    const quantityNumber = Number(form.quantity);
+    if (Number.isNaN(quantityNumber) || !Number.isInteger(quantityNumber) || quantityNumber < 0) {
+      setError('Quantity must be a non-negative integer');
+      return;
+    }
+
     if (!form.storeId) {
       setError('Store is required');
       return;
@@ -42,10 +48,10 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
         await addProductAction({
           name: form.name,
           price: priceNumber,
-          inStock: form.inStock,
           storeId: form.storeId,
           description: form.description || undefined,
           imageUrl: form.imageUrl || undefined,
+          quantity: quantityNumber,
         });
 
         setForm((p) => ({
@@ -54,6 +60,7 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           price: '0',
           description: '',
           imageUrl: '',
+          quantity: '0',
         }));
 
         setMessage(
@@ -149,6 +156,28 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
       </label>
 
       <label style={labelBase}>
+        <span>Quantity</span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={form.quantity}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === '') {
+              setForm((p) => ({ ...p, quantity: '' }));
+              return;
+            }
+            const numeric = Number(value);
+            if (!Number.isNaN(numeric) && numeric >= 0) {
+              setForm((p) => ({ ...p, quantity: String(Math.floor(numeric)) }));
+            }
+          }}
+          style={fieldBase}
+        />
+      </label>
+
+      <label style={labelBase}>
         <span>Store (required)</span>
         <select
           value={form.storeId}
@@ -215,22 +244,6 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
           />
         </div>
       )}
-
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontSize: 13,
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={form.inStock}
-          onChange={(e) => setForm((p) => ({ ...p, inStock: e.target.checked }))}
-        />
-        In stock
-      </label>
 
       <button
         type="submit"
