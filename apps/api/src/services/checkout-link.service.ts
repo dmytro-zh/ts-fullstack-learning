@@ -91,7 +91,7 @@ export class CheckoutLinkService {
 
       const product = link.product;
 
-      if (!product.inStock || product.quantity <= 0 || product.quantity < quantity) {
+      if (product.quantity <= 0 || product.quantity < quantity) {
         throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Product is out of stock', {
           field: 'quantity',
         });
@@ -103,7 +103,7 @@ export class CheckoutLinkService {
         where: { id: product.id },
         data: {
           quantity: newQuantity,
-          inStock: newQuantity > 0 ? product.inStock : false,
+          inStock: newQuantity > 0,
         },
       });
 

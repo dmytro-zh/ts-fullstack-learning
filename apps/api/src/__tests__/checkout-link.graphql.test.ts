@@ -7,16 +7,19 @@ const CREATE_STORE = `
     createStore(input: $input) { id name email }
   }
 `;
+
 const ADD_PRODUCT = `
-  mutation AddProduct($name:String!, $price:Float!, $inStock:Boolean!, $storeId:ID) {
-    addProduct(name:$name, price:$price, inStock:$inStock, storeId:$storeId) { id name }
+  mutation AddProduct($name:String!, $price:Float!, $storeId:ID!, $quantity:Int!) {
+    addProduct(name:$name, price:$price, storeId:$storeId, quantity:$quantity) { id name }
   }
 `;
+
 const CREATE_LINK = `
   mutation CreateCheckoutLink($input: CheckoutLinkInput!) {
     createCheckoutLink(input:$input) { id slug product { id name } store { id name } active }
   }
 `;
+
 const GET_LINK = `
   query CheckoutLink($slug:String!) {
     checkoutLink(slug:$slug) { id slug active product { id name price } store { id name email } }
@@ -36,9 +39,15 @@ describe('CheckoutLink GraphQL flow', () => {
   });
 
   afterAll(async () => {
-    await prisma.checkoutLink.deleteMany({ where: { slug: { startsWith: 'test-slug-' } } }).catch(() => {});
-    await prisma.product.deleteMany({ where: { name: { startsWith: 'Test CL ' } } }).catch(() => {});
-    await prisma.store.deleteMany({ where: { name: { startsWith: 'Test Store ' } } }).catch(() => {});
+    await prisma.checkoutLink
+      .deleteMany({ where: { slug: { startsWith: 'test-slug-' } } })
+      .catch(() => {});
+    await prisma.product
+      .deleteMany({ where: { name: { startsWith: 'Test CL ' } } })
+      .catch(() => {});
+    await prisma.store
+      .deleteMany({ where: { name: { startsWith: 'Test Store ' } } })
+      .catch(() => {});
     await server.stop();
     await prisma.$disconnect().catch(() => {});
   });
@@ -54,7 +63,7 @@ describe('CheckoutLink GraphQL flow', () => {
 
     const productRes = await server.executeOperation({
       query: ADD_PRODUCT,
-      variables: { name: productName, price: 9.99, inStock: true, storeId },
+      variables: { name: productName, price: 9.99, storeId, quantity: 3 },
     });
     const productData = productRes.body.kind === 'single' ? productRes.body.singleResult.data : null;
     productId = (productData as any)?.addProduct?.id;
