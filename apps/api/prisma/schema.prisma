@@ -9,9 +9,10 @@ generator client {
 
 model Product {
   id            String        @id @default(cuid())
+  slug          String        @unique
   name          String        @unique
   price         Float
-  inStock       Boolean       @default(true)
+  inStock       Boolean       @default(false)
   store         Store         @relation(fields: [storeId], references: [id])
   storeId       String
   cartItems     CartItem[]
@@ -21,7 +22,7 @@ model Product {
   updatedAt     DateTime      @updatedAt
   description   String?
   imageUrl      String?
-  quantity  Int      @default(0)
+  quantity      Int           @default(0)
 }
 
 model CartItem {

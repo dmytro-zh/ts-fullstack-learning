@@ -109,7 +109,6 @@ const typeDefs = /* GraphQL */ `
     addProduct(
       name: String!
       price: Float!
-      inStock: Boolean!
       storeId: ID!
       description: String
       imageUrl: String
@@ -119,7 +118,6 @@ const typeDefs = /* GraphQL */ `
     updateProduct(
       id: ID!
       price: Float!
-      inStock: Boolean!
       description: String
       imageUrl: String
       quantity: Int
@@ -128,7 +126,7 @@ const typeDefs = /* GraphQL */ `
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
-    updateOrderStatus(id: ID!, status: OrderStatus!): Order!
+    updateOrderStatus(orderId: ID!, status: OrderStatus!): Order!
   }
 `;
 
@@ -165,7 +163,6 @@ const resolvers = {
       args: {
         name: string;
         price: number;
-        inStock: boolean;
         storeId: string;
         description?: string;
         imageUrl?: string;
@@ -178,7 +175,6 @@ const resolvers = {
       args: {
         id: string;
         price: number;
-        inStock: boolean;
         description?: string;
         imageUrl?: string;
         quantity?: number;
@@ -207,8 +203,8 @@ const resolvers = {
       },
     ) => checkoutLinkService.checkoutByLink(args.input),
 
-    updateOrderStatus: (_: unknown, args: { id: string; status: string }) =>
-      orderService.updateStatus(args.id, args.status),
+    updateOrderStatus: (_: unknown, args: { orderId: string; status: string }) =>
+      orderService.updateStatus(args.orderId, args.status),
   },
 };
 

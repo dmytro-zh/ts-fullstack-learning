@@ -7,8 +7,11 @@ import {
 } from '../../../graphql/generated/graphql';
 import { ProductDetails } from './ProductDetails';
 
+type SearchParams = Record<string, string | string[] | undefined>;
+
 type ProductPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<SearchParams>;
 };
 
 async function fetchProduct(id: string): Promise<ProductByIdQuery> {
@@ -17,8 +20,11 @@ async function fetchProduct(id: string): Promise<ProductByIdQuery> {
   return client.request<ProductByIdQuery>(ProductByIdDocument, { id });
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = params;
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+  const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const storeParam = resolvedSearchParams.store;
+  const storeIdFromQuery = typeof storeParam === 'string' ? storeParam : undefined;
 
   let data: ProductByIdQuery;
 
@@ -34,14 +40,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          Failed to load product.
-        </div>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>Failed to load product.</div>
       </main>
     );
   }
@@ -66,37 +65,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
             gap: 12,
           }}
         >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 24,
-              letterSpacing: -0.03,
-            }}
-          >
-            Product not found
-          </h1>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 13,
-              color: '#4b5563',
-            }}
-          >
+          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>Product not found</h1>
+          <p style={{ margin: 0, fontSize: 13, color: '#4b5563' }}>
             It might have been removed or does not belong here.
           </p>
-          <div
-            style={{
-              marginTop: 10,
-              display: 'flex',
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
-            {data.productStoreId && (
+
+          <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {storeIdFromQuery && (
               <Link
-                href={`/products?store=${encodeURIComponent(
-                  data.productStoreId,
-                )}`}
+                href={`/products?store=${encodeURIComponent(storeIdFromQuery)}`}
                 style={{
                   padding: '7px 13px',
                   borderRadius: 999,
@@ -130,7 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     );
   }
 
-  const storeId = product.store?.id;
+  const storeId = product.store?.id ?? storeIdFromQuery;
 
   return (
     <main
@@ -141,14 +118,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         color: '#020617',
       }}
     >
-      <div
-        style={{
-          maxWidth: 1120,
-          margin: '0 auto',
-          display: 'grid',
-          gap: 18,
-        }}
-      >
+      <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gap: 18 }}>
         <header
           style={{
             display: 'flex',
@@ -158,50 +128,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
             flexWrap: 'wrap',
           }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-              }}
-            >
-              Product
-            </div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 24,
-                letterSpacing: -0.03,
-              }}
-            >
-              {product.name}
-            </h1>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#6b7280',
-              }}
-            >
-              {product.store
-                ? product.store.name
-                : 'Store'}
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>Product</div>
+            <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>{product.name}</h1>
+            <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
+              {product.store ? product.store.name : 'Store'}
             </p>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-            }}
-          >
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {storeId && (
               <Link
                 href={`/products?store=${encodeURIComponent(storeId)}`}

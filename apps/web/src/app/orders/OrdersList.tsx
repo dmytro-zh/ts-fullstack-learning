@@ -82,7 +82,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
 
     startTransition(async () => {
       try {
-        await updateOrderStatusAction({ id: orderId, status: nextStatus });
+        await updateOrderStatusAction({ orderId, status: nextStatus });
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to update order status',
@@ -139,7 +139,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
               >
                 <div style={{ display: 'grid', gap: 4 }}>
                   <strong style={{ color: '#111827' }}>
-                    {o.product.name} × {quantity}
+                    {(o.product?.name ?? 'Unknown product')} × {quantity}
                   </strong>
                   <span style={{ fontSize: 13, color: '#6b7280' }}>
                     {createdAt}

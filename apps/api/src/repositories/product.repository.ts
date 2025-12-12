@@ -28,6 +28,12 @@ export class ProductRepository {
     });
   }
 
+  findBySlug(slug: string) {
+    return prisma.product.findUnique({
+      where: { slug },
+    });
+  }
+
   create(data: Prisma.ProductCreateInput) {
     return prisma.product.create({
       data,

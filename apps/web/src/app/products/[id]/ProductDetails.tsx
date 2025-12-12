@@ -12,7 +12,6 @@ type ProductData = NonNullable<ProductByIdQuery['product']>;
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
   const [price, setPrice] = useState(String(product.price));
-  const [inStock, setInStock] = useState(product.inStock);
   const [description, setDescription] = useState(product.description ?? '');
   const [imageUrl, setImageUrl] = useState(product.imageUrl ?? '');
   const [quantity, setQuantity] = useState(String(product.quantity ?? 0));
@@ -30,7 +29,11 @@ export function ProductDetails({ product }: { product: ProductData }) {
     }
 
     const quantityNumber = Number(quantity);
-    if (Number.isNaN(quantityNumber) || !Number.isInteger(quantityNumber) || quantityNumber < 0) {
+    if (
+      Number.isNaN(quantityNumber) ||
+      !Number.isInteger(quantityNumber) ||
+      quantityNumber < 0
+    ) {
       setError('Quantity must be a non-negative integer');
       return;
     }
@@ -39,7 +42,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
       await updateProductAction({
         id: product.id,
         price: priceNumber,
-        inStock,
         description: description || undefined,
         imageUrl: imageUrl || undefined,
         quantity: quantityNumber,
@@ -74,6 +76,10 @@ export function ProductDetails({ product }: { product: ProductData }) {
 
   const storeId = product.store?.id ?? null;
 
+  const quantityNumber = Number(quantity);
+  const isInStock =
+    !Number.isNaN(quantityNumber) && Number.isFinite(quantityNumber) && quantityNumber > 0;
+
   return (
     <div
       style={{
@@ -89,7 +95,13 @@ export function ProductDetails({ product }: { product: ProductData }) {
         color: '#0f172a',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        }}
+      >
         <div>
           <h1 style={{ margin: 0, fontSize: 26 }}>{product.name}</h1>
           <p style={{ margin: '4px 0', color: '#475569' }}>
@@ -111,6 +123,16 @@ export function ProductDetails({ product }: { product: ProductData }) {
         >
           Create checkout link
         </Link>
+      </div>
+
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: isInStock ? '#166534' : '#b91c1c',
+        }}
+      >
+        Status: {isInStock ? 'In stock' : 'Out of stock'}
       </div>
 
       <label style={labelStyle}>
@@ -147,48 +169,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
           placeholder="0"
           style={inputBaseStyle}
         />
-      </label>
-
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontWeight: 600,
-          color: '#0f172a',
-          position: 'relative',
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={inStock}
-          onChange={(e) => setInStock(e.target.checked)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            opacity: 0,
-            margin: 0,
-            cursor: 'pointer',
-          }}
-        />
-        <span
-          style={{
-            width: 16,
-            height: 16,
-            border: '1px solid #d1d5db',
-            borderRadius: 4,
-            backgroundColor: '#ffffff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            color: '#2563eb',
-            boxSizing: 'border-box',
-          }}
-        >
-          {inStock ? '✓' : ''}
-        </span>
-        <span>In stock</span>
       </label>
 
       <label style={labelStyle}>
