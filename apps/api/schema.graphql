@@ -1,5 +1,6 @@
 type Product {
   id: ID!
+  slug: String!
   name: String!
   price: Float!
   inStock: Boolean!
@@ -53,6 +54,18 @@ type Store {
   updatedAt: String!
 }
 
+enum OrderStatus {
+  NEW
+  PENDING
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
 type Order {
   id: ID!
   customerName: String!
@@ -65,6 +78,8 @@ type Order {
   quantity: Int!
   shippingNote: String
   createdAt: String!
+  product: Product
+  checkoutLink: CheckoutLink
 }
 
 type Query {
@@ -73,27 +88,29 @@ type Query {
   product(id: ID!): Product
   stores: [Store!]!
   checkoutLink(slug: String!): CheckoutLink
+  orders(storeId: ID): [Order!]!
 }
 
 type Mutation {
   addProduct(
     name: String!
     price: Float!
-    inStock: Boolean!
     storeId: ID
     description: String
     imageUrl: String
     quantity: Int
   ): Product!
+
   updateProduct(
     id: ID!
     price: Float!
-    inStock: Boolean!
     description: String
     imageUrl: String
     quantity: Int
   ): Product!
+
   createStore(input: StoreInput!): Store!
   createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
   checkoutByLink(input: CheckoutByLinkInput!): Order!
+  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order!
 }

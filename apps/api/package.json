@@ -11,7 +11,7 @@
     "prisma:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "rimraf prisma/dev.db && pnpm run prisma:migrate --name init && pnpm run db:seed",
-    "test": "vitest"
+    "test": "vitest run --dir src"
   },
   "keywords": [],
   "author": "",
