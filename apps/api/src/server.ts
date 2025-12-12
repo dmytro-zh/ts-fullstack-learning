@@ -22,6 +22,7 @@ const typeDefs = /* GraphQL */ `
 
   type Product {
     id: ID!
+    slug: String!
     name: String!
     price: Float!
     inStock: Boolean!
