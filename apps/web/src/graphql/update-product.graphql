@@ -1,7 +1,6 @@
 mutation UpdateProduct(
   $id: ID!
   $price: Float!
-  $inStock: Boolean!
   $description: String
   $imageUrl: String
   $quantity: Int!
@@ -9,7 +8,6 @@ mutation UpdateProduct(
   updateProduct(
     id: $id
     price: $price
-    inStock: $inStock
     description: $description
     imageUrl: $imageUrl
     quantity: $quantity
@@ -17,7 +15,6 @@ mutation UpdateProduct(
     id
     name
     price
-    inStock
     description
     imageUrl
     quantity
