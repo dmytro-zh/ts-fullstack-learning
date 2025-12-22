@@ -22,7 +22,7 @@ type Documents = {
   'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}': typeof types.StoresOverviewDocument;
   'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}': typeof types.OrdersByStoreDocument;
   'query StoreOrders($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}': typeof types.StoreOrdersDocument;
-  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.ProductByIdDocument;
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}': typeof types.ProductByIdDocument;
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
   'mutation UpdateOrderStatus($orderId: ID!, $status: OrderStatus!) {\n  updateOrderStatus(orderId: $orderId, status: $status) {\n    id\n    status\n  }\n}': typeof types.UpdateOrderStatusDocument;
@@ -45,7 +45,7 @@ const documents: Documents = {
     types.OrdersByStoreDocument,
   'query StoreOrders($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}':
     types.StoreOrdersDocument,
-  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
+  'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}':
     types.ProductByIdDocument,
   'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}':
     types.ProductsDocument,
@@ -122,8 +122,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n    store {\n      id\n      name\n      email\n    }\n  }\n}',
-): (typeof documents)['query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n    store {\n      id\n      name\n      email\n    }\n  }\n}'];
+  source: 'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}',
+): (typeof documents)['query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
