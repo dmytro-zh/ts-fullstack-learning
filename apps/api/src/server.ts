@@ -32,6 +32,19 @@ const typeDefs = /* GraphQL */ `
     imageUrl: String
     createdAt: String!
     quantity: Int!
+    images: [ProductImage!]!
+  }
+
+  type ProductImage {
+    id: ID!
+    key: String!
+    url: String!
+    width: Int
+    height: Int
+    mime: String!
+    size: Int!
+    isPrimary: Boolean!
+    createdAt: String!
   }
 
   type CheckoutLink {

@@ -53,3 +53,6 @@ lerna-debug.log*
 
 # Prisma local DB
 apps/api/prisma/prisma/*.db
+
+# local uploads
+/uploads/
