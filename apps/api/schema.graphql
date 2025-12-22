@@ -10,6 +10,19 @@ type Product {
   imageUrl: String
   createdAt: String!
   quantity: Int!
+  images: [ProductImage!]!
+}
+
+type ProductImage {
+  id: ID!
+  key: String!
+  url: String!
+  width: Int
+  height: Int
+  mime: String!
+  size: Int!
+  isPrimary: Boolean!
+  createdAt: String!
 }
 
 type CheckoutLink {
@@ -30,8 +43,9 @@ input CheckoutByLinkInput {
   slug: String!
   customerName: String!
   email: String!
+  quantity: Int!
+  shippingAddress: String!
   shippingNote: String
-  quantity: Int
 }
 
 input CheckoutLinkInput {
@@ -47,6 +61,7 @@ input StoreInput {
 
 type Store {
   id: ID!
+  ownerId: ID!
   name: String!
   email: String
   products: [Product!]!
@@ -73,13 +88,15 @@ type Order {
   total: Float!
   status: OrderStatus!
   checkoutLinkId: ID
+  checkoutLink: CheckoutLink
   storeId: ID
+  store: Store
   productId: ID!
+  product: Product!
   quantity: Int!
   shippingNote: String
+  shippingAddress: String!
   createdAt: String!
-  product: Product
-  checkoutLink: CheckoutLink
 }
 
 type Query {
@@ -88,14 +105,15 @@ type Query {
   product(id: ID!): Product
   stores: [Store!]!
   checkoutLink(slug: String!): CheckoutLink
-  orders(storeId: ID): [Order!]!
+  orders(storeId: ID!): [Order!]!
+  order(id: ID!): Order
 }
 
 type Mutation {
   addProduct(
     name: String!
     price: Float!
-    storeId: ID
+    storeId: ID!
     description: String
     imageUrl: String
     quantity: Int

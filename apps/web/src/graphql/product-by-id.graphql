@@ -6,12 +6,22 @@ query ProductById($id: ID!) {
     inStock
     storeId
     description
-    imageUrl
     quantity
     store {
       id
       name
       email
+    }
+    images {
+      id
+      url
+      key
+      isPrimary
+      mime
+      size
+      width
+      height
+      createdAt
     }
   }
 }

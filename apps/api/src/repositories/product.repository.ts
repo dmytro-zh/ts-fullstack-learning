@@ -8,7 +8,7 @@ export class ProductRepository {
 
   findAllWithStore() {
     return prisma.product.findMany({
-      include: { store: true },
+      include: { store: true, images: true },
       orderBy: {
         createdAt: 'desc',
       },
@@ -24,7 +24,7 @@ export class ProductRepository {
   findByIdWithStore(id: string) {
     return prisma.product.findUnique({
       where: { id },
-      include: { store: true },
+      include: { store: true, images: true },
     });
   }
 

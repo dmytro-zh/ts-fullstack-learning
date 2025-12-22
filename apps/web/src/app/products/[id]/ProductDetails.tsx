@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ProductByIdQuery } from '../../../graphql/generated/graphql';
@@ -9,14 +9,35 @@ import { updateProductAction } from '../../actions/updateProduct';
 
 type ProductData = NonNullable<ProductByIdQuery['product']>;
 
+function pickPrimaryImage(product: ProductData) {
+  const images = product.images ?? [];
+  const primary = images.find((img) => img.isPrimary) ?? images[0] ?? null;
+  return primary;
+}
+
 export function ProductDetails({ product }: { product: ProductData }) {
   const router = useRouter();
+
   const [price, setPrice] = useState(String(product.price));
   const [description, setDescription] = useState(product.description ?? '');
-  const [imageUrl, setImageUrl] = useState(product.imageUrl ?? '');
   const [quantity, setQuantity] = useState(String(product.quantity ?? 0));
+
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const storeId = product.store?.id ?? null;
+
+  const quantityNumber = Number(quantity);
+  const isInStock =
+    !Number.isNaN(quantityNumber) && Number.isFinite(quantityNumber) && quantityNumber > 0;
+
+  const primaryImage = useMemo(() => pickPrimaryImage(product), [product]);
+
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
   const onSave = async () => {
     setMessage(null);
@@ -28,11 +49,11 @@ export function ProductDetails({ product }: { product: ProductData }) {
       return;
     }
 
-    const quantityNumber = Number(quantity);
+    const quantityNumberLocal = Number(quantity);
     if (
-      Number.isNaN(quantityNumber) ||
-      !Number.isInteger(quantityNumber) ||
-      quantityNumber < 0
+      Number.isNaN(quantityNumberLocal) ||
+      !Number.isInteger(quantityNumberLocal) ||
+      quantityNumberLocal < 0
     ) {
       setError('Quantity must be a non-negative integer');
       return;
@@ -43,13 +64,49 @@ export function ProductDetails({ product }: { product: ProductData }) {
         id: product.id,
         price: priceNumber,
         description: description || undefined,
-        imageUrl: imageUrl || undefined,
-        quantity: quantityNumber,
+        quantity: quantityNumberLocal,
       });
       setMessage('Saved');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
+    }
+  };
+
+  const onPickFile = () => {
+    setMessage(null);
+    setError(null);
+    fileInputRef.current?.click();
+  };
+
+  const onUploadSelected = async (file: File) => {
+    setMessage(null);
+    setError(null);
+    setIsUploading(true);
+
+    try {
+      const form = new FormData();
+      form.append('productId', product.id);
+      form.append('makePrimary', 'true');
+      form.append('file', file);
+
+      const res = await fetch(`${apiBaseUrl}/uploads/product-image`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error ?? `Upload failed (${res.status})`);
+      }
+
+      setMessage('Image uploaded');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -74,12 +131,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
     color: '#0f172a',
   };
 
-  const storeId = product.store?.id ?? null;
-
-  const quantityNumber = Number(quantity);
-  const isInStock =
-    !Number.isNaN(quantityNumber) && Number.isFinite(quantityNumber) && quantityNumber > 0;
-
   return (
     <div
       style={{
@@ -100,6 +151,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
+          gap: 12,
+          flexWrap: 'wrap',
         }}
       >
         <div>
@@ -114,9 +167,9 @@ export function ProductDetails({ product }: { product: ProductData }) {
         <Link
           href={
             storeId
-              ? `/checkout-links?productId=${encodeURIComponent(
-                  product.id,
-                )}&store=${encodeURIComponent(storeId)}`
+              ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(
+                  storeId,
+                )}`
               : `/checkout-links?productId=${encodeURIComponent(product.id)}`
           }
           style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
@@ -133,6 +186,87 @@ export function ProductDetails({ product }: { product: ProductData }) {
         }}
       >
         Status: {isInStock ? 'In stock' : 'Out of stock'}
+      </div>
+
+      {/* Image block */}
+      <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontWeight: 700 }}>Product image</span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file) void onUploadSelected(file);
+              }}
+            />
+            <button
+              type="button"
+              onClick={onPickFile}
+              disabled={isUploading}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: '1px solid rgba(209,213,219,0.95)',
+                background: isUploading ? '#f3f4f6' : '#ffffff',
+                color: '#111827',
+                fontWeight: 700,
+                cursor: isUploading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isUploading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            borderRadius: 14,
+            border: '1px solid rgba(229,231,235,0.95)',
+            background: '#f9fafb',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              aspectRatio: '16 / 10',
+            }}
+          >
+            {primaryImage?.url ? (
+              <Image
+                src={primaryImage.url}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 720px"
+                style={{ objectFit: 'cover' }}
+                priority
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: '#6b7280',
+                  fontSize: 13,
+                  background: 'linear-gradient(135deg, #f8fafc 0, #eef2ff 100%)',
+                }}
+              >
+                No image yet. Upload one to make it shine.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 12, color: '#6b7280' }}>
+          Tip: first uploaded image becomes primary for now.
+        </div>
       </div>
 
       <label style={labelStyle}>
@@ -185,44 +319,6 @@ export function ProductDetails({ product }: { product: ProductData }) {
           }}
         />
       </label>
-
-      <label style={labelStyle}>
-        Image URL
-        <input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://example.com/image.jpg"
-          style={inputBaseStyle}
-        />
-      </label>
-
-      {imageUrl ? (
-        <div style={{ display: 'grid', gap: 6 }}>
-          <span style={{ fontWeight: 600 }}>Preview</span>
-          <div
-            style={{
-              maxWidth: '100%',
-              borderRadius: 10,
-              border: '1px solid #e5e7eb',
-              overflow: 'hidden',
-              display: 'block',
-            }}
-          >
-            <Image
-              src={imageUrl}
-              alt={product.name}
-              width={600}
-              height={400}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                objectFit: 'cover',
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
 
       <button
         type="button"

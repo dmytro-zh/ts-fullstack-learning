@@ -23,7 +23,8 @@ export type Scalars = {
 export type CheckoutByLinkInput = {
   customerName: Scalars['String']['input'];
   email: Scalars['String']['input'];
-  quantity?: InputMaybe<Scalars['Int']['input']>;
+  quantity: Scalars['Int']['input'];
+  shippingAddress: Scalars['String']['input'];
   shippingNote?: InputMaybe<Scalars['String']['input']>;
   slug: Scalars['String']['input'];
 };
@@ -65,7 +66,7 @@ export type MutationAddProductArgs = {
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
   quantity?: InputMaybe<Scalars['Int']['input']>;
-  storeId?: InputMaybe<Scalars['ID']['input']>;
+  storeId: Scalars['ID']['input'];
 };
 
 export type MutationCheckoutByLinkArgs = {
@@ -101,11 +102,13 @@ export type Order = {
   customerName: Scalars['String']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  product?: Maybe<Product>;
+  product: Product;
   productId: Scalars['ID']['output'];
   quantity: Scalars['Int']['output'];
+  shippingAddress: Scalars['String']['output'];
   shippingNote?: Maybe<Scalars['String']['output']>;
   status: OrderStatus;
+  store?: Maybe<Store>;
   storeId?: Maybe<Scalars['ID']['output']>;
   total: Scalars['Float']['output'];
 };
@@ -128,6 +131,7 @@ export type Product = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   imageUrl?: Maybe<Scalars['String']['output']>;
+  images: Array<ProductImage>;
   inStock: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
@@ -137,10 +141,24 @@ export type Product = {
   storeId?: Maybe<Scalars['ID']['output']>;
 };
 
+export type ProductImage = {
+  __typename?: 'ProductImage';
+  createdAt: Scalars['String']['output'];
+  height?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  mime: Scalars['String']['output'];
+  size: Scalars['Int']['output'];
+  url: Scalars['String']['output'];
+  width?: Maybe<Scalars['Int']['output']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
+  order?: Maybe<Order>;
   orders: Array<Order>;
   product?: Maybe<Product>;
   products: Array<Product>;
@@ -151,8 +169,12 @@ export type QueryCheckoutLinkArgs = {
   slug: Scalars['String']['input'];
 };
 
+export type QueryOrderArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type QueryOrdersArgs = {
-  storeId?: InputMaybe<Scalars['ID']['input']>;
+  storeId: Scalars['ID']['input'];
 };
 
 export type QueryProductArgs = {
@@ -165,6 +187,7 @@ export type Store = {
   email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  ownerId: Scalars['ID']['output'];
   products: Array<Product>;
   updatedAt: Scalars['String']['output'];
 };
@@ -289,7 +312,7 @@ export type StoreDashboardQuery = {
     createdAt: string;
     status: OrderStatus;
     quantity: number;
-    product?: { __typename?: 'Product'; id: string; name: string } | null;
+    product: { __typename?: 'Product'; id: string; name: string };
   }>;
 };
 
@@ -309,7 +332,7 @@ export type OrdersByStoreQuery = {
     createdAt: string;
     customerName: string;
     email: string;
-    product?: { __typename?: 'Product'; id: string; name: string; price: number } | null;
+    product: { __typename?: 'Product'; id: string; name: string; price: number };
     checkoutLink?: { __typename?: 'CheckoutLink'; slug: string } | null;
   }>;
 };
@@ -327,7 +350,7 @@ export type StoreOrdersQuery = {
     createdAt: string;
     status: OrderStatus;
     quantity: number;
-    product?: { __typename?: 'Product'; id: string; name: string } | null;
+    product: { __typename?: 'Product'; id: string; name: string };
   }>;
 };
 
@@ -345,9 +368,20 @@ export type ProductByIdQuery = {
     inStock: boolean;
     storeId?: string | null;
     description?: string | null;
-    imageUrl?: string | null;
     quantity: number;
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
+    images: Array<{
+      __typename?: 'ProductImage';
+      id: string;
+      url: string;
+      key: string;
+      isPrimary: boolean;
+      mime: string;
+      size: number;
+      width?: number | null;
+      height?: number | null;
+      createdAt: string;
+    }>;
   } | null;
 };
 
@@ -1001,7 +1035,6 @@ export const ProductByIdDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
                 {
                   kind: 'Field',
@@ -1012,6 +1045,24 @@ export const ProductByIdDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'images' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                     ],
                   },
                 },
