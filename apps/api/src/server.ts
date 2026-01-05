@@ -6,6 +6,7 @@ import { OrderService } from './services/order.service';
 import { formatGraphQLError } from './errors/format-graphql-error';
 import { DomainError } from './errors/domain-error';
 import { ERROR_CODES } from './errors/codes';
+import { prisma } from './lib/prisma';
 
 const typeDefs = /* GraphQL */ `
   enum OrderStatus {
@@ -219,6 +220,16 @@ const resolvers = {
 
     updateOrderStatus: (_: unknown, args: { orderId: string; status: string }) =>
       orderService.updateStatus(args.orderId, args.status),
+  },
+  Product: {
+    images: async (parent: { id: string }) => {
+      const images = await prisma.productImage.findMany({
+        where: { productId: parent.id },
+        orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      });
+
+      return images;
+    },
   },
 };
 
