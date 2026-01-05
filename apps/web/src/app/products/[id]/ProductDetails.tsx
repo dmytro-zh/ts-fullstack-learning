@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductByIdQuery } from '../../../graphql/generated/graphql';
 import { updateProductAction } from '../../actions/updateProduct';
+import { deleteProductAction } from '../../actions/deleteProduct';
 
 type ProductData = NonNullable<ProductByIdQuery['product']>;
 type ProductImage = NonNullable<NonNullable<ProductData['images']>[number]>;
@@ -205,13 +206,7 @@ function SubtleTag({
   );
 }
 
-function Toast({
-  text,
-  tone,
-}: {
-  text: string;
-  tone: 'success' | 'error' | 'info';
-}) {
+function Toast({ text, tone }: { text: string; tone: 'success' | 'error' | 'info' }) {
   const map =
     tone === 'success'
       ? { color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' }
@@ -238,7 +233,13 @@ function Toast({
   );
 }
 
-export function ProductDetails({ product, storeId }: { product: ProductData; storeId: string | null }) {
+export function ProductDetails({
+  product,
+  storeId,
+}: {
+  product: ProductData;
+  storeId: string | null;
+}) {
   const router = useRouter();
 
   const initialPrice = String(product.price);
@@ -249,12 +250,16 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
   const [description, setDescription] = useState(initialDescription);
   const [quantity, setQuantity] = useState(initialQuantity);
 
-  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(
+    null,
+  );
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingSaved, setIsDeletingSaved] = useState(false);
+  const [deleteProductModalOpen, setDeleteProductModalOpen] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
   const [uploadSession, setUploadSession] = useState<string | null>(null);
   const [draftImages, setDraftImages] = useState<DraftImage[]>([]);
@@ -262,7 +267,6 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
 
   const [selectedSavedImageId, setSelectedSavedImageId] = useState<string | null>(null);
 
-  // Optimistic: after Save show server-returned images immediately.
   const [optimisticSavedImages, setOptimisticSavedImages] = useState<ProductImage[] | null>(null);
 
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
@@ -277,7 +281,7 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
   const savedImagesFromProps = useMemo(
-    () => ((product.images ?? []) as ProductImage[]) ?? [],
+    () => ((product.images ?? []) as ProductImage[]),
     [product.images],
   );
 
@@ -422,7 +426,10 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
         setSelectedPrimaryDraftId(null);
       } catch (e) {
         if (cancelled) return;
-        setToast({ tone: 'error', text: e instanceof Error ? e.message : 'Failed to init upload session' });
+        setToast({
+          tone: 'error',
+          text: e instanceof Error ? e.message : 'Failed to init upload session',
+        });
       }
     })();
 
@@ -487,6 +494,21 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
     const t = window.setTimeout(() => setToast(null), 2500);
     return () => window.clearTimeout(t);
   }, [toast]);
+
+  // Optional but recommended:
+  // keep local fields in sync with refreshed product,
+  // but never override while user has unsaved changes.
+  useEffect(() => {
+    if (isDirty) return;
+
+    setPrice(String(product.price));
+    setDescription(product.description ?? '');
+    setQuantity(String(product.quantity ?? 0));
+
+    setOptimisticSavedImages(null);
+    setSelectedSavedImageId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id, product.price, product.description, product.quantity]);
 
   const onPickFile = () => {
     setToast(null);
@@ -625,25 +647,25 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
       });
 
       if (uploadSession && draftImages.length > 0) {
-        const primaryId =
+        const primaryDraftId =
           selectedPrimaryDraftId ??
           draftImages.find((i) => i.isPrimary)?.id ??
           draftImages[0]?.id ??
           null;
 
-        // Key fix: attach returns full images list - show it immediately.
-        const imagesFromServer = await attachSessionToProduct(uploadSession, primaryId);
+        const imagesFromServer = await attachSessionToProduct(uploadSession, primaryDraftId);
 
+        // FIX: use returned list to set selection, do not reuse draft id
         setOptimisticSavedImages(imagesFromServer as unknown as ProductImage[]);
-        setSelectedSavedImageId(primaryId);
+        const nextPrimary =
+          imagesFromServer.find((i) => i.isPrimary) ?? imagesFromServer[0] ?? null;
+        setSelectedSavedImageId(nextPrimary?.id ?? null);
 
         await cleanupSession(uploadSession);
         setDraftImages([]);
         setSelectedPrimaryDraftId(null);
 
         setToast({ tone: 'success', text: 'Changes saved.' });
-
-        // Still refresh to keep GraphQL props in sync
         router.refresh();
       } else {
         setToast({ tone: 'success', text: 'Changes saved.' });
@@ -713,7 +735,10 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
       closeDeleteSaved();
       router.refresh();
     } catch (err) {
-      setToast({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to delete image' });
+      setToast({
+        tone: 'error',
+        text: err instanceof Error ? err.message : 'Failed to delete image',
+      });
     } finally {
       setIsDeletingSaved(false);
     }
@@ -774,6 +799,10 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
   const checkoutHref = storeId
     ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(storeId)}`
     : `/checkout-links?productId=${encodeURIComponent(product.id)}`;
+
+  // Prevent product archive while unsaved changes exist (recommended)
+  const deleteProductDisabled =
+    isSaving || isUploading || isDeletingSaved || isDeletingProduct || isDirty;
 
   return (
     <div style={pageCardStyle}>
@@ -861,6 +890,84 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
         </div>
       ) : null}
 
+      {deleteProductModalOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              width: 'min(520px, 100%)',
+              background: '#fff',
+              borderRadius: 18,
+              border: '1px solid rgba(226,232,240,0.95)',
+              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.25)',
+              padding: 16,
+              display: 'grid',
+              gap: 12,
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: 16 }}>Archive product?</div>
+            <div style={{ color: '#475569', fontSize: 13, lineHeight: 1.5, fontWeight: 700 }}>
+              This will hide the product from the store. Existing orders will stay intact. Checkout
+              links will be deactivated.
+            </div>
+
+            {isDirty ? (
+              <div style={{ color: '#991b1b', fontSize: 13, lineHeight: 1.5, fontWeight: 800 }}>
+                You have unsaved changes. Save or cancel before archiving the product.
+              </div>
+            ) : null}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <SecondaryButton
+                disabled={isDeletingProduct}
+                onClick={() => setDeleteProductModalOpen(false)}
+              >
+                Cancel
+              </SecondaryButton>
+              <DangerButton
+                disabled={isDeletingProduct || isDirty}
+                onClick={() =>
+                  void (async () => {
+                    try {
+                      setIsDeletingProduct(true);
+                      setToast(null);
+
+                      await deleteProductAction(product.id);
+
+                      setToast({ tone: 'success', text: 'Product archived.' });
+
+                      if (storeId) router.push(`/products?store=${encodeURIComponent(storeId)}`);
+                      else router.push('/products');
+                    } catch (e) {
+                      setToast({
+                        tone: 'error',
+                        text: e instanceof Error ? e.message : 'Failed to archive product',
+                      });
+                    } finally {
+                      setIsDeletingProduct(false);
+                      setDeleteProductModalOpen(false);
+                    }
+                  })()
+                }
+              >
+                {isDeletingProduct ? 'Archiving...' : 'Archive'}
+              </DangerButton>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div
         style={{
           display: 'flex',
@@ -875,9 +982,7 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
             <div style={{ fontSize: 14, fontWeight: 900 }}>Images</div>
             {hasDraft ? <SubtleTag tone="warning">Draft</SubtleTag> : <SubtleTag tone="success">Saved</SubtleTag>}
           </div>
-          <p style={helperText}>
-            Upload images, choose the primary, then Save to apply.
-          </p>
+          <p style={helperText}>Upload images, choose the primary, then Save to apply.</p>
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1133,6 +1238,39 @@ export function ProductDetails({ product, storeId }: { product: ProductData; sto
           ) : (
             <p style={helperText}>Edit fields or upload an image to enable Save.</p>
           )}
+
+          <div style={{ marginTop: 6 }}>
+            <div style={{ height: 1, background: 'rgba(226,232,240,0.95)', margin: '12px 0' }} />
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Danger zone
+              </div>
+              <p style={helperText}>
+                Archive will hide the product and deactivate checkout links. Existing orders remain.
+              </p>
+
+              <DangerButton
+                disabled={deleteProductDisabled}
+                onClick={() => setDeleteProductModalOpen(true)}
+                title={isDirty ? 'Save or cancel changes before archiving' : 'Archive this product'}
+              >
+                Archive product
+              </DangerButton>
+
+              {isDirty ? (
+                <div style={{ color: '#991b1b', fontSize: 12, fontWeight: 800, lineHeight: 1.4 }}>
+                  You have unsaved changes. Save or cancel before archiving.
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </div>

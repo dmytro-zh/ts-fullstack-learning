@@ -24,6 +24,8 @@ model Product {
   description   String?
   imageUrl      String?
   quantity      Int           @default(0)
+  deletedAt     DateTime?
+  isActive  Boolean  @default(true)
 }
 
 model ProductImage {

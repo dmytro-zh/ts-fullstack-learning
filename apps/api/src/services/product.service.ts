@@ -2,9 +2,15 @@ import { ProductSchema } from '@ts-fullstack-learning/shared';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
+import { prisma } from '../lib/prisma';
+import { DomainError } from '../errors/domain-error';
+import { ERROR_CODES } from '../errors/codes';
 
 const nullableTrimmedString = z.string().nullable().optional();
-const nullableImageUrl = z.union([z.string().url(), z.literal('')]).nullable().optional();
+const nullableImageUrl = z
+  .union([z.string().url(), z.literal('')])
+  .nullable()
+  .optional();
 
 const createProductInput = ProductSchema.pick({
   name: true,
@@ -100,5 +106,42 @@ export class ProductService {
     }
 
     return this.repo.update(data.id, updateData);
+  }
+
+  async deleteProduct(id: string) {
+    if (!id || id.trim().length === 0) {
+      throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Invalid product id', {
+        field: 'id',
+      });
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const product = await tx.product.findFirst({
+        where: { id, deletedAt: null, isActive: true },
+      });
+
+      if (!product) {
+        throw new DomainError(ERROR_CODES.PRODUCT_NOT_FOUND, 'Product not found', {
+          field: 'id',
+        });
+      }
+
+      // Deactivate checkout links for this product
+      await tx.checkoutLink.updateMany({
+        where: { productId: id, active: true },
+        data: { active: false },
+      });
+
+      // Soft delete product
+      return tx.product.update({
+        where: { id },
+        data: {
+          isActive: false,
+          deletedAt: new Date(),
+          inStock: false,
+          quantity: 0,
+        },
+      });
+    });
   }
 }

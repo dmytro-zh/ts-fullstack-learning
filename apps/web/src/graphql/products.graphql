@@ -6,5 +6,6 @@ query Products {
     inStock
     storeId
     quantity
+    isActive
   }
 }

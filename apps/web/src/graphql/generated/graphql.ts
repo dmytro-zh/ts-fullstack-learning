@@ -56,6 +56,7 @@ export type Mutation = {
   checkoutByLink: Order;
   createCheckoutLink: CheckoutLink;
   createStore: Store;
+  deleteProduct: Product;
   updateOrderStatus: Order;
   updateProduct: Product;
 };
@@ -79,6 +80,10 @@ export type MutationCreateCheckoutLinkArgs = {
 
 export type MutationCreateStoreArgs = {
   input: StoreInput;
+};
+
+export type MutationDeleteProductArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationUpdateOrderStatusArgs = {
@@ -133,6 +138,7 @@ export type Product = {
   imageUrl?: Maybe<Scalars['String']['output']>;
   images: Array<ProductImage>;
   inStock: Scalars['Boolean']['output'];
+  isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int']['output'];
@@ -310,6 +316,7 @@ export type StoreDashboardQuery = {
     storeId?: string | null;
     createdAt: string;
     quantity: number;
+    isActive: boolean;
   }>;
   orders: Array<{
     __typename?: 'Order';
@@ -321,6 +328,15 @@ export type StoreDashboardQuery = {
     quantity: number;
     product: { __typename?: 'Product'; id: string; name: string };
   }>;
+};
+
+export type DeleteProductMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type DeleteProductMutation = {
+  __typename?: 'Mutation';
+  deleteProduct: { __typename?: 'Product'; id: string; storeId?: string | null };
 };
 
 export type OrdersByStoreQueryVariables = Exact<{
@@ -404,6 +420,7 @@ export type ProductsQuery = {
     inStock: boolean;
     storeId?: string | null;
     quantity: number;
+    isActive: boolean;
   }>;
 };
 
@@ -849,6 +866,7 @@ export const StoreDashboardDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
               ],
             },
           },
@@ -890,6 +908,49 @@ export const StoreDashboardDocument = {
     },
   ],
 } as unknown as DocumentNode<StoreDashboardQuery, StoreDashboardQueryVariables>;
+export const DeleteProductDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteProduct' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteProduct' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteProductMutation, DeleteProductMutationVariables>;
 export const OrdersByStoreDocument = {
   kind: 'Document',
   definitions: [
@@ -1116,6 +1177,7 @@ export const ProductsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'storeId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'quantity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
               ],
             },
           },

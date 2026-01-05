@@ -123,7 +123,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const stores = storesData.stores ?? [];
   const store = stores.find((s) => s.id === storeId) ?? null;
   const allProducts = storeData.products ?? [];
-  const products = allProducts.filter((p) => p.storeId === storeId);
+  const products = allProducts.filter((p) => p.storeId === storeId && p.isActive !== false);
 
   return (
     <main

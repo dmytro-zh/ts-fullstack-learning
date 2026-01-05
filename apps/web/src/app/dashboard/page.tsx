@@ -135,8 +135,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const allOrders = dashboardData?.orders ?? [];
 
   const productsForStore = activeStore
-    ? allProducts.filter((p) => p.storeId === activeStore.id)
-    : [];
+  ? allProducts.filter((p) => p.storeId === activeStore.id && p.isActive !== false)
+  : [];
 
   const storeProducts =
     activeStore != null
