@@ -1,51 +1,607 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProductByIdQuery } from '../../../graphql/generated/graphql';
 import { updateProductAction } from '../../actions/updateProduct';
 
 type ProductData = NonNullable<ProductByIdQuery['product']>;
+type ProductImage = NonNullable<NonNullable<ProductData['images']>[number]>;
 
-function pickPrimaryImage(product: ProductData) {
-  const images = product.images ?? [];
-  const primary = images.find((img) => img.isPrimary) ?? images[0] ?? null;
-  return primary;
+type DraftImage = {
+  id: string;
+  productId: string | null;
+  uploadSession: string;
+  key: string;
+  url: string;
+  mime: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  isPrimary: boolean;
+  createdAt: string;
+};
+
+type AttachResponse = {
+  ok: boolean;
+  productId: string;
+  images: Array<{ id: string; url: string; isPrimary: boolean }>;
+};
+
+type DeleteResponse = {
+  ok: boolean;
+  images: Array<{ id: string; url: string; isPrimary: boolean }>;
+};
+
+function sortDraftImagesNewestFirst(images: DraftImage[]) {
+  return [...images].sort((a, b) => {
+    const ta = Date.parse(a.createdAt);
+    const tb = Date.parse(b.createdAt);
+    return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
+  });
 }
 
-export function ProductDetails({ product }: { product: ProductData }) {
+function sortSavedImagesPrimaryFirst(images: ProductImage[]) {
+  const primary = images.filter((i) => i.isPrimary);
+  const rest = images.filter((i) => !i.isPrimary);
+  return [...primary, ...rest];
+}
+
+function pickPrimaryDraftImage(images: DraftImage[], selectedId: string | null) {
+  if (selectedId) return images.find((i) => i.id === selectedId) ?? null;
+  return images.find((i) => i.isPrimary) ?? images[0] ?? null;
+}
+
+function pickPrimarySavedImage(images: ProductImage[], selectedId: string | null) {
+  if (selectedId) return images.find((i) => i.id === selectedId) ?? null;
+  return images.find((i) => i.isPrimary) ?? images[0] ?? null;
+}
+
+function normalizeQuantityInput(value: string) {
+  const onlyDigits = value.replace(/[^\d]/g, '');
+  if (onlyDigits === '') return '';
+  const num = Number(onlyDigits);
+  if (!Number.isFinite(num) || Number.isNaN(num)) return '';
+  return String(Math.max(0, Math.floor(num)));
+}
+
+function PrimaryButton({
+  children,
+  disabled,
+  onClick,
+  title,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      style={{
+        padding: '10px 14px',
+        borderRadius: 999,
+        border: '1px solid #1d4ed8',
+        background: disabled ? '#93c5fd' : '#2563eb',
+        color: '#ffffff',
+        fontWeight: 900,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: '0 12px 26px rgba(37,99,235,0.22)',
+        lineHeight: '20px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SecondaryButton({
+  children,
+  disabled,
+  onClick,
+  title,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      style={{
+        padding: '10px 14px',
+        borderRadius: 999,
+        border: '1px solid rgba(226,232,240,0.95)',
+        background: disabled ? '#f1f5f9' : '#ffffff',
+        color: '#0f172a',
+        fontWeight: 900,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: '0 8px 22px rgba(15,23,42,0.06)',
+        lineHeight: '20px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DangerButton({
+  children,
+  disabled,
+  onClick,
+  title,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick?: () => void;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      style={{
+        padding: '10px 14px',
+        borderRadius: 999,
+        border: '1px solid rgba(239,68,68,0.35)',
+        background: disabled ? '#fecaca' : '#ef4444',
+        color: '#ffffff',
+        fontWeight: 900,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: '0 12px 26px rgba(239,68,68,0.18)',
+        lineHeight: '20px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SubtleTag({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: 'success' | 'warning' | 'neutral';
+}) {
+  const map =
+    tone === 'success'
+      ? { color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' }
+      : tone === 'warning'
+        ? { color: '#92400e', bg: '#fffbeb', border: '#fcd34d' }
+        : { color: '#334155', bg: '#f1f5f9', border: '#cbd5e1' };
+
+  return (
+    <span
+      style={{
+        fontSize: 12,
+        fontWeight: 900,
+        padding: '4px 10px',
+        borderRadius: 999,
+        color: map.color,
+        background: map.bg,
+        border: `1px solid ${map.border}`,
+        lineHeight: '16px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Toast({
+  text,
+  tone,
+}: {
+  text: string;
+  tone: 'success' | 'error' | 'info';
+}) {
+  const map =
+    tone === 'success'
+      ? { color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' }
+      : tone === 'error'
+        ? { color: '#991b1b', bg: '#fef2f2', border: '#fecaca' }
+        : { color: '#1e40af', bg: '#eff6ff', border: '#bfdbfe' };
+
+  return (
+    <div
+      role="status"
+      style={{
+        borderRadius: 14,
+        border: `1px solid ${map.border}`,
+        background: map.bg,
+        color: map.color,
+        padding: '10px 12px',
+        fontWeight: 900,
+        fontSize: 13,
+        lineHeight: 1.35,
+      }}
+    >
+      {text}
+    </div>
+  );
+}
+
+export function ProductDetails({ product, storeId }: { product: ProductData; storeId: string | null }) {
   const router = useRouter();
 
-  const [price, setPrice] = useState(String(product.price));
-  const [description, setDescription] = useState(product.description ?? '');
-  const [quantity, setQuantity] = useState(String(product.quantity ?? 0));
+  const initialPrice = String(product.price);
+  const initialDescription = product.description ?? '';
+  const initialQuantity = String(product.quantity ?? 0);
 
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [price, setPrice] = useState(initialPrice);
+  const [description, setDescription] = useState(initialDescription);
+  const [quantity, setQuantity] = useState(initialQuantity);
+
+  const [toast, setToast] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingSaved, setIsDeletingSaved] = useState(false);
 
-  const storeId = product.store?.id ?? null;
+  const [uploadSession, setUploadSession] = useState<string | null>(null);
+  const [draftImages, setDraftImages] = useState<DraftImage[]>([]);
+  const [selectedPrimaryDraftId, setSelectedPrimaryDraftId] = useState<string | null>(null);
 
-  const quantityNumber = Number(quantity);
-  const isInStock =
-    !Number.isNaN(quantityNumber) && Number.isFinite(quantityNumber) && quantityNumber > 0;
+  const [selectedSavedImageId, setSelectedSavedImageId] = useState<string | null>(null);
 
-  const primaryImage = useMemo(() => pickPrimaryImage(product), [product]);
+  // Optimistic: after Save show server-returned images immediately.
+  const [optimisticSavedImages, setOptimisticSavedImages] = useState<ProductImage[] | null>(null);
+
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; imageId: string | null }>(() => ({
+    open: false,
+    imageId: null,
+  }));
 
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://localhost:4000';
 
+  const savedImagesFromProps = useMemo(
+    () => ((product.images ?? []) as ProductImage[]) ?? [],
+    [product.images],
+  );
+
+  const savedImages = useMemo(() => {
+    const base = optimisticSavedImages ?? savedImagesFromProps;
+    return sortSavedImagesPrimaryFirst(base);
+  }, [optimisticSavedImages, savedImagesFromProps]);
+
+  const hasDraft = draftImages.length > 0;
+
+  const draftPrimaryImage = useMemo(
+    () => pickPrimaryDraftImage(draftImages, selectedPrimaryDraftId),
+    [draftImages, selectedPrimaryDraftId],
+  );
+
+  const savedPrimaryImage = useMemo(
+    () => pickPrimarySavedImage(savedImages, selectedSavedImageId),
+    [savedImages, selectedSavedImageId],
+  );
+
+  const galleryImages = useMemo(() => {
+    if (hasDraft) return sortDraftImagesNewestFirst(draftImages);
+    return savedImages;
+  }, [hasDraft, draftImages, savedImages]);
+
+  const selectedImageUrl = useMemo(() => {
+    if (hasDraft) return draftPrimaryImage?.url ?? null;
+    return savedPrimaryImage?.url ?? null;
+  }, [hasDraft, draftPrimaryImage?.url, savedPrimaryImage?.url]);
+
+  const selectedId = useMemo(() => {
+    if (hasDraft) return selectedPrimaryDraftId ?? draftPrimaryImage?.id ?? null;
+    return selectedSavedImageId ?? savedPrimaryImage?.id ?? null;
+  }, [
+    hasDraft,
+    selectedPrimaryDraftId,
+    draftPrimaryImage?.id,
+    selectedSavedImageId,
+    savedPrimaryImage?.id,
+  ]);
+
+  const isDirtyFields =
+    price !== initialPrice || description !== initialDescription || quantity !== initialQuantity;
+
+  const isDirtyImages = draftImages.length > 0;
+  const isDirty = isDirtyFields || isDirtyImages;
+
+  async function createSession() {
+    const res = await fetch(`${apiBaseUrl}/uploads/sessions`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Failed to create upload session (${res.status})`);
+    const data = (await res.json()) as { uploadSession: string };
+    return data.uploadSession;
+  }
+
+  async function loadSessionImages(session: string) {
+    const res = await fetch(`${apiBaseUrl}/uploads/sessions/${encodeURIComponent(session)}`);
+    if (!res.ok) throw new Error(`Failed to load session images (${res.status})`);
+    const data = (await res.json()) as { uploadSession: string; images: DraftImage[] };
+    return data.images ?? [];
+  }
+
+  async function cleanupSession(session: string) {
+    await fetch(`${apiBaseUrl}/uploads/sessions/${encodeURIComponent(session)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async function deleteDraftImage(id: string) {
+    const res = await fetch(`${apiBaseUrl}/uploads/product-image/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? `Delete failed (${res.status})`);
+    }
+  }
+
+  async function deleteSavedImage(productId: string, imageId: string) {
+    const res = await fetch(
+      `${apiBaseUrl}/products/${encodeURIComponent(productId)}/images/${encodeURIComponent(imageId)}`,
+      { method: 'DELETE' },
+    );
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? `Delete failed (${res.status})`);
+    }
+
+    const data = (await res.json()) as DeleteResponse;
+    return data.images ?? [];
+  }
+
+  async function uploadToSession(session: string, file: File) {
+    const form = new FormData();
+    form.append('uploadSession', session);
+    form.append('makePrimary', 'true');
+    form.append('file', file);
+
+    const res = await fetch(`${apiBaseUrl}/uploads/product-image`, {
+      method: 'POST',
+      body: form,
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? `Upload failed (${res.status})`);
+    }
+
+    const created = (await res.json()) as DraftImage;
+    return created;
+  }
+
+  async function attachSessionToProduct(session: string, primaryImageId: string | null) {
+    const res = await fetch(`${apiBaseUrl}/uploads/attach`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uploadSession: session,
+        productId: product.id,
+        primaryImageId: primaryImageId ?? null,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? `Attach failed (${res.status})`);
+    }
+
+    const data = (await res.json()) as AttachResponse;
+    return data.images ?? [];
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const session = await createSession();
+        if (cancelled) return;
+        setUploadSession(session);
+        setDraftImages([]);
+        setSelectedPrimaryDraftId(null);
+      } catch (e) {
+        if (cancelled) return;
+        setToast({ tone: 'error', text: e instanceof Error ? e.message : 'Failed to init upload session' });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+      if (!isDirty) return;
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const anchor = target.closest('a') as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      const href = anchor.href;
+      if (!href) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      setPendingHref(href);
+      setLeaveModalOpen(true);
+    };
+
+    const onPopState = () => {
+      if (!isDirty) return;
+      history.pushState(null, '', window.location.href);
+      setPendingHref('BACK');
+      setLeaveModalOpen(true);
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onClickCapture, true);
+    window.addEventListener('popstate', onPopState);
+
+    if (typeof window !== 'undefined') {
+      history.pushState(null, '', window.location.href);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onClickCapture, true);
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, [isDirty]);
+
+  useEffect(() => {
+    if (!toast) return;
+    if (toast.tone === 'error') return;
+
+    const t = window.setTimeout(() => setToast(null), 2500);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
+  const onPickFile = () => {
+    setToast(null);
+    fileInputRef.current?.click();
+  };
+
+  const onUploadSelected = async (file: File) => {
+    setToast(null);
+
+    if (!uploadSession) {
+      setToast({ tone: 'error', text: 'Upload session is not ready yet' });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const created = await uploadToSession(uploadSession, file);
+      const images = await loadSessionImages(uploadSession);
+      const sorted = sortDraftImagesNewestFirst(images);
+
+      setDraftImages(sorted);
+      setSelectedPrimaryDraftId(created.id);
+
+      setToast({ tone: 'info', text: 'Image added as draft. Save to apply.' });
+    } catch (err) {
+      setToast({ tone: 'error', text: err instanceof Error ? err.message : 'Upload failed' });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const onRemoveDraftImage = async (id: string) => {
+    setToast(null);
+    if (!uploadSession) return;
+
+    try {
+      await deleteDraftImage(id);
+      const images = await loadSessionImages(uploadSession);
+      const sorted = sortDraftImagesNewestFirst(images);
+
+      setDraftImages(sorted);
+
+      if (selectedPrimaryDraftId === id) {
+        setSelectedPrimaryDraftId(sorted[0]?.id ?? null);
+      }
+
+      if (sorted.length === 0) {
+        setToast({ tone: 'info', text: 'Draft cleared.' });
+      }
+    } catch (err) {
+      setToast({ tone: 'error', text: err instanceof Error ? err.message : 'Delete failed' });
+    }
+  };
+
+  const onSelectPrimary = (id: string) => {
+    if (hasDraft) {
+      setSelectedPrimaryDraftId(id);
+      setToast({ tone: 'info', text: 'Primary selected in draft. Save to apply.' });
+      return;
+    }
+
+    setSelectedSavedImageId(id);
+    setToast(null);
+  };
+
+  const onClearDraftOnly = async () => {
+    setToast(null);
+
+    if (uploadSession && draftImages.length > 0) {
+      try {
+        await cleanupSession(uploadSession);
+      } catch {
+        // ignore
+      }
+    }
+
+    setDraftImages([]);
+    setSelectedPrimaryDraftId(null);
+    setToast({ tone: 'info', text: 'Draft cleared.' });
+  };
+
+  const onCancel = async () => {
+    setToast(null);
+
+    if (uploadSession && draftImages.length > 0) {
+      try {
+        await cleanupSession(uploadSession);
+      } catch {
+        // ignore
+      }
+    }
+
+    setPrice(initialPrice);
+    setDescription(initialDescription);
+    setQuantity(initialQuantity);
+
+    setDraftImages([]);
+    setSelectedPrimaryDraftId(null);
+
+    setOptimisticSavedImages(null);
+    setSelectedSavedImageId(null);
+
+    setToast({ tone: 'info', text: 'Changes discarded.' });
+  };
+
   const onSave = async () => {
-    setMessage(null);
-    setError(null);
+    setToast(null);
+    setIsSaving(true);
 
     const priceNumber = Number(price.replace(',', '.'));
     if (Number.isNaN(priceNumber)) {
-      setError('Price must be a number');
+      setToast({ tone: 'error', text: 'Price must be a number' });
+      setIsSaving(false);
       return;
     }
 
@@ -55,7 +611,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
       !Number.isInteger(quantityNumberLocal) ||
       quantityNumberLocal < 0
     ) {
-      setError('Quantity must be a non-negative integer');
+      setToast({ tone: 'error', text: 'Quantity must be a non-negative integer' });
+      setIsSaving(false);
       return;
     }
 
@@ -66,55 +623,119 @@ export function ProductDetails({ product }: { product: ProductData }) {
         description: description || undefined,
         quantity: quantityNumberLocal,
       });
-      setMessage('Saved');
-      router.refresh();
+
+      if (uploadSession && draftImages.length > 0) {
+        const primaryId =
+          selectedPrimaryDraftId ??
+          draftImages.find((i) => i.isPrimary)?.id ??
+          draftImages[0]?.id ??
+          null;
+
+        // Key fix: attach returns full images list - show it immediately.
+        const imagesFromServer = await attachSessionToProduct(uploadSession, primaryId);
+
+        setOptimisticSavedImages(imagesFromServer as unknown as ProductImage[]);
+        setSelectedSavedImageId(primaryId);
+
+        await cleanupSession(uploadSession);
+        setDraftImages([]);
+        setSelectedPrimaryDraftId(null);
+
+        setToast({ tone: 'success', text: 'Changes saved.' });
+
+        // Still refresh to keep GraphQL props in sync
+        router.refresh();
+      } else {
+        setToast({ tone: 'success', text: 'Changes saved.' });
+        router.refresh();
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setToast({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to save' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const onPickFile = () => {
-    setMessage(null);
-    setError(null);
-    fileInputRef.current?.click();
-  };
+  const discardAndLeave = async () => {
+    setLeaveModalOpen(false);
+    await onCancel();
 
-  const onUploadSelected = async (file: File) => {
-    setMessage(null);
-    setError(null);
-    setIsUploading(true);
+    if (!pendingHref) return;
+
+    if (pendingHref === 'BACK') {
+      router.back();
+      return;
+    }
 
     try {
-      const form = new FormData();
-      form.append('productId', product.id);
-      form.append('makePrimary', 'true');
-      form.append('file', file);
-
-      const res = await fetch(`${apiBaseUrl}/uploads/product-image`, {
-        method: 'POST',
-        body: form,
-      });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? `Upload failed (${res.status})`);
+      const url = new URL(pendingHref);
+      const sameOrigin = url.origin === window.location.origin;
+      if (sameOrigin) {
+        router.push(url.pathname + url.search + url.hash);
+      } else {
+        window.location.href = pendingHref;
       }
+    } finally {
+      setPendingHref(null);
+    }
+  };
 
-      setMessage('Image uploaded');
+  const continueEditing = () => {
+    setLeaveModalOpen(false);
+    setPendingHref(null);
+  };
+
+  const openDeleteSaved = (imageId: string) => {
+    setDeleteModal({ open: true, imageId });
+  };
+
+  const closeDeleteSaved = () => {
+    setDeleteModal({ open: false, imageId: null });
+  };
+
+  const confirmDeleteSaved = async () => {
+    const imageId = deleteModal.imageId;
+    if (!imageId) return;
+
+    setIsDeletingSaved(true);
+    setToast(null);
+
+    try {
+      const nextImages = await deleteSavedImage(product.id, imageId);
+
+      setOptimisticSavedImages(nextImages as unknown as ProductImage[]);
+
+      const nextPrimary = nextImages.find((i) => i.isPrimary) ?? nextImages[0] ?? null;
+      setSelectedSavedImageId(nextPrimary?.id ?? null);
+
+      setToast({ tone: 'success', text: 'Image deleted.' });
+
+      closeDeleteSaved();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setToast({ tone: 'error', text: err instanceof Error ? err.message : 'Failed to delete image' });
     } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setIsDeletingSaved(false);
     }
+  };
+
+  const pageCardStyle: React.CSSProperties = {
+    width: '100%',
+    background: '#ffffff',
+    border: '1px solid rgba(226,232,240,0.95)',
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: '0 18px 50px rgba(15, 23, 42, 0.08)',
+    display: 'grid',
+    gap: 16,
+    color: '#0f172a',
   };
 
   const inputBaseStyle: React.CSSProperties = {
     padding: '10px 12px',
-    borderRadius: 8,
-    border: '1px solid #d1d5db',
-    background: '#f9fafb',
+    borderRadius: 12,
+    border: '1px solid rgba(226,232,240,0.95)',
+    background: '#f8fafc',
     color: '#0f172a',
     caretColor: '#2563eb',
     fontSize: 14,
@@ -127,217 +748,393 @@ export function ProductDetails({ product }: { product: ProductData }) {
   const labelStyle: React.CSSProperties = {
     display: 'grid',
     gap: 6,
-    fontWeight: 600,
+    fontWeight: 900,
     color: '#0f172a',
+    fontSize: 12,
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase',
   };
 
+  const helperText: React.CSSProperties = {
+    margin: 0,
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: 700,
+    lineHeight: 1.4,
+  };
+
+  const previewBoxStyle: React.CSSProperties = {
+    borderRadius: 18,
+    border: '1px solid rgba(226,232,240,0.95)',
+    background: '#ffffff',
+    overflow: 'hidden',
+    boxShadow: '0 10px 26px rgba(15, 23, 42, 0.06)',
+  };
+
+  const checkoutHref = storeId
+    ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(storeId)}`
+    : `/checkout-links?productId=${encodeURIComponent(product.id)}`;
+
   return (
-    <div
-      style={{
-        maxWidth: 720,
-        margin: '0 auto',
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 12,
-        padding: 20,
-        boxShadow: '0 10px 25px rgba(15, 23, 42, 0.08)',
-        display: 'grid',
-        gap: 14,
-        color: '#0f172a',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: 26 }}>{product.name}</h1>
-          <p style={{ margin: '4px 0', color: '#475569' }}>
-            Store:{' '}
-            {product.store
-              ? `${product.store.name}${product.store.email ? ` (${product.store.email})` : ''}`
-              : 'No store'}
-          </p>
-        </div>
-        <Link
-          href={
-            storeId
-              ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(
-                  storeId,
-                )}`
-              : `/checkout-links?productId=${encodeURIComponent(product.id)}`
-          }
-          style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
-        >
-          Create checkout link
-        </Link>
-      </div>
-
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: isInStock ? '#166534' : '#b91c1c',
-        }}
-      >
-        Status: {isInStock ? 'In stock' : 'Out of stock'}
-      </div>
-
-      {/* Image block */}
-      <div style={{ display: 'grid', gap: 8 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontWeight: 700 }}>Product image</span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                if (file) void onUploadSelected(file);
-              }}
-            />
-            <button
-              type="button"
-              onClick={onPickFile}
-              disabled={isUploading}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 10,
-                border: '1px solid rgba(209,213,219,0.95)',
-                background: isUploading ? '#f3f4f6' : '#ffffff',
-                color: '#111827',
-                fontWeight: 700,
-                cursor: isUploading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {isUploading ? 'Uploading...' : 'Upload'}
-            </button>
-          </div>
-        </div>
-
+    <div style={pageCardStyle}>
+      {leaveModalOpen ? (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
-            borderRadius: 14,
-            border: '1px solid rgba(229,231,235,0.95)',
-            background: '#f9fafb',
-            overflow: 'hidden',
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+            zIndex: 9999,
           }}
         >
           <div
             style={{
-              position: 'relative',
-              width: '100%',
-              aspectRatio: '16 / 10',
+              width: 'min(520px, 100%)',
+              background: '#fff',
+              borderRadius: 18,
+              border: '1px solid rgba(226,232,240,0.95)',
+              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.25)',
+              padding: 16,
+              display: 'grid',
+              gap: 12,
             }}
           >
-            {primaryImage?.url ? (
-              <Image
-                src={primaryImage.url}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 720px"
-                style={{ objectFit: 'cover' }}
-                priority
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#6b7280',
-                  fontSize: 13,
-                  background: 'linear-gradient(135deg, #f8fafc 0, #eef2ff 100%)',
-                }}
-              >
-                No image yet. Upload one to make it shine.
-              </div>
-            )}
+            <div style={{ fontWeight: 900, fontSize: 16 }}>Unsaved changes</div>
+            <div style={{ color: '#475569', fontSize: 13, lineHeight: 1.5, fontWeight: 700 }}>
+              You have unsaved changes. Save them or discard before leaving this page.
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <SecondaryButton onClick={continueEditing}>Continue editing</SecondaryButton>
+              <DangerButton onClick={() => void discardAndLeave()} title="Discard changes and leave">
+                Discard and leave
+              </DangerButton>
+            </div>
           </div>
         </div>
+      ) : null}
 
-        <div style={{ fontSize: 12, color: '#6b7280' }}>
-          Tip: first uploaded image becomes primary for now.
+      {deleteModal.open ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 16,
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              width: 'min(520px, 100%)',
+              background: '#fff',
+              borderRadius: 18,
+              border: '1px solid rgba(226,232,240,0.95)',
+              boxShadow: '0 20px 60px rgba(15, 23, 42, 0.25)',
+              padding: 16,
+              display: 'grid',
+              gap: 12,
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: 16 }}>Delete image?</div>
+            <div style={{ color: '#475569', fontSize: 13, lineHeight: 1.5, fontWeight: 700 }}>
+              This will permanently delete the image from the product.
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <SecondaryButton disabled={isDeletingSaved} onClick={closeDeleteSaved}>
+                Cancel
+              </SecondaryButton>
+              <DangerButton disabled={isDeletingSaved} onClick={() => void confirmDeleteSaved()}>
+                {isDeletingSaved ? 'Deleting...' : 'Delete'}
+              </DangerButton>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'grid', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 14, fontWeight: 900 }}>Images</div>
+            {hasDraft ? <SubtleTag tone="warning">Draft</SubtleTag> : <SubtleTag tone="success">Saved</SubtleTag>}
+          </div>
+          <p style={helperText}>
+            Upload images, choose the primary, then Save to apply.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Link
+            href={checkoutHref}
+            style={{
+              padding: '10px 14px',
+              borderRadius: 999,
+              border: '1px solid rgba(37,99,235,0.35)',
+              background: '#ffffff',
+              color: '#2563eb',
+              fontWeight: 900,
+              textDecoration: 'none',
+              boxShadow: '0 8px 22px rgba(15,23,42,0.06)',
+              lineHeight: '20px',
+              whiteSpace: 'nowrap',
+            }}
+            title="Create a shareable checkout link for this product"
+          >
+            Create checkout link
+          </Link>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (file) void onUploadSelected(file);
+            }}
+          />
+
+          <SecondaryButton disabled={isUploading || !uploadSession} onClick={onPickFile}>
+            {isUploading ? 'Uploading...' : 'Upload image'}
+          </SecondaryButton>
+
+          {hasDraft ? (
+            <SecondaryButton onClick={() => void onClearDraftOnly()} title="Remove draft images">
+              Clear draft
+            </SecondaryButton>
+          ) : null}
         </div>
       </div>
 
-      <label style={labelStyle}>
-        Price
-        <input
-          type="text"
-          inputMode="decimal"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="49.99"
-          style={inputBaseStyle}
-        />
-      </label>
-
-      <label style={labelStyle}>
-        Quantity
-        <input
-          type="number"
-          min={0}
-          step={1}
-          inputMode="numeric"
-          value={quantity}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value === '') {
-              setQuantity('');
-              return;
-            }
-            const numeric = Number(value);
-            if (!Number.isNaN(numeric) && numeric >= 0) {
-              setQuantity(String(Math.floor(numeric)));
-            }
-          }}
-          placeholder="0"
-          style={inputBaseStyle}
-        />
-      </label>
-
-      <label style={labelStyle}>
-        Description
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          placeholder="Short description for your buyers..."
-          style={{
-            ...inputBaseStyle,
-            resize: 'vertical',
-            minHeight: 96,
-          }}
-        />
-      </label>
-
-      <button
-        type="button"
-        onClick={onSave}
+      <div
         style={{
-          padding: '10px 12px',
-          borderRadius: 10,
-          border: '1px solid #1d4ed8',
-          background: '#2563eb',
-          color: '#ffffff',
-          fontWeight: 700,
-          cursor: 'pointer',
+          display: 'grid',
+          gridTemplateColumns: '1.35fr 0.85fr',
+          gap: 16,
+          alignItems: 'start',
         }}
       >
-        Save
-      </button>
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={previewBoxStyle}>
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3' }}>
+              {selectedImageUrl ? (
+                <Image
+                  src={selectedImageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 760px"
+                  style={{ objectFit: 'contain', background: '#ffffff' }}
+                  priority
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#64748b',
+                    fontSize: 13,
+                    fontWeight: 800,
+                    background: 'linear-gradient(135deg, #ffffff 0, #f8fafc 100%)',
+                  }}
+                >
+                  No image yet
+                </div>
+              )}
+            </div>
+          </div>
 
-      {message && <p style={{ color: '#16a34a', margin: 0 }}>{message}</p>}
-      {error && <p style={{ color: '#b91c1c', margin: 0 }}>{error}</p>}
+          {galleryImages.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))',
+                gap: 10,
+              }}
+            >
+              {galleryImages.map((img) => {
+                const isSelected = selectedId ? selectedId === img.id : false;
+
+                return (
+                  <div
+                    key={img.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onSelectPrimary(img.id)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      e.preventDefault();
+                      onSelectPrimary(img.id);
+                    }}
+                    style={{
+                      borderRadius: 16,
+                      border: isSelected ? '2px solid #2563eb' : '1px solid rgba(226,232,240,0.95)',
+                      background: '#ffffff',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      boxShadow: isSelected
+                        ? '0 10px 22px rgba(37,99,235,0.18)'
+                        : '0 8px 18px rgba(15,23,42,0.04)',
+                      transform: isSelected ? 'translateY(-1px)' : 'none',
+                    }}
+                    title={hasDraft ? 'Set as primary in draft' : 'Preview'}
+                  >
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                      <Image
+                        src={img.url}
+                        alt={product.name}
+                        fill
+                        sizes="120px"
+                        style={{ objectFit: 'contain', background: '#ffffff' }}
+                      />
+                    </div>
+
+                    {hasDraft ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          void onRemoveDraftImage(img.id);
+                        }}
+                        aria-label="Remove draft image"
+                        title="Remove"
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 999,
+                          border: '1px solid rgba(226,232,240,0.95)',
+                          background: 'rgba(255,255,255,0.92)',
+                          color: '#0f172a',
+                          cursor: 'pointer',
+                          fontWeight: 900,
+                          lineHeight: '24px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        x
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openDeleteSaved(img.id);
+                        }}
+                        aria-label="Delete saved image"
+                        title="Delete"
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 999,
+                          border: '1px solid rgba(239,68,68,0.25)',
+                          background: 'rgba(255,255,255,0.92)',
+                          color: '#991b1b',
+                          cursor: 'pointer',
+                          fontWeight: 900,
+                          lineHeight: '24px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        x
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {toast ? <Toast tone={toast.tone} text={toast.text} /> : null}
+        </div>
+
+        <div
+          style={{
+            borderRadius: 18,
+            border: '1px solid rgba(226,232,240,0.95)',
+            background: '#ffffff',
+            boxShadow: '0 10px 26px rgba(15, 23, 42, 0.06)',
+            padding: 16,
+            display: 'grid',
+            gap: 12,
+          }}
+        >
+          <label style={labelStyle}>
+            Price
+            <input
+              type="text"
+              inputMode="decimal"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="49.99"
+              style={inputBaseStyle}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Quantity
+            <input
+              type="text"
+              inputMode="numeric"
+              value={quantity}
+              onChange={(e) => setQuantity(normalizeQuantityInput(e.target.value))}
+              placeholder="0"
+              style={inputBaseStyle}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Description
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={6}
+              placeholder="Short description for your buyers..."
+              style={{ ...inputBaseStyle, resize: 'vertical', minHeight: 140 }}
+            />
+          </label>
+
+          {isDirty ? (
+            <div style={{ display: 'grid', gap: 10, marginTop: 6 }}>
+              <PrimaryButton disabled={isSaving} onClick={() => void onSave()} title="Save changes">
+                {isSaving ? 'Saving...' : 'Save'}
+              </PrimaryButton>
+
+              <SecondaryButton disabled={isSaving} onClick={() => void onCancel()} title="Discard changes">
+                Cancel
+              </SecondaryButton>
+            </div>
+          ) : (
+            <p style={helperText}>Edit fields or upload an image to enable Save.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
