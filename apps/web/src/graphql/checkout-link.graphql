@@ -1,3 +1,5 @@
+# apps/web/src/graphql/checkout-link.graphql
+
 query CheckoutLink($slug: String!) {
   checkoutLink(slug: $slug) {
     id
@@ -11,6 +13,12 @@ query CheckoutLink($slug: String!) {
       inStock
       description
       imageUrl
+      images {
+        id
+        url
+        isPrimary
+        createdAt
+      }
     }
     store {
       id

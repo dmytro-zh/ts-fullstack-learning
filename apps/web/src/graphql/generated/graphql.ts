@@ -251,6 +251,13 @@ export type CheckoutLinkQuery = {
       inStock: boolean;
       description?: string | null;
       imageUrl?: string | null;
+      images: Array<{
+        __typename?: 'ProductImage';
+        id: string;
+        url: string;
+        isPrimary: boolean;
+        createdAt: string;
+      }>;
     };
     store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
   } | null;
@@ -637,6 +644,19 @@ export const CheckoutLinkDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'inStock' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'images' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'isPrimary' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
