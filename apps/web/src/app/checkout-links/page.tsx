@@ -25,13 +25,16 @@ type PageProps = {
 
 export default async function CheckoutLinksPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const initialProductId =
-    typeof params?.productId === 'string' ? params.productId : undefined;
-  const initialStoreId =
-    typeof params?.store === 'string' ? params.store : undefined;
+  const initialProductId = typeof params?.productId === 'string' ? params.productId : undefined;
+  const initialStoreId = typeof params?.store === 'string' ? params.store : undefined;
 
   try {
     const { products, stores } = await fetchData();
+    const activeProducts = (products ?? []).filter((p) => p.isActive !== false);
+    const safeInitialProductId =
+      initialProductId && activeProducts.some((p) => p.id === initialProductId)
+        ? initialProductId
+        : undefined;
     return (
       <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh' }}>
         <div
@@ -48,13 +51,11 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
             color: '#111827',
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
-            Checkout links
-          </h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout links</h1>
           <CheckoutLinksForm
-            products={products}
+            products={activeProducts}
             stores={stores}
-            initialProductId={initialProductId}
+            initialProductId={safeInitialProductId}
             initialStoreId={initialStoreId}
           />
         </div>
