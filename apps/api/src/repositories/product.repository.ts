@@ -1,13 +1,21 @@
 import { prisma } from '../lib/prisma';
 import type { Prisma } from '@prisma/client';
 
+const ACTIVE_PRODUCT_WHERE: Prisma.ProductWhereInput = {
+  deletedAt: null,
+  isActive: true,
+};
+
 export class ProductRepository {
   findAll() {
-    return prisma.product.findMany();
+    return prisma.product.findMany({
+      where: ACTIVE_PRODUCT_WHERE,
+    });
   }
 
   findAllWithStore() {
     return prisma.product.findMany({
+      where: ACTIVE_PRODUCT_WHERE,
       include: { store: true, images: true },
       orderBy: {
         createdAt: 'desc',
@@ -16,21 +24,21 @@ export class ProductRepository {
   }
 
   findById(id: string) {
-    return prisma.product.findUnique({
-      where: { id },
+    return prisma.product.findFirst({
+      where: { id, ...ACTIVE_PRODUCT_WHERE },
     });
   }
 
   findByIdWithStore(id: string) {
-    return prisma.product.findUnique({
-      where: { id },
+    return prisma.product.findFirst({
+      where: { id, ...ACTIVE_PRODUCT_WHERE },
       include: { store: true, images: true },
     });
   }
 
   findBySlug(slug: string) {
-    return prisma.product.findUnique({
-      where: { slug },
+    return prisma.product.findFirst({
+      where: { slug, ...ACTIVE_PRODUCT_WHERE },
     });
   }
 

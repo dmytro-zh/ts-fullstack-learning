@@ -34,6 +34,7 @@ const typeDefs = /* GraphQL */ `
     createdAt: String!
     quantity: Int!
     images: [ProductImage!]!
+    isActive: Boolean!
   }
 
   type ProductImage {
@@ -138,6 +139,8 @@ const typeDefs = /* GraphQL */ `
       quantity: Int
     ): Product!
 
+    deleteProduct(id: ID!): Product!
+
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
     checkoutByLink(input: CheckoutByLinkInput!): Order!
@@ -160,6 +163,16 @@ const resolvers = {
       const link = await checkoutLinkService.getBySlug(args.slug);
 
       if (!link || !link.active) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
+
+      // IMPORTANT: do not allow checkout for deleted products
+      // @ts-ignore - depends on include shape
+      if ((link as any).product && (link as any).product.isActive === false) {
         throw new DomainError(
           ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
           'Checkout link not found or inactive',
@@ -195,6 +208,8 @@ const resolvers = {
         quantity?: number;
       },
     ) => productService.updateProduct(args),
+
+    deleteProduct: (_: unknown, args: { id: string }) => productService.deleteProduct(args.id),
 
     createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
       storeService.createStore(args.input),

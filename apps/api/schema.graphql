@@ -11,6 +11,7 @@ type Product {
   createdAt: String!
   quantity: Int!
   images: [ProductImage!]!
+  isActive: Boolean!
 }
 
 type ProductImage {
