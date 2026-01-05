@@ -19,11 +19,12 @@ type Documents = {
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    createdAt\n    product {\n      id\n      name\n      price\n      inStock\n      description\n      imageUrl\n      images {\n        id\n        url\n        isPrimary\n        createdAt\n      }\n    }\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}': typeof types.CreateStoreDocument;
-  'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}': typeof types.StoresOverviewDocument;
+  'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n    isActive\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}': typeof types.StoresOverviewDocument;
+  'mutation DeleteProduct($id: ID!) {\n  deleteProduct(id: $id) {\n    id\n    storeId\n  }\n}': typeof types.DeleteProductDocument;
   'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}': typeof types.OrdersByStoreDocument;
   'query StoreOrders($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}': typeof types.StoreOrdersDocument;
   'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}': typeof types.ProductByIdDocument;
-  'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}': typeof types.ProductsDocument;
+  'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n    isActive\n  }\n}': typeof types.ProductsDocument;
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': typeof types.StoresDocument;
   'mutation UpdateOrderStatus($orderId: ID!, $status: OrderStatus!) {\n  updateOrderStatus(orderId: $orderId, status: $status) {\n    id\n    status\n  }\n}': typeof types.UpdateOrderStatusDocument;
   'mutation UpdateProduct($id: ID!, $price: Float!, $description: String, $imageUrl: String, $quantity: Int!) {\n  updateProduct(\n    id: $id\n    price: $price\n    description: $description\n    imageUrl: $imageUrl\n    quantity: $quantity\n  ) {\n    id\n    name\n    price\n    description\n    imageUrl\n    quantity\n  }\n}': typeof types.UpdateProductDocument;
@@ -39,15 +40,17 @@ const documents: Documents = {
     types.CreateCheckoutLinkDocument,
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}':
     types.CreateStoreDocument,
-  'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}':
+  'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n    isActive\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}':
     types.StoresOverviewDocument,
+  'mutation DeleteProduct($id: ID!) {\n  deleteProduct(id: $id) {\n    id\n    storeId\n  }\n}':
+    types.DeleteProductDocument,
   'query OrdersByStore($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    status\n    total\n    quantity\n    shippingNote\n    createdAt\n    customerName\n    email\n    product {\n      id\n      name\n      price\n    }\n    checkoutLink {\n      slug\n    }\n  }\n}':
     types.OrdersByStoreDocument,
   'query StoreOrders($storeId: ID!) {\n  orders(storeId: $storeId) {\n    id\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}':
     types.StoreOrdersDocument,
   'query ProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    price\n    inStock\n    storeId\n    description\n    quantity\n    store {\n      id\n      name\n      email\n    }\n    images {\n      id\n      url\n      key\n      isPrimary\n      mime\n      size\n      width\n      height\n      createdAt\n    }\n  }\n}':
     types.ProductByIdDocument,
-  'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}':
+  'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n    isActive\n  }\n}':
     types.ProductsDocument,
   'query Stores {\n  stores {\n    id\n    name\n    email\n  }\n}': types.StoresDocument,
   'mutation UpdateOrderStatus($orderId: ID!, $status: OrderStatus!) {\n  updateOrderStatus(orderId: $orderId, status: $status) {\n    id\n    status\n  }\n}':
@@ -104,8 +107,14 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}',
-): (typeof documents)['query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}'];
+  source: 'query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n    isActive\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}',
+): (typeof documents)['query StoresOverview {\n  stores {\n    id\n    name\n  }\n}\n\nquery StoreDashboard($storeId: ID!) {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    createdAt\n    quantity\n    isActive\n  }\n  orders(storeId: $storeId) {\n    id\n    productId\n    total\n    createdAt\n    status\n    quantity\n    product {\n      id\n      name\n    }\n  }\n}'];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(
+  source: 'mutation DeleteProduct($id: ID!) {\n  deleteProduct(id: $id) {\n    id\n    storeId\n  }\n}',
+): (typeof documents)['mutation DeleteProduct($id: ID!) {\n  deleteProduct(id: $id) {\n    id\n    storeId\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -128,8 +137,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}',
-): (typeof documents)['query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n  }\n}'];
+  source: 'query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n    isActive\n  }\n}',
+): (typeof documents)['query Products {\n  products {\n    id\n    name\n    price\n    inStock\n    storeId\n    quantity\n    isActive\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
