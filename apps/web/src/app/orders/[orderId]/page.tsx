@@ -11,8 +11,8 @@ import {
 export const dynamic = 'force-dynamic';
 
 type OrderDetailsPageProps = {
-  params: { orderId: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ orderId: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
@@ -28,8 +28,10 @@ async function fetchStoreOrders(storeId: string): Promise<StoreOrdersQuery> {
 }
 
 export default async function OrderDetailsPage({ params, searchParams }: OrderDetailsPageProps) {
-  const { orderId } = params;
-  const storeParam = searchParams?.store;
+  const { orderId } = await params;
+
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const storeParam = resolvedSearchParams?.store;
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
   // No storeId in URL

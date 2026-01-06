@@ -38,11 +38,43 @@ async function fetchOrder(id: string) {
 }
 
 type ThankYouPageProps = {
-  params: { orderId: string };
+  params?: Promise<{ orderId: string }>;
 };
 
 export default async function ThankYouPage({ params }: ThankYouPageProps) {
-  const { orderId } = params;
+  const resolvedParams = params ? await params : undefined;
+  const orderId = resolvedParams?.orderId;
+
+  if (!orderId) {
+    return (
+      <main
+        style={{
+          minHeight: '100vh',
+          padding: 40,
+          background: '#f7f7f8',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#0f172a',
+        }}
+      >
+        <div
+          style={{
+            background: '#fff',
+            padding: 24,
+            borderRadius: 20,
+            maxWidth: 720,
+            width: '100%',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
+          }}
+        >
+          Missing order id.
+        </div>
+      </main>
+    );
+  }
+
   const order = await fetchOrder(orderId);
 
   return (

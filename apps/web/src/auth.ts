@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
 
   // Make NextAuth and middleware use the same secret
-  secret: process.env.NEXTAUTH_SECRET,
+  ...(process.env.NEXTAUTH_SECRET ? { secret: process.env.NEXTAUTH_SECRET } : {}),
 
   pages: {
     signIn: '/login',
@@ -49,7 +49,9 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        const email = String(credentials?.email ?? '').trim().toLowerCase();
+        const email = String(credentials?.email ?? '')
+          .trim()
+          .toLowerCase();
         const password = String(credentials?.password ?? '');
 
         if (!email || !password) return null;
@@ -86,8 +88,15 @@ export const authOptions: NextAuthOptions = {
       const t = token as JWT & { userId?: string; role?: AppRole };
 
       if (session.user) {
-        (session.user as { id?: string; role?: AppRole }).id = t.userId;
-        (session.user as { id?: string; role?: AppRole }).role = t.role;
+        const u = session.user as { id?: string; role?: AppRole };
+
+        if (typeof t.userId === 'string') {
+          u.id = t.userId;
+        }
+
+        if (t.role) {
+          u.role = t.role;
+        }
       }
 
       return session;

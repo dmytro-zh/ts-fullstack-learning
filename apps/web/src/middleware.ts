@@ -31,7 +31,10 @@ export async function middleware(req: NextRequest) {
 
   if (!isOwnerOnly && !isMerchantOnly) return NextResponse.next();
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    ...(process.env.NEXTAUTH_SECRET ? { secret: process.env.NEXTAUTH_SECRET } : {}),
+  });
   if (!token) return buildLoginRedirect(req);
 
   const role = (token as { role?: AppRole }).role;
