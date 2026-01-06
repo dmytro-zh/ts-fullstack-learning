@@ -33,6 +33,9 @@ function getDevUsers() {
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
 
+  // Make NextAuth and middleware use the same secret
+  secret: process.env.NEXTAUTH_SECRET,
+
   pages: {
     signIn: '/login',
   },

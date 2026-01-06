@@ -40,12 +40,22 @@ export default function LoginPage() {
         callbackUrl,
       });
 
-      if (!res || res.error) {
+      if (!res) {
+        setErrorText('No response from /api/auth. Check NextAuth route.');
+        return;
+      }
+
+      if (res.error) {
         setErrorText('Invalid email or password.');
         return;
       }
 
-      router.replace(callbackUrl);
+      const target = res.url ?? callbackUrl;
+
+      // Important: full navigation avoids cookie/middleware race in dev
+      window.location.href = target;
+    } catch {
+      setErrorText('Unexpected error. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +124,7 @@ export default function LoginPage() {
                   'radial-gradient(circle at 30% 30%, #22c55e 0, #16a34a 50%, #0f766e 100%)',
               }}
             />
-            Merchant sign in
+            Sign in
           </div>
 
           <h1
@@ -143,40 +153,19 @@ export default function LoginPage() {
           style={{
             borderRadius: 22,
             border: cardBorder,
-            background:
-              'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
-            boxShadow:
-              '0 18px 55px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.10)',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96))',
+            boxShadow: '0 18px 55px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.10)',
             padding: 18,
             display: 'grid',
             gap: 14,
             backdropFilter: 'blur(18px)',
           }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 800,
-                fontSize: 14,
-                letterSpacing: -0.01,
-              }}
-            >
-              Sign in
-            </div>
-
-            <div
-              style={{
-                fontSize: 12,
-                color: '#64748b',
-                lineHeight: 1.5,
-              }}
-            >
-              You will be redirected to: <span style={{ color: '#0f172a', fontWeight: 700 }}>{callbackUrl}</span>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ fontWeight: 800, fontSize: 14, letterSpacing: -0.01 }}>Sign in</div>
+            <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+              You will be redirected to:{' '}
+              <span style={{ color: '#0f172a', fontWeight: 700 }}>{callbackUrl}</span>
             </div>
           </div>
 
@@ -250,12 +239,7 @@ export default function LoginPage() {
             </div>
           ) : null}
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 10,
-            }}
-          >
+          <div style={{ display: 'grid', gap: 10 }}>
             <button
               type="button"
               disabled={!canSubmit}
@@ -287,13 +271,7 @@ export default function LoginPage() {
                 alignItems: 'center',
               }}
             >
-              <div
-                style={{
-                  fontSize: 11,
-                  color: '#94a3b8',
-                  fontWeight: 700,
-                }}
-              >
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>
                 Dev shortcuts:
               </div>
 

@@ -32,15 +32,12 @@ export async function middleware(req: NextRequest) {
   if (!isOwnerOnly && !isMerchantOnly) return NextResponse.next();
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
   if (!token) return buildLoginRedirect(req);
 
   const role = (token as { role?: AppRole }).role;
   if (!role) return buildLoginRedirect(req);
 
-  if (isOwnerOnly && role !== APP_ROLES.PLATFORM_OWNER) {
-    return buildForbiddenRedirect(req);
-  }
+  if (isOwnerOnly && role !== APP_ROLES.PLATFORM_OWNER) return buildForbiddenRedirect(req);
 
   if (isMerchantOnly && role !== APP_ROLES.MERCHANT && role !== APP_ROLES.PLATFORM_OWNER) {
     return buildForbiddenRedirect(req);
