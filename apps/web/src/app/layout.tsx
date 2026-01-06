@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { NextAuthSessionProvider } from './_providers/SessionProvider';
 import { TopNav } from './_components/TopNav';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,11 +22,13 @@ export const metadata: Metadata = {
   description: 'Tiny checkout and orders dashboard for small creators',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="en">
       <body
@@ -37,7 +41,7 @@ export default function RootLayout({
           fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         }}
       >
-        <NextAuthSessionProvider>
+        <NextAuthSessionProvider session={session}>
           <div
             style={{
               minHeight: '100vh',
@@ -172,7 +176,7 @@ export default function RootLayout({
                   gap: 8,
                 }}
               >
-                <span>Creator checkout · side project</span>
+                <span>Creator checkout - side project</span>
                 <span>Built for very small, very real shops.</span>
               </div>
             </footer>
