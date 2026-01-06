@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { NextAuthSessionProvider } from './_providers/SessionProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,11 +31,9 @@ export default function RootLayout({
         style={{
           margin: 0,
           minHeight: '100vh',
-          background:
-            'radial-gradient(circle at top, #e5f2ff 0, #f9fafb 45%, #f3f4f6 100%)',
+          background: 'radial-gradient(circle at top, #e5f2ff 0, #f9fafb 45%, #f3f4f6 100%)',
           color: '#020617',
-          fontFamily:
-            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         }}
       >
         <div
@@ -67,8 +66,7 @@ export default function RootLayout({
                   border: '1px solid rgba(148,163,184,0.35)',
                   background:
                     'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))',
-                  boxShadow:
-                    '0 14px 40px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.12)',
+                  boxShadow: '0 14px 40px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.12)',
                   padding: '9px 16px',
                   display: 'flex',
                   alignItems: 'center',
@@ -95,8 +93,7 @@ export default function RootLayout({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow:
-                        '0 10px 24px rgba(37,99,235,0.42), 0 0 0 1px rgba(15,23,42,0.35)',
+                      boxShadow: '0 10px 24px rgba(37,99,235,0.42), 0 0 0 1px rgba(15,23,42,0.35)',
                     }}
                   >
                     <span
@@ -177,7 +174,8 @@ export default function RootLayout({
                       color: '#4b5563',
                       border: '1px solid transparent',
                     }}
-                  >Dashboard
+                  >
+                    Dashboard
                   </Link>
                   <Link
                     href="/checkout-links"
@@ -186,8 +184,7 @@ export default function RootLayout({
                       padding: '7px 14px',
                       borderRadius: 999,
                       border: '1px solid rgba(37,99,235,0.9)',
-                      background:
-                        'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
                       color: '#f9fafb',
                       fontWeight: 600,
                       boxShadow: '0 10px 26px rgba(37,99,235,0.30)',
@@ -208,7 +205,7 @@ export default function RootLayout({
               flexDirection: 'column',
             }}
           >
-            {children}
+            <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
           </main>
 
           <footer
@@ -217,8 +214,7 @@ export default function RootLayout({
               padding: '12px 16px 18px',
               fontSize: 11,
               color: '#9ca3af',
-              background:
-                'linear-gradient(to top, rgba(248,250,252,0.96), rgba(248,250,252,0.75))',
+              background: 'linear-gradient(to top, rgba(248,250,252,0.96), rgba(248,250,252,0.75))',
             }}
           >
             <div
