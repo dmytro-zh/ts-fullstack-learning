@@ -11,7 +11,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 type OrdersPageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
@@ -48,7 +48,9 @@ function formatOrderDate(createdAt?: string | null): string {
 }
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
-  const storeParam = searchParams?.store;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const storeParam = resolvedSearchParams?.store;
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
   if (!storeId) {
@@ -96,8 +98,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 padding: '9px 18px',
                 borderRadius: 999,
                 border: '1px solid #1d4ed8',
-                background:
-                  'linear-gradient(135deg, #2563eb 0, #1d4ed8 100%)',
+                background: 'linear-gradient(135deg, #2563eb 0, #1d4ed8 100%)',
                 fontSize: 13,
                 fontWeight: 500,
                 color: '#f9fafb',
@@ -145,7 +146,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   }
 
   const stores = storesData.stores ?? [];
-  const store = stores.find(s => s.id === storeId) ?? null;
+  const store = stores.find((s) => s.id === storeId) ?? null;
   const orders = ordersData.orders ?? [];
 
   return (
@@ -265,16 +266,16 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 gap: 8,
               }}
             >
-              {orders.map(order => {
+              {orders.map((order) => {
                 const quantity = order.quantity ?? 1;
                 const createdAtLabel = formatOrderDate(order.createdAt);
 
                 return (
                   <Link
                     key={order.id}
-                    href={`/orders/${encodeURIComponent(
-                      order.id,
-                    )}?store=${encodeURIComponent(storeId)}`}
+                    href={`/orders/${encodeURIComponent(order.id)}?store=${encodeURIComponent(
+                      storeId,
+                    )}`}
                     style={{
                       borderRadius: 14,
                       border: '1px solid rgba(229,231,235,0.95)',
@@ -300,7 +301,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           fontWeight: 500,
                         }}
                       >
-                        {order.product?.name ?? 'Order'} × {quantity}
+                        {order.product?.name ?? 'Order'} x {quantity}
                       </span>
                       <span
                         style={{
