@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-
-type Role = 'PLATFORM_OWNER' | 'MERCHANT' | 'BUYER';
+import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared/auth/roles';
 
 const merchantOnlyPrefixes = [
   '/dashboard',
@@ -37,8 +36,6 @@ export async function middleware(req: NextRequest) {
 
   const token = await getToken({
     req,
-    // NextAuth uses NEXTAUTH_SECRET under the hood.
-    // If you use a different name, set it here.
     secret: process.env.NEXTAUTH_SECRET,
   });
 
@@ -46,22 +43,23 @@ export async function middleware(req: NextRequest) {
     return buildLoginRedirect(req);
   }
 
-  const role = (token as unknown as { role?: Role }).role;
+  const role = (token as { role?: AppRole }).role;
 
-  // If role is not present yet, treat as unauthenticated.
-  // This prevents accidental access until role is wired into JWT/session.
   if (!role) {
     return buildLoginRedirect(req);
   }
 
-  if (isOwnerOnly && role !== 'PLATFORM_OWNER') {
+  if (isOwnerOnly && role !== APP_ROLES.PLATFORM_OWNER) {
     const url = req.nextUrl.clone();
     url.pathname = '/forbidden';
     return NextResponse.redirect(url);
   }
 
-  // Merchant area: allow MERCHANT and PLATFORM_OWNER
-  if (isMerchantOnly && role !== 'MERCHANT' && role !== 'PLATFORM_OWNER') {
+  if (
+    isMerchantOnly &&
+    role !== APP_ROLES.MERCHANT &&
+    role !== APP_ROLES.PLATFORM_OWNER
+  ) {
     const url = req.nextUrl.clone();
     url.pathname = '/forbidden';
     return NextResponse.redirect(url);
@@ -72,12 +70,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-      Skip:
-      - next internals
-      - static files
-      - auth routes
-    */
     '/((?!_next|favicon.ico|api/auth|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map)$).*)',
   ],
 };

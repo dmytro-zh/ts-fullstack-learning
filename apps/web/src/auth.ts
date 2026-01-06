@@ -1,8 +1,8 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
-
-export type AppRole = 'PLATFORM_OWNER' | 'MERCHANT';
+import type { AppRole } from '@ts-fullstack-learning/shared/auth/roles';
+import { APP_ROLES } from '@ts-fullstack-learning/shared/auth/roles';
 
 export type AppUser = {
   id: string;
@@ -17,14 +17,14 @@ function getDevUsers() {
       id: 'u_platform_owner',
       name: 'Platform Owner',
       email: 'owner@local.dev',
-      role: 'PLATFORM_OWNER' as const,
+      role: APP_ROLES.PLATFORM_OWNER,
       password: 'owner',
     },
     {
       id: 'u_merchant',
       name: 'Merchant',
       email: 'merchant@local.dev',
-      role: 'MERCHANT' as const,
+      role: APP_ROLES.MERCHANT,
       password: 'merchant',
     },
   ];
