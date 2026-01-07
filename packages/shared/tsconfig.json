@@ -5,7 +5,11 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist",
-    "strict": true
+    "strict": true,
+    "noEmit": false,
+
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
   },
   "include": ["src"]
 }
