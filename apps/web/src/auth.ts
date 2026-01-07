@@ -1,8 +1,7 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
-import type { AppRole } from '@ts-fullstack-learning/shared/auth/roles';
-import { APP_ROLES } from '@ts-fullstack-learning/shared/auth/roles';
+import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
 export type AppUser = {
   id: string;

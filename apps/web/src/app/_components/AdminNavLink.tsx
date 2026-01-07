@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared/auth/roles';
+import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
 export function AdminNavLink() {
   const { data } = useSession();

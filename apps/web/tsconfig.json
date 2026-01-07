@@ -3,7 +3,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@ts-fullstack-learning/shared": ["../../packages/shared/src"],
       "@/*": ["./src/*"]
     },
 
@@ -21,11 +20,7 @@
     "jsx": "preserve",
     "types": ["node"],
 
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
@@ -34,9 +29,5 @@
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"],
-  "references": [
-    {
-      "path": "../../packages/shared"
-    }
-  ]
+  "references": [{ "path": "../../packages/shared" }]
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared/auth/roles';
+import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
 const baseLinkStyle: React.CSSProperties = {
   textDecoration: 'none',

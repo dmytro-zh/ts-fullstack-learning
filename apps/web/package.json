@@ -11,6 +11,7 @@
     "graphql:watch": "graphql-codegen --watch --verbose"
   },
   "dependencies": {
+    "@ts-fullstack-learning/shared": "workspace:*",
     "framer-motion": "^12.23.26",
     "graphql": "^16.11.0",
     "graphql-request": "^6.1.0",
@@ -25,7 +26,6 @@
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/client-preset": "^5.0.2",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@ts-fullstack-learning/shared": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",

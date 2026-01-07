@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared/auth/roles';
+import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
 const merchantOnlyPrefixes = ['/dashboard', '/products', '/orders', '/stores', '/checkout-links'];
 const ownerOnlyPrefixes = ['/admin'];
