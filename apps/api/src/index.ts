@@ -9,6 +9,8 @@ import fsp from 'node:fs/promises';
 import crypto from 'node:crypto';
 import { createApolloServer } from './server';
 import { prisma } from './lib/prisma';
+import type { GraphQLContext } from './server-context';
+import { getRequestAuth } from './auth/get-request-auth';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -301,8 +303,7 @@ app.post('/uploads/attach', async (req, res) => {
 
 app.post('/uploads/product-image', upload.single('file'), async (req, res) => {
   try {
-    const uploadSession =
-      typeof req.body?.uploadSession === 'string' ? req.body.uploadSession : '';
+    const uploadSession = typeof req.body?.uploadSession === 'string' ? req.body.uploadSession : '';
 
     const productIdRaw = typeof req.body?.productId === 'string' ? req.body.productId : '';
     const productId = productIdRaw.trim().length > 0 ? productIdRaw.trim() : null;
@@ -400,7 +401,10 @@ async function start() {
   app.use(
     '/graphql',
     expressMiddleware(server, {
-      context: async () => ({}),
+      context: async ({ req }): Promise<GraphQLContext> => {
+        const auth = await getRequestAuth(req);
+        return { auth };
+      },
     }),
   );
 
