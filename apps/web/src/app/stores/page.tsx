@@ -1,18 +1,45 @@
-import { GraphQLClient } from 'graphql-request';
 import Link from 'next/link';
+import { print } from 'graphql';
 import { redirect } from 'next/navigation';
-import { getEnv } from '../../lib/env';
-import {
-  StoresDocument,
-  type StoresQuery,
-} from '../../graphql/generated/graphql';
+import { headers, cookies } from 'next/headers';
+import { StoresDocument, type StoresQuery } from '../../graphql/generated/graphql';
 import { createStoreAction as createStoreMutation } from '../actions/createStore';
 
+function getServerBaseUrl(h: Headers) {
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
+  const proto = h.get('x-forwarded-proto') ?? 'http';
+  return `${proto}://${host}`;
+}
+
 async function fetchStores() {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
-  const res = await client.request<StoresQuery>(StoresDocument);
-  return res.stores;
+  const h = await headers();
+  const baseUrl = getServerBaseUrl(h);
+
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+
+  const res = await fetch(`${baseUrl}/api/graphql`, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      'content-type': 'application/json',
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
+    },
+    body: JSON.stringify({
+      query: print(StoresDocument),
+      variables: {},
+    }),
+  });
+
+  const json = (await res.json()) as { data?: StoresQuery; errors?: unknown };
+
+  if (!res.ok || json.errors) {
+    throw new Error(
+      `Failed to load stores: ${res.status}${json.errors ? ` (graphql errors)` : ''}`,
+    );
+  }
+
+  return json.data?.stores ?? [];
 }
 
 async function createStoreAction(formData: FormData) {
@@ -199,7 +226,7 @@ export default async function StoresPage({ searchParams }: PageProps) {
                     </span>
 
                     <Link
-                      href={`/orders?storeId=${s.id}`}
+                      href={`/orders?store=${encodeURIComponent(s.id)}`}
                       style={{
                         padding: '6px 14px',
                         borderRadius: 999,

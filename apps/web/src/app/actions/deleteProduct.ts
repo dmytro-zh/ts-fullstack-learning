@@ -1,12 +1,14 @@
 'use server';
 
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
-import { DeleteProductDocument, type DeleteProductMutation, type DeleteProductMutationVariables } from '../../graphql/generated/graphql';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
+import {
+  DeleteProductDocument,
+  type DeleteProductMutation,
+  type DeleteProductMutationVariables,
+} from '../../graphql/generated/graphql';
 
 export async function deleteProductAction(id: string) {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
 
   const data = await client.request<DeleteProductMutation, DeleteProductMutationVariables>(
     DeleteProductDocument,

@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../../lib/env';
-import { StoresOverviewDocument, type StoresOverviewQuery } from '../../../graphql/generated/graphql';
+import { createWebGraphQLClient } from '../../../lib/graphql-client';
+import {
+  StoresOverviewDocument,
+  type StoresOverviewQuery,
+} from '../../../graphql/generated/graphql';
 import { AddProductForm } from '../AddProductForm';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -11,13 +13,14 @@ type NewProductPageProps = {
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
 export default async function NewProductPage({ searchParams }: NewProductPageProps) {
-  const resolvedSearchParams: SearchParams = await (searchParams ?? Promise.resolve<SearchParams>({}));
+  const resolvedSearchParams: SearchParams = await (searchParams ??
+    Promise.resolve<SearchParams>({}));
+
   const storeParam = resolvedSearchParams['store'];
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
@@ -35,12 +38,7 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           Failed to load stores for product creation.
         </div>
       </main>
@@ -67,14 +65,7 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
         color: '#020617',
       }}
     >
-      <div
-        style={{
-          maxWidth: 1120,
-          margin: '0 auto',
-          display: 'grid',
-          gap: 20,
-        }}
-      >
+      <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gap: 20 }}>
         <header
           style={{
             display: 'flex',
@@ -84,49 +75,18 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
             flexWrap: 'wrap',
           }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-              }}
-            >
-              New product
-            </div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 24,
-                letterSpacing: -0.03,
-              }}
-            >
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>New product</div>
+            <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>
               Add a product to this tiny store.
             </h1>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#6b7280',
-              }}
-            >
+            <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
               Give it a clear name and price. It will be ready for checkout links right away.
             </p>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-            }}
-          >
-            {storeId && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {storeId ? (
               <Link
                 href={`/products?store=${encodeURIComponent(storeId)}`}
                 style={{
@@ -141,7 +101,8 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
               >
                 Back to products
               </Link>
-            )}
+            ) : null}
+
             <Link
               href="/dashboard"
               style={{

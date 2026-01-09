@@ -1,14 +1,12 @@
 import Link from 'next/link';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
+import type React from 'react';
 import {
   StoresOverviewDocument,
   StoreDashboardDocument,
   type StoresOverviewQuery,
   type StoreDashboardQuery,
 } from '../../graphql/generated/graphql';
-
-import type React from 'react';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 
 const itemCardBaseStyle: React.CSSProperties = {
   borderRadius: 14,
@@ -24,17 +22,13 @@ type DashboardPageProps = {
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
 async function fetchStoreDashboard(storeId: string): Promise<StoreDashboardQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
-  return client.request<StoreDashboardQuery>(StoreDashboardDocument, {
-    storeId,
-  });
+  const client = await createWebGraphQLClient();
+  return client.request<StoreDashboardQuery>(StoreDashboardDocument, { storeId });
 }
 
 function formatOrderDate(createdAt?: string | null): string {
@@ -135,8 +129,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const allOrders = dashboardData?.orders ?? [];
 
   const productsForStore = activeStore
-  ? allProducts.filter((p) => p.storeId === activeStore.id && p.isActive !== false)
-  : [];
+    ? allProducts.filter((p) => p.storeId === activeStore.id && p.isActive !== false)
+    : [];
 
   const storeProducts =
     activeStore != null
@@ -445,31 +439,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     gap: 4,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Revenue (30d)
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      letterSpacing: -0.03,
-                    }}
-                  >
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>Revenue (30d)</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
                     {formattedRevenue30d}
                   </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}
-                  >
-                    Last 30 days of paid orders
-                  </span>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>Last 30 days of paid orders</span>
                 </div>
 
                 <div
@@ -482,31 +456,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     gap: 4,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Orders (30d)
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      letterSpacing: -0.03,
-                    }}
-                  >
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>Orders (30d)</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
                     {recentOrdersCount}
                   </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}
-                  >
-                    Paid orders for this store
-                  </span>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>Paid orders for this store</span>
                 </div>
 
                 <div
@@ -519,35 +473,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     gap: 4,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Products
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      letterSpacing: -0.03,
-                    }}
-                  >
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>Products</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
                     {totalProductsCount}
                   </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}
-                  >
-                    All products in this store
-                  </span>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>All products in this store</span>
                 </div>
               </div>
 
-              {/* Best seller (30d) */}
               <div
                 style={{
                   borderRadius: 16,
@@ -562,93 +495,29 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               >
                 {bestSellingProduct ? (
                   <>
-                    {/* Левая колонка: лейбл + товар + pcs / orders */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 4,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 12,
-                          color: '#6b7280',
-                        }}
-                      >
-                        Best seller (30d)
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {bestSellingProduct.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          color: '#4b5563',
-                        }}
-                      >
-                        {bestSellingProduct.unitsSold} pcs · {bestSellingProduct.ordersCount} orders
+                    <div style={{ display: 'grid', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>Best seller (30d)</span>
+                      <span style={{ fontSize: 16, fontWeight: 600 }}>{bestSellingProduct.name}</span>
+                      <span style={{ fontSize: 12, color: '#4b5563' }}>
+                        {bestSellingProduct.unitsSold} pcs - {bestSellingProduct.ordersCount} orders
                       </span>
                     </div>
 
-                    {/* Правая колонка: сумма + подпись */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 2,
-                        textAlign: 'right',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 18,
-                          fontWeight: 700,
-                        }}
-                      >
+                    <div style={{ display: 'grid', gap: 2, textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: 18, fontWeight: 700 }}>
                         ${bestSellingProduct.revenue.toFixed(2)}
                       </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: '#6b7280',
-                        }}
-                      >
-                        Revenue in 30 days
-                      </span>
+                      <span style={{ fontSize: 11, color: '#6b7280' }}>Revenue in 30 days</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Пустое состояние, тот же layout, но текст вместо цифр */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 4,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 12,
-                          color: '#6b7280',
-                        }}
-                      >
-                        Best seller (30d)
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          color: '#4b5563',
-                        }}
-                      >
+                    <div style={{ display: 'grid', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>Best seller (30d)</span>
+                      <span style={{ fontSize: 12, color: '#4b5563' }}>
                         No paid orders in the last 30 days yet.
                       </span>
                     </div>
-
                     <div />
                   </>
                 )}
@@ -667,46 +536,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   flexWrap: 'wrap',
                 }}
               >
-                <div
-                  style={{
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: '#6b7280',
-                    }}
-                  >
-                    Current store
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {activeStore.name}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: '#4b5563',
-                    }}
-                  >
+                <div style={{ display: 'grid', gap: 4 }}>
+                  <span style={{ fontSize: 12, color: '#6b7280' }}>Current store</span>
+                  <span style={{ fontSize: 16, fontWeight: 600 }}>{activeStore.name}</span>
+                  <span style={{ fontSize: 12, color: '#4b5563' }}>
                     Attach a product, create a link, and every paid order will land here.
                   </span>
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                    justifyContent: 'flex-end',
-                  }}
-                >
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <Link
                     href="/stores"
                     style={{
@@ -751,37 +589,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       gap: 8,
                     }}
                   >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 2,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Products
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: '#6b7280',
-                        }}
-                      >
+                    <div style={{ display: 'grid', gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>Products</span>
+                      <span style={{ fontSize: 11, color: '#6b7280' }}>
                         A quick look at what this store can sell.
                       </span>
                     </div>
                     {hasProducts && (
                       <Link
                         href={`/products?store=${encodeURIComponent(activeStore.id)}`}
-                        style={{
-                          fontSize: 11,
-                          color: '#1d4ed8',
-                          textDecoration: 'none',
-                        }}
+                        style={{ fontSize: 11, color: '#1d4ed8', textDecoration: 'none' }}
                       >
                         View all products
                       </Link>
@@ -804,9 +621,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         justifyItems: 'center',
                       }}
                     >
-                      <span>
-                        This store has no products yet. Add one to create a checkout link.
-                      </span>
+                      <span>This store has no products yet. Add one to create a checkout link.</span>
                       <Link
                         href={`/products?store=${encodeURIComponent(activeStore.id)}`}
                         style={{
@@ -828,14 +643,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       </Link>
                     </div>
                   ) : (
-                    <div
-                      style={{
-                        marginTop: 6,
-                        display: 'grid',
-                        gap: 6,
-                        fontSize: 13,
-                      }}
-                    >
+                    <div style={{ marginTop: 6, display: 'grid', gap: 6, fontSize: 13 }}>
                       {storeProducts.map((p) => {
                         const inStock = p.inStock === true;
                         const stockLabel = inStock ? 'In stock' : 'Out of stock';
@@ -852,24 +660,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                               gap: 8,
                             }}
                           >
-                            <div
-                              style={{
-                                display: 'grid',
-                                gap: 2,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 6,
-                                  minWidth: 0,
-                                }}
-                              >
+                            <div style={{ display: 'grid', gap: 2 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                                 <Link
-                                  href={`/products/${encodeURIComponent(
-                                    p.id,
-                                  )}?store=${encodeURIComponent(activeStore.id)}`}
+                                  href={`/products/${encodeURIComponent(p.id)}?store=${encodeURIComponent(
+                                    activeStore.id,
+                                  )}`}
                                   style={{
                                     fontSize: 13,
                                     fontWeight: 500,
@@ -902,31 +698,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                 )}
                               </div>
 
-                              <span
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 500,
-                                  color: stockColor,
-                                }}
-                              >
+                              <span style={{ fontSize: 12, fontWeight: 500, color: stockColor }}>
                                 {stockLabel}
                               </span>
                             </div>
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 10,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                ${p.price.toFixed(2)}
-                              </span>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ fontSize: 13, fontWeight: 600 }}>${p.price.toFixed(2)}</span>
                               <Link
                                 href={`/checkout-links?productId=${encodeURIComponent(
                                   p.id,
@@ -973,37 +751,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       gap: 8,
                     }}
                   >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gap: 2,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Latest orders
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: '#6b7280',
-                        }}
-                      >
+                    <div style={{ display: 'grid', gap: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>Latest orders</span>
+                      <span style={{ fontSize: 11, color: '#6b7280' }}>
                         A short stream of recent payments for this store.
                       </span>
                     </div>
                     {hasOrders && (
                       <Link
                         href={`/orders?store=${encodeURIComponent(activeStore.id)}`}
-                        style={{
-                          fontSize: 11,
-                          color: '#1d4ed8',
-                          textDecoration: 'none',
-                        }}
+                        style={{ fontSize: 11, color: '#1d4ed8', textDecoration: 'none' }}
                       >
                         View all orders
                       </Link>
@@ -1026,14 +783,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       No orders yet. Share a checkout link and your first order will appear here.
                     </div>
                   ) : (
-                    <div
-                      style={{
-                        marginTop: 6,
-                        display: 'grid',
-                        gap: 6,
-                        fontSize: 13,
-                      }}
-                    >
+                    <div style={{ marginTop: 6, display: 'grid', gap: 6, fontSize: 13 }}>
                       {storeOrders.map((o) => {
                         const createdAtLabel = formatOrderDate(o.createdAt);
                         const quantity = o.quantity ?? 1;
@@ -1044,10 +794,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             href={`/orders/${encodeURIComponent(o.id)}?store=${encodeURIComponent(
                               activeStore.id,
                             )}`}
-                            style={{
-                              textDecoration: 'none',
-                              color: 'inherit',
-                            }}
+                            style={{ textDecoration: 'none', color: 'inherit' }}
                           >
                             <div
                               style={{
@@ -1059,21 +806,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                 flexWrap: 'wrap',
                               }}
                             >
-                              <div
-                                style={{
-                                  display: 'grid',
-                                  gap: 4,
-                                  minWidth: 0,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                    gap: 6,
-                                    minWidth: 0,
-                                  }}
-                                >
+                              <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
                                   <span
                                     style={{
                                       fontSize: 13,
@@ -1102,14 +836,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                   </span>
                                 </div>
 
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    color: '#6b7280',
-                                  }}
-                                >
-                                  {createdAtLabel}
-                                </span>
+                                <span style={{ fontSize: 11, color: '#6b7280' }}>{createdAtLabel}</span>
 
                                 <span
                                   style={{
@@ -1123,30 +850,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                 </span>
                               </div>
 
-                              <div
-                                style={{
-                                  display: 'grid',
-                                  justifyItems: 'flex-end',
-                                  textAlign: 'right',
-                                  gap: 2,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  ${o.total.toFixed(2)}
-                                </span>
-                                <span
-                                  style={{
-                                    fontSize: 11,
-                                    color: '#16a34a',
-                                  }}
-                                >
-                                  Paid
-                                </span>
+                              <div style={{ display: 'grid', justifyItems: 'flex-end', textAlign: 'right', gap: 2 }}>
+                                <span style={{ fontSize: 13, fontWeight: 600 }}>${o.total.toFixed(2)}</span>
+                                <span style={{ fontSize: 11, color: '#16a34a' }}>Paid</span>
                               </div>
                             </div>
                           </Link>

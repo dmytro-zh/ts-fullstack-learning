@@ -1,6 +1,5 @@
 // Public checkout page: load checkout link by slug and render product info + checkout form.
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../../lib/env';
+import { createWebGraphQLClient } from '../../../lib/graphql-client';
 import {
   CheckoutLinkDocument,
   type CheckoutLinkQuery,
@@ -9,8 +8,7 @@ import {
 import { CheckoutLinkView } from './CheckoutLinkView';
 
 async function fetchCheckoutLink(slug: string) {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   const data = await client.request<CheckoutLinkQuery, CheckoutLinkQueryVariables>(
     CheckoutLinkDocument,
     { slug },
