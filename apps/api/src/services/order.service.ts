@@ -20,6 +20,34 @@ const orderStatusSchema = z.enum([
   'REFUNDED',
 ]);
 
+const ALLOWED_STATUS_TRANSITIONS = {
+  NEW: ['PENDING_PAYMENT', 'CANCELLED'],
+  PENDING_PAYMENT: ['PAID', 'CANCELLED'],
+  PAID: ['PROCESSING', 'CANCELLED', 'REFUNDED'],
+  PROCESSING: ['SHIPPED', 'CANCELLED', 'REFUNDED'],
+  SHIPPED: ['COMPLETED'],
+  COMPLETED: [],
+  CANCELLED: [],
+  REFUNDED: [],
+} as const satisfies Partial<Record<$Enums.OrderStatus, readonly $Enums.OrderStatus[]>>;
+
+function assertValidStatusTransition(from: $Enums.OrderStatus, to: $Enums.OrderStatus) {
+  if (from === to) return;
+
+  const transitions = ALLOWED_STATUS_TRANSITIONS as Partial<
+    Record<$Enums.OrderStatus, readonly $Enums.OrderStatus[]>
+  >;
+
+  const allowed = transitions[from] ?? [];
+  if (!allowed.includes(to)) {
+    throw new DomainError(
+      ERROR_CODES.INVALID_ORDER_STATUS_TRANSITION,
+      'Invalid order status transition',
+      { field: 'status', meta: { from, to } },
+    );
+  }
+}
+
 export class OrderService {
   constructor(private readonly repo = new OrderRepository()) {}
 
@@ -27,18 +55,12 @@ export class OrderService {
     const id = storeIdSchema.parse(storeId);
 
     if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const ownsStore = await this.repo.isStoreOwnedBy(id, ctx.auth.userId);
     if (!ownsStore) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     return this.repo.findByStore(id);
@@ -48,10 +70,7 @@ export class OrderService {
     const id = orderIdSchema.parse(orderId);
 
     if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const order = await this.repo.findById(id);
@@ -59,25 +78,16 @@ export class OrderService {
 
     const userId = ctx.auth.userId;
     if (!userId) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     if (!order.storeId) {
-      throw new DomainError(
-        ERROR_CODES.NOT_FOUND,
-        'Order store not found',
-      );
+      throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order store not found');
     }
 
     const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
     if (!ownsStore) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     return order;
@@ -87,44 +97,32 @@ export class OrderService {
     const id = orderIdSchema.parse(orderId);
 
     if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const order = await this.repo.findById(id);
     if (!order) {
-      throw new DomainError(
-        ERROR_CODES.NOT_FOUND,
-        'Order not found',
-      );
+      throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order not found');
     }
 
     const userId = ctx.auth.userId;
     if (!userId) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     if (!order.storeId) {
-      throw new DomainError(
-        ERROR_CODES.NOT_FOUND,
-        'Order store not found',
-      );
+      throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order store not found');
     }
 
     const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
     if (!ownsStore) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const nextStatus = orderStatusSchema.parse(status) as $Enums.OrderStatus;
+
+    assertValidStatusTransition(order.status as $Enums.OrderStatus, nextStatus);
+
     return this.repo.updateStatus(id, nextStatus);
   }
 }
