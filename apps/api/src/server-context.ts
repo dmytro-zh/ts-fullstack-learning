@@ -1,4 +1,4 @@
-import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
+import type { AppRole } from '@ts-fullstack-learning/shared';
 
 export type GraphQLContext = {
   auth: {

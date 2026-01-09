@@ -4,6 +4,8 @@ import { CheckoutLinkRepository } from '../repositories/checkout-link.repository
 import { ProductRepository } from '../repositories/product.repository';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
+import type { GraphQLContext } from '../server-context';
+import { APP_ROLES } from '@ts-fullstack-learning/shared';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -28,8 +30,13 @@ export class CheckoutLinkService {
     private readonly productRepo = new ProductRepository(),
   ) {}
 
-  async createLink(input: LinkInput) {
+  async createLink(ctx: GraphQLContext, input: LinkInput) {
     const { slug, productId, storeId } = linkInput.parse(input);
+
+    const userId = ctx.auth.userId;
+    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    }
 
     const product = await this.productRepo.findById(productId);
     if (!product) {
@@ -38,11 +45,36 @@ export class CheckoutLinkService {
       });
     }
 
+    if (!product.storeId) {
+      throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found', {
+        field: 'productId',
+      });
+    }
+
+    if (storeId && storeId !== product.storeId) {
+      throw new DomainError(
+        ERROR_CODES.INVALID_CHECKOUT_INPUT,
+        'Product does not belong to store',
+        {
+          field: 'storeId',
+        },
+      );
+    }
+
+    const ownsStore = await prisma.store.findFirst({
+      where: { id: product.storeId, ownerId: userId },
+      select: { id: true },
+    });
+
+    if (!ownsStore) {
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    }
+
     const existing = await this.repo.findBySlug(slug);
 
     if (existing) {
       const sameProduct = existing.productId === productId;
-      const sameStore = (existing.storeId ?? null) === (storeId ?? null);
+      const sameStore = (existing.storeId ?? null) === (product.storeId ?? null);
 
       if (sameProduct && sameStore) {
         if (!existing.active) {
@@ -61,7 +93,7 @@ export class CheckoutLinkService {
     return this.repo.create({
       slug,
       product: { connect: { id: productId } },
-      ...(storeId ? { store: { connect: { id: storeId } } } : {}),
+      store: { connect: { id: product.storeId } },
     });
   }
 

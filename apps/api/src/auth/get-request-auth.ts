@@ -7,10 +7,6 @@ export type RequestAuth = {
   role: AppRole | null;
 };
 
-function normalizeSecret(secret: string): Uint8Array {
-  return new TextEncoder().encode(secret);
-}
-
 function parseBearerToken(req: express.Request): string | null {
   const header = req.headers.authorization;
   if (!header) return null;
@@ -23,32 +19,34 @@ function parseBearerToken(req: express.Request): string | null {
   return token.trim();
 }
 
+function normalizeSecret(secret: string): Uint8Array {
+  return new TextEncoder().encode(secret);
+}
+
 function isAppRole(value: unknown): value is AppRole {
-  return value === APP_ROLES.PLATFORM_OWNER || value === APP_ROLES.MERCHANT || value === APP_ROLES.BUYER;
+  return (
+    value === APP_ROLES.PLATFORM_OWNER ||
+    value === APP_ROLES.MERCHANT ||
+    value === APP_ROLES.BUYER
+  );
 }
 
 export async function getRequestAuth(req: express.Request): Promise<RequestAuth> {
   const token = parseBearerToken(req);
   if (!token) return { userId: null, role: null };
 
-  const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    // If secret is missing - treat as anonymous (do not throw, keep API usable in dev)
-    return { userId: null, role: null };
-  }
+  const secret = process.env.API_JWT_SECRET;
+  if (!secret) return { userId: null, role: null };
 
   try {
     const { payload } = await jwtVerify(token, normalizeSecret(secret));
 
     const userId = typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
-
-    // We expect role in payload.role (string)
-    const roleRaw = (payload as { role?: unknown }).role;
+    const roleRaw = payload.role;
     const role = isAppRole(roleRaw) ? roleRaw : null;
 
     return { userId, role };
   } catch {
-    // Invalid token - treat as anonymous
     return { userId: null, role: null };
   }
 }

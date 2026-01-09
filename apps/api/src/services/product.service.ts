@@ -1,10 +1,11 @@
-import { ProductSchema } from '@ts-fullstack-learning/shared';
+import { APP_ROLES, ProductSchema } from '@ts-fullstack-learning/shared';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
 import { prisma } from '../lib/prisma';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
+import type { GraphQLContext } from '../server-context';
 
 const nullableTrimmedString = z.string().nullable().optional();
 const nullableImageUrl = z
@@ -71,8 +72,25 @@ export class ProductService {
     return this.repo.findByIdWithStore(id);
   }
 
-  async addProduct(input: CreateProductInput) {
+  async addProduct(ctx: GraphQLContext, input: CreateProductInput) {
     const data = createProductInput.parse(input);
+
+    const userId = ctx.auth.userId;
+    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+      throw new DomainError(
+        ERROR_CODES.FORBIDDEN,
+        'Access denied',
+      );
+    }
+
+    const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
+    if (!ownsStore) {
+      throw new DomainError(
+        ERROR_CODES.FORBIDDEN,
+        'Access denied',
+      );
+    }
+
     const quantity = data.quantity ?? 0;
     const inStock = quantity > 0;
     const slug = await this.generateUniqueSlug(data.name);
@@ -91,8 +109,40 @@ export class ProductService {
     });
   }
 
-  async updateProduct(input: UpdateProductInput) {
+  async updateProduct(ctx: GraphQLContext, input: UpdateProductInput) {
     const data = updateProductInput.parse(input);
+
+    const userId = ctx.auth.userId;
+    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+      throw new DomainError(
+        ERROR_CODES.FORBIDDEN,
+        'Access denied',
+      );
+    }
+
+    const product = await this.repo.findById(data.id);
+    if (!product) {
+      throw new DomainError(
+        ERROR_CODES.PRODUCT_NOT_FOUND,
+        'Product not found',
+        { field: 'id' },
+      );
+    }
+
+    if (!product.storeId) {
+      throw new DomainError(
+        ERROR_CODES.NOT_FOUND,
+        'Product store not found',
+      );
+    }
+
+    const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
+    if (!ownsStore) {
+      throw new DomainError(
+        ERROR_CODES.FORBIDDEN,
+        'Access denied',
+      );
+    }
 
     const updateData: Prisma.ProductUpdateInput = {
       price: data.price,
@@ -108,7 +158,15 @@ export class ProductService {
     return this.repo.update(data.id, updateData);
   }
 
-  async deleteProduct(id: string) {
+  async deleteProduct(ctx: GraphQLContext, id: string) {
+    const userId = ctx.auth.userId;
+    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+      throw new DomainError(
+        ERROR_CODES.FORBIDDEN,
+        'Access denied',
+      );
+    }
+
     if (!id || id.trim().length === 0) {
       throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Invalid product id', {
         field: 'id',
@@ -124,6 +182,25 @@ export class ProductService {
         throw new DomainError(ERROR_CODES.PRODUCT_NOT_FOUND, 'Product not found', {
           field: 'id',
         });
+      }
+
+      if (!product.storeId) {
+        throw new DomainError(
+          ERROR_CODES.NOT_FOUND,
+          'Product store not found',
+        );
+      }
+
+      const ownsStore = await tx.store.findFirst({
+        where: { id: product.storeId, ownerId: userId },
+        select: { id: true },
+      });
+
+      if (!ownsStore) {
+        throw new DomainError(
+          ERROR_CODES.FORBIDDEN,
+          'Access denied',
+        );
       }
 
       // Deactivate checkout links for this product
