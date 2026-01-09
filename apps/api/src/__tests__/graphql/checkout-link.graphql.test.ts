@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { createApolloServer } from '../server';
-import { prisma } from '../lib/prisma';
+import { createApolloServer } from '../../server';
+import { prisma } from '../../lib/prisma';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 
 const authContext = {
