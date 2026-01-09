@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../../lib/env';
+import { headers, cookies } from 'next/headers';
+import { print, type DocumentNode } from 'graphql';
+import { createWebGraphQLClient } from '../../../lib/graphql-client';
 import {
   StoresOverviewDocument,
   StoreOrdersDocument,
@@ -15,15 +16,52 @@ type OrderDetailsPageProps = {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+function getServerBaseUrl(h: Headers) {
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
+  const proto = h.get('x-forwarded-proto') ?? 'http';
+  return `${proto}://${host}`;
+}
+
+async function _gqlRequest<TData>(args: { query: DocumentNode; variables?: Record<string, unknown> }) {
+  const h = await headers();
+  const baseUrl = getServerBaseUrl(h);
+
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+
+  const res = await fetch(`${baseUrl}/api/graphql`, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      'content-type': 'application/json',
+      ...(cookieHeader ? { cookie: cookieHeader } : {}),
+    },
+    body: JSON.stringify({
+      query: print(args.query),
+      variables: args.variables ?? {},
+    }),
+  });
+
+  const json = (await res.json()) as { data?: TData; errors?: unknown };
+
+  if (!res.ok || json.errors) {
+    throw new Error(
+      `GraphQL request failed: ${res.status}${json.errors ? ' (graphql errors)' : ''}`,
+    );
+  }
+
+  return json.data as TData;
+}
+
+void _gqlRequest;
+
 async function fetchStores(): Promise<StoresOverviewQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
 async function fetchStoreOrders(storeId: string): Promise<StoreOrdersQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoreOrdersQuery>(StoreOrdersDocument, { storeId });
 }
 
@@ -34,7 +72,6 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const storeParam = resolvedSearchParams?.store;
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
-  // No storeId in URL
   if (!storeId) {
     return (
       <main
@@ -45,37 +82,12 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 22,
-              letterSpacing: -0.03,
-            }}
-          >
-            Order
-          </h1>
-          <p
-            style={{
-              marginTop: 8,
-              fontSize: 13,
-              color: '#4b5563',
-            }}
-          >
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: -0.03 }}>Order</h1>
+          <p style={{ marginTop: 8, fontSize: 13, color: '#4b5563' }}>
             No store selected for this order URL.
           </p>
-          <div
-            style={{
-              marginTop: 14,
-              display: 'flex',
-              gap: 8,
-            }}
-          >
+          <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
             <Link
               href="/dashboard"
               style={{
@@ -117,14 +129,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          Failed to load order.
-        </div>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>Failed to load order.</div>
       </main>
     );
   }
@@ -144,37 +149,12 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 22,
-              letterSpacing: -0.03,
-            }}
-          >
-            Order not found
-          </h1>
-          <p
-            style={{
-              marginTop: 8,
-              fontSize: 13,
-              color: '#4b5563',
-            }}
-          >
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <h1 style={{ margin: 0, fontSize: 22, letterSpacing: -0.03 }}>Order not found</h1>
+          <p style={{ marginTop: 8, fontSize: 13, color: '#4b5563' }}>
             This order does not exist for the selected store.
           </p>
-          <div
-            style={{
-              marginTop: 14,
-              display: 'flex',
-              gap: 8,
-            }}
-          >
+          <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
             <Link
               href={`/orders?store=${encodeURIComponent(storeId)}`}
               style={{
@@ -195,7 +175,6 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
     );
   }
 
-  // Pretty label for createdAt
   let createdAtLabel = 'Unknown';
   if (order.createdAt) {
     const numeric = Number(order.createdAt);
@@ -203,6 +182,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
       Number.isNaN(numeric) && typeof order.createdAt === 'string'
         ? new Date(order.createdAt)
         : new Date(numeric);
+
     if (!Number.isNaN(date.getTime())) {
       createdAtLabel = date.toLocaleString('en-US', {
         year: 'numeric',
@@ -214,10 +194,8 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
     }
   }
 
-  // Quantity with safe fallback for old orders
   const quantity = order.quantity ?? 1;
 
-  // Status label + color from backend enum
   const rawStatusKey = (order.status ?? 'PAID') as string;
 
   const statusLabelMap: Record<string, string> = {
@@ -254,12 +232,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
         color: '#020617',
       }}
     >
-      <div
-        style={{
-          maxWidth: 1120,
-          margin: '0 auto',
-        }}
-      >
+      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
         <section
           style={{
             borderRadius: 22,
@@ -270,7 +243,6 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
             gap: 16,
           }}
         >
-          {/* Top row: title + actions */}
           <div
             style={{
               display: 'flex',
@@ -280,49 +252,15 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
               flexWrap: 'wrap',
             }}
           >
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Order
-              </span>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  letterSpacing: -0.03,
-                }}
-              >
-                {order.product?.name ?? 'Order'} · ${order.total.toFixed(2)}
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Order</span>
+              <h1 style={{ margin: 0, fontSize: 22, letterSpacing: -0.03 }}>
+                {order.product?.name ?? 'Order'} - ${order.total.toFixed(2)}
               </h1>
-              {store && (
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: '#6b7280',
-                  }}
-                >
-                  {store.name}
-                </span>
-              )}
+              {store && <span style={{ fontSize: 13, color: '#6b7280' }}>{store.name}</span>}
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                flexWrap: 'wrap',
-                justifyContent: 'flex-end',
-              }}
-            >
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <Link
                 href={`/orders?store=${encodeURIComponent(storeId)}`}
                 style={{
@@ -355,15 +293,8 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
             </div>
           </div>
 
-          {/* Divider */}
-          <div
-            style={{
-              height: 1,
-              background: 'rgba(229,231,235,0.9)',
-            }}
-          />
+          <div style={{ height: 1, background: 'rgba(229,231,235,0.9)' }} />
 
-          {/* Order details grid */}
           <div
             style={{
               display: 'grid',
@@ -371,43 +302,13 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             }}
           >
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Store
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                }}
-              >
-                {store?.name ?? 'Unknown store'}
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Store</span>
+              <span style={{ fontSize: 13 }}>{store?.name ?? 'Unknown store'}</span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Order ID
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Order ID</span>
               <span
                 style={{
                   fontSize: 13,
@@ -419,121 +320,29 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
               </span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Product
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                }}
-              >
-                {order.product?.name ?? 'Unknown product'}
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Product</span>
+              <span style={{ fontSize: 13 }}>{order.product?.name ?? 'Unknown product'}</span>
             </div>
 
-            {/* Quantity block */}
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Quantity
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                }}
-              >
-                {quantity}
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Quantity</span>
+              <span style={{ fontSize: 13 }}>{quantity}</span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Total
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                ${order.total.toFixed(2)}
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Total</span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>${order.total.toFixed(2)}</span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Created at
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                }}
-              >
-                {createdAtLabel}
-              </span>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Created at</span>
+              <span style={{ fontSize: 13 }}>{createdAtLabel}</span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}
-              >
-                Status
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: statusColor,
-                }}
-              >
+            <div style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>Status</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: statusColor }}>
                 {statusLabel}
               </span>
             </div>

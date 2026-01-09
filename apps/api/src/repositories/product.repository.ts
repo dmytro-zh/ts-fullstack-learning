@@ -54,4 +54,13 @@ export class ProductRepository {
       data,
     });
   }
+
+  async isStoreOwnedBy(storeId: string, ownerId: string) {
+    const store = await prisma.store.findFirst({
+      where: { id: storeId, ownerId },
+      select: { id: true },
+    });
+
+    return Boolean(store);
+  }
 }

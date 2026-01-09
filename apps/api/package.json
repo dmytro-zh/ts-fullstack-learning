@@ -1,6 +1,7 @@
 {
   "name": "api",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -20,9 +21,11 @@
     "@apollo/server": "^5.2.0",
     "@apollo/utils.withrequired": "^3.0.0",
     "@as-integrations/express4": "^1.1.2",
+    "@panva/hkdf": "^1.2.1",
     "@prisma/client": "^6.16.2",
     "@ts-fullstack-learning/shared": "workspace:*",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.22.1",
     "graphql": "^16.11.0",
     "multer": "^2.0.2",
@@ -33,6 +36,7 @@
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.19.13",
+    "jose": "^5.10.0",
     "prisma": "^6.16.2",
     "tsx": "^4.20.5",
     "typescript": "^5",

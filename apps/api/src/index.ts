@@ -1,4 +1,4 @@
-import { ApolloServer } from '@apollo/server';
+import 'dotenv/config';
 import { expressMiddleware } from '@as-integrations/express4';
 import cors from 'cors';
 import express from 'express';
@@ -9,6 +9,9 @@ import fsp from 'node:fs/promises';
 import crypto from 'node:crypto';
 import { createApolloServer } from './server';
 import { prisma } from './lib/prisma';
+import type { GraphQLContext } from './server-context';
+import { getRequestAuth } from './auth/get-request-auth';
+import { issueApiToken } from './auth/issue-api-token';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -61,7 +64,6 @@ function getPublicBaseUrl(req: express.Request): string {
 }
 
 function normalizeProductImages(images: Array<{ id: string; url: string; isPrimary: boolean }>) {
-  // Ensure only one primary (defensive)
   const hasPrimary = images.some((i) => i.isPrimary);
   if (!hasPrimary && images.length > 0) {
     return images.map((i, idx) => ({ ...i, isPrimary: idx === 0 }));
@@ -77,6 +79,46 @@ function normalizeProductImages(images: Array<{ id: string; url: string; isPrima
     return { ...i, isPrimary: false };
   });
 }
+
+/**
+ * API auth (prod-like):
+ * Web calls POST /auth/login and receives an access token (JWS).
+ * Web then sends Authorization: Bearer <token> to /graphql.
+ */
+app.post('/auth/login', async (req, res) => {
+  try {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+    if (!email || !password) return res.status(400).json({ error: 'email/password required' });
+
+    // demo users (same as web)
+    const isMerchant = email === 'merchant@local.dev' && password === 'merchant';
+    const isOwner = email === 'owner@local.dev' && password === 'owner';
+
+    if (!isMerchant && !isOwner) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // IMPORTANT: token.sub must be real DB userId, to make ownership checks work
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!user) return res.status(404).json({ error: 'User not found in DB' });
+
+    const token = await issueApiToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return res.status(200).json({ token });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to login' });
+  }
+});
 
 app.post('/uploads/sessions', (_req, res) => {
   const uploadSession = createUploadSessionId();
@@ -125,7 +167,6 @@ app.delete('/uploads/sessions/:uploadSession', async (req, res) => {
   }
 });
 
-// Convenience endpoint for UI (optional but useful)
 app.get('/products/:productId/images', async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -148,7 +189,6 @@ app.get('/products/:productId/images', async (req, res) => {
   }
 });
 
-// Delete attached image - this is what you need for "Saved" delete
 app.delete('/products/:productId/images/:imageId', async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -173,7 +213,6 @@ app.delete('/products/:productId/images/:imageId', async (req, res) => {
     await prisma.productImage.delete({ where: { id: imageId } });
     await safeUnlink(filePath);
 
-    // If we deleted primary - choose a new primary (newest)
     if (wasPrimary) {
       const newest = await prisma.productImage.findFirst({
         where: { productId },
@@ -208,7 +247,6 @@ app.delete('/products/:productId/images/:imageId', async (req, res) => {
   }
 });
 
-// Bugfix: after attach, the newest (or chosen) image from the session becomes the only primary for the product
 app.post('/uploads/attach', async (req, res) => {
   try {
     const uploadSession =
@@ -301,8 +339,7 @@ app.post('/uploads/attach', async (req, res) => {
 
 app.post('/uploads/product-image', upload.single('file'), async (req, res) => {
   try {
-    const uploadSession =
-      typeof req.body?.uploadSession === 'string' ? req.body.uploadSession : '';
+    const uploadSession = typeof req.body?.uploadSession === 'string' ? req.body.uploadSession : '';
 
     const productIdRaw = typeof req.body?.productId === 'string' ? req.body.productId : '';
     const productId = productIdRaw.trim().length > 0 ? productIdRaw.trim() : null;
@@ -394,15 +431,23 @@ app.delete('/uploads/product-image/:id', async (req, res) => {
 });
 
 async function start() {
-  const server: ApolloServer = createApolloServer();
+  const server = createApolloServer();
   await server.start();
 
   app.use(
     '/graphql',
     expressMiddleware(server, {
-      context: async () => ({}),
+      context: async ({ req }): Promise<GraphQLContext> => {
+        const auth = await getRequestAuth(req);
+        return { auth };
+      },
     }),
   );
+
+  app.get('/debug/auth', async (req, res) => {
+    const auth = await getRequestAuth(req);
+    return res.status(200).json(auth);
+  });
 
   app.get('/health', (_req, res) => res.status(200).send('OK'));
 

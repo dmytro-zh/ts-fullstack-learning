@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
 import {
   StoresOverviewDocument,
   StoreDashboardDocument,
   type StoresOverviewQuery,
   type StoreDashboardQuery,
 } from '../../graphql/generated/graphql';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -15,19 +14,19 @@ type ProductsPageProps = {
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
 async function fetchStoreDashboard(storeId: string): Promise<StoreDashboardQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoreDashboardQuery>(StoreDashboardDocument, { storeId });
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const resolvedSearchParams: SearchParams = await (searchParams ?? Promise.resolve<SearchParams>({}));
+  const resolvedSearchParams: SearchParams = await (searchParams ??
+    Promise.resolve<SearchParams>({}));
+
   const storeParam = resolvedSearchParams['store'];
   const storeId = typeof storeParam === 'string' ? storeParam : undefined;
 
@@ -41,35 +40,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 24,
-              letterSpacing: -0.03,
-            }}
-          >
-            Products
-          </h1>
-          <p
-            style={{
-              marginTop: 8,
-              fontSize: 13,
-              color: '#4b5563',
-            }}
-          >
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>Products</h1>
+          <p style={{ marginTop: 8, fontSize: 13, color: '#4b5563' }}>
             No store selected. Open the dashboard and pick a store first.
           </p>
-          <div
-            style={{
-              marginTop: 14,
-            }}
-          >
+          <div style={{ marginTop: 14 }}>
             <Link
               href="/dashboard"
               style={{
@@ -95,7 +71,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   let storeData: StoreDashboardQuery;
 
   try {
-    const [storesResult, storeResult] = await Promise.all([fetchStores(), fetchStoreDashboard(storeId)]);
+    const [storesResult, storeResult] = await Promise.all([
+      fetchStores(),
+      fetchStoreDashboard(storeId),
+    ]);
     storesData = storesResult;
     storeData = storeResult;
   } catch {
@@ -108,14 +87,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           color: '#020617',
         }}
       >
-        <div
-          style={{
-            maxWidth: 1120,
-            margin: '0 auto',
-          }}
-        >
-          Failed to load products.
-        </div>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>Failed to load products.</div>
       </main>
     );
   }
@@ -254,7 +226,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <div style={{ display: 'grid', gap: 8 }}>
               {products.map((product) => {
                 const inStock = product.inStock === true;
-                const stockText = inStock ? (product.quantity > 0 ? `${product.quantity} in stock` : 'In stock') : 'Out of stock';
+                const stockText = inStock
+                  ? product.quantity > 0
+                    ? `${product.quantity} in stock`
+                    : 'In stock'
+                  : 'Out of stock';
                 const stockColor = inStock ? '#16a34a' : '#b91c1c';
 
                 return (
@@ -273,7 +249,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   >
                     <div style={{ display: 'grid', gap: 2 }}>
                       <Link
-                        href={`/products/${encodeURIComponent(product.id)}?store=${encodeURIComponent(storeId)}`}
+                        href={`/products/${encodeURIComponent(product.id)}?store=${encodeURIComponent(
+                          storeId,
+                        )}`}
                         style={{
                           fontSize: 13,
                           fontWeight: 500,
@@ -287,9 +265,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>${product.price.toFixed(2)}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>
+                        ${product.price.toFixed(2)}
+                      </span>
                       <Link
-                        href={`/checkout-links?store=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(product.id)}`}
+                        href={`/checkout-links?store=${encodeURIComponent(
+                          storeId,
+                        )}&productId=${encodeURIComponent(product.id)}`}
                         style={{
                           padding: '6px 11px',
                           borderRadius: 999,

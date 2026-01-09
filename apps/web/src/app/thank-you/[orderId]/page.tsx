@@ -1,6 +1,5 @@
 import ThankYouAnimation from './ThankYouAnimation';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../../lib/env';
+import { createWebGraphQLClient } from '../../../lib/graphql-client';
 
 const ORDER_QUERY = /* GraphQL */ `
   query Order($id: ID!) {
@@ -31,8 +30,7 @@ type OrderResponse = {
 };
 
 async function fetchOrder(id: string) {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   const data = await client.request<OrderResponse>(ORDER_QUERY, { id });
   return data.order;
 }

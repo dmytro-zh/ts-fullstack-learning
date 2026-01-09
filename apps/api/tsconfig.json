@@ -3,10 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "baseUrl": ".",
-    "types": ["node"],
-    "paths": {
-      "@ts-fullstack-learning/shared": ["../../packages/shared/src"]
-    }
+    "types": ["node"]
   },
   "include": ["src", "prisma/**/*.ts"],
   "references": [{ "path": "../../packages/shared" }]

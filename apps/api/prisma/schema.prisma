@@ -116,3 +116,16 @@ model CheckoutLink {
   @@index([productId])
   @@index([storeId])
 }
+
+enum AppRole {
+  PLATFORM_OWNER
+  MERCHANT
+  BUYER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      AppRole
+  createdAt DateTime @default(now())
+}

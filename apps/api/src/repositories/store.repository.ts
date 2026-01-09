@@ -8,8 +8,18 @@ type CreateStoreData = {
 
 export class StoreRepository {
   create(data: CreateStoreData) {
-    return prisma.store.create({
-      data,
+    return prisma.store.create({ data });
+  }
+
+  findAll() {
+    return prisma.store.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findById(id: string) {
+    return prisma.store.findUnique({
+      where: { id },
     });
   }
 

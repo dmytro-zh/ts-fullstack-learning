@@ -277,8 +277,23 @@ export function ProductDetails({
     imageId: null,
   }));
 
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://localhost:4000';
+  // IMPORTANT: keep same-origin so cookies/auth always work.
+  // If your API is mounted under apps/web (same Next app), use relative URLs.
+  const apiBaseUrl = '/api';
+
+  const fetchJson = async <T,>(input: RequestInfo | URL, init?: RequestInit): Promise<T> => {
+    const res = await fetch(input, {
+      ...init,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? `Request failed (${res.status})`);
+    }
+
+    return (await res.json()) as T;
+  };
 
   const savedImagesFromProps = useMemo(
     () => ((product.images ?? []) as ProductImage[]),
@@ -330,47 +345,42 @@ export function ProductDetails({
   const isDirty = isDirtyFields || isDirtyImages;
 
   async function createSession() {
-    const res = await fetch(`${apiBaseUrl}/uploads/sessions`, { method: 'POST' });
-    if (!res.ok) throw new Error(`Failed to create upload session (${res.status})`);
-    const data = (await res.json()) as { uploadSession: string };
+    const data = await fetchJson<{ uploadSession: string }>(`${apiBaseUrl}/uploads/sessions`, {
+      method: 'POST',
+    });
     return data.uploadSession;
   }
 
   async function loadSessionImages(session: string) {
-    const res = await fetch(`${apiBaseUrl}/uploads/sessions/${encodeURIComponent(session)}`);
-    if (!res.ok) throw new Error(`Failed to load session images (${res.status})`);
-    const data = (await res.json()) as { uploadSession: string; images: DraftImage[] };
+    const data = await fetchJson<{ uploadSession: string; images: DraftImage[] }>(
+      `${apiBaseUrl}/uploads/sessions/${encodeURIComponent(session)}`,
+    );
     return data.images ?? [];
   }
 
   async function cleanupSession(session: string) {
     await fetch(`${apiBaseUrl}/uploads/sessions/${encodeURIComponent(session)}`, {
       method: 'DELETE',
+      credentials: 'include',
     });
   }
 
   async function deleteDraftImage(id: string) {
-    const res = await fetch(`${apiBaseUrl}/uploads/product-image/${encodeURIComponent(id)}`, {
+    await fetch(`${apiBaseUrl}/uploads/product-image/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-    });
-    if (!res.ok) {
+      credentials: 'include',
+    }).then(async (res) => {
+      if (res.ok) return;
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       throw new Error(data?.error ?? `Delete failed (${res.status})`);
-    }
+    });
   }
 
   async function deleteSavedImage(productId: string, imageId: string) {
-    const res = await fetch(
+    const data = await fetchJson<DeleteResponse>(
       `${apiBaseUrl}/products/${encodeURIComponent(productId)}/images/${encodeURIComponent(imageId)}`,
       { method: 'DELETE' },
     );
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      throw new Error(data?.error ?? `Delete failed (${res.status})`);
-    }
-
-    const data = (await res.json()) as DeleteResponse;
     return data.images ?? [];
   }
 
@@ -383,6 +393,7 @@ export function ProductDetails({
     const res = await fetch(`${apiBaseUrl}/uploads/product-image`, {
       method: 'POST',
       body: form,
+      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -395,7 +406,7 @@ export function ProductDetails({
   }
 
   async function attachSessionToProduct(session: string, primaryImageId: string | null) {
-    const res = await fetch(`${apiBaseUrl}/uploads/attach`, {
+    const data = await fetchJson<AttachResponse>(`${apiBaseUrl}/uploads/attach`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -405,12 +416,6 @@ export function ProductDetails({
       }),
     });
 
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      throw new Error(data?.error ?? `Attach failed (${res.status})`);
-    }
-
-    const data = (await res.json()) as AttachResponse;
     return data.images ?? [];
   }
 
@@ -495,9 +500,6 @@ export function ProductDetails({
     return () => window.clearTimeout(t);
   }, [toast]);
 
-  // Optional but recommended:
-  // keep local fields in sync with refreshed product,
-  // but never override while user has unsaved changes.
   useEffect(() => {
     if (isDirty) return;
 
@@ -655,10 +657,8 @@ export function ProductDetails({
 
         const imagesFromServer = await attachSessionToProduct(uploadSession, primaryDraftId);
 
-        // FIX: use returned list to set selection, do not reuse draft id
         setOptimisticSavedImages(imagesFromServer as unknown as ProductImage[]);
-        const nextPrimary =
-          imagesFromServer.find((i) => i.isPrimary) ?? imagesFromServer[0] ?? null;
+        const nextPrimary = imagesFromServer.find((i) => i.isPrimary) ?? imagesFromServer[0] ?? null;
         setSelectedSavedImageId(nextPrimary?.id ?? null);
 
         await cleanupSession(uploadSession);
@@ -800,7 +800,6 @@ export function ProductDetails({
     ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(storeId)}`
     : `/checkout-links?productId=${encodeURIComponent(product.id)}`;
 
-  // Prevent product archive while unsaved changes exist (recommended)
   const deleteProductDisabled =
     isSaving || isUploading || isDeletingSaved || isDeletingProduct || isDirty;
 

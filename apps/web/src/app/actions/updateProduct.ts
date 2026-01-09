@@ -1,8 +1,7 @@
 'use server';
 
-import { GraphQLClient } from 'graphql-request';
 import { z } from 'zod';
-import { getEnv } from '../../lib/env';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 import { UpdateProductDocument } from '../../graphql/generated/graphql';
 
 const schema = z.object({
@@ -17,8 +16,7 @@ type UpdateProductInput = z.infer<typeof schema>;
 
 export async function updateProductAction(input: UpdateProductInput) {
   const data = schema.parse(input);
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
 
   await client.request(UpdateProductDocument, {
     id: data.id,

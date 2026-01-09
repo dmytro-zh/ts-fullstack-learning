@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 import {
   StoresOverviewDocument,
   StoreOrdersDocument,
@@ -15,14 +14,12 @@ type OrdersPageProps = {
 };
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoresOverviewQuery>(StoresOverviewDocument);
 }
 
 async function fetchStoreOrders(storeId: string): Promise<StoreOrdersQuery> {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
   return client.request<StoreOrdersQuery>(StoreOrdersDocument, { storeId });
 }
 
@@ -256,8 +253,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 textAlign: 'center',
               }}
             >
-              No orders yet. Share a checkout link for this store and new orders will
-              appear here.
+              No orders yet. Share a checkout link for this store and new orders will appear here.
             </div>
           ) : (
             <div

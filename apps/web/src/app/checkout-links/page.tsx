@@ -1,6 +1,4 @@
-// SSR: fetch products+stores for selects
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 import {
   ProductsDocument,
   type ProductsQuery,
@@ -10,12 +8,13 @@ import {
 import { CheckoutLinksForm } from './CheckoutLinksForm';
 
 async function fetchData() {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
+
   const [productsRes, storesRes] = await Promise.all([
     client.request<ProductsQuery>(ProductsDocument),
     client.request<StoresQuery>(StoresDocument),
   ]);
+
   return { products: productsRes.products, stores: storesRes.stores };
 }
 
@@ -31,10 +30,12 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
   try {
     const { products, stores } = await fetchData();
     const activeProducts = (products ?? []).filter((p) => p.isActive !== false);
+
     const safeInitialProductId =
       initialProductId && activeProducts.some((p) => p.id === initialProductId)
         ? initialProductId
         : undefined;
+
     return (
       <main style={{ padding: 32, background: '#f7f7f8', minHeight: '100vh' }}>
         <div
@@ -54,7 +55,7 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout links</h1>
           <CheckoutLinksForm
             products={activeProducts}
-            stores={stores}
+            stores={stores ?? []}
             initialProductId={safeInitialProductId}
             initialStoreId={initialStoreId}
           />

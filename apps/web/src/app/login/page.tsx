@@ -1,15 +1,34 @@
 'use client';
 
-import { signIn, useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const cardBorder = '1px solid rgba(148,163,184,0.35)';
 
+type MeResponse = {
+  userId: string | null;
+  role: string | null;
+};
+
+async function hasApiSession(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/me', {
+      cache: 'no-store',
+      credentials: 'include',
+    });
+
+    if (!res.ok) return false;
+
+    const data = (await res.json()) as MeResponse;
+    return Boolean(data.userId) && Boolean(data.role);
+  } catch {
+    return false;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useSession();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,37 +42,38 @@ export default function LoginPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      router.replace(callbackUrl);
-    }
-  }, [status, router, callbackUrl]);
+    let cancelled = false;
+
+    void (async () => {
+      const ok = await hasApiSession();
+      if (!cancelled && ok) {
+        router.replace(callbackUrl);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, callbackUrl]);
 
   const onSubmit = async () => {
     setErrorText(null);
     setSubmitting(true);
 
     try {
-      const res = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
       });
 
-      if (!res) {
-        setErrorText('No response from /api/auth. Check NextAuth route.');
-        return;
-      }
-
-      if (res.error) {
+      if (!res.ok) {
         setErrorText('Invalid email or password.');
         return;
       }
 
-      const target = res.url ?? callbackUrl;
-
-      // Important: full navigation avoids cookie/middleware race in dev
-      window.location.href = target;
+      window.location.href = callbackUrl;
     } catch {
       setErrorText('Unexpected error. Please try again.');
     } finally {
@@ -271,9 +291,7 @@ export default function LoginPage() {
                 alignItems: 'center',
               }}
             >
-              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>
-                Dev shortcuts:
-              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>Dev shortcuts:</div>
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button
@@ -324,9 +342,7 @@ export default function LoginPage() {
                 fontWeight: 650,
               }}
             >
-              <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 4 }}>
-                Demo users
-              </div>
+              <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 4 }}>Demo users</div>
               <div>merchant@local.dev / merchant</div>
               <div>owner@local.dev / owner</div>
             </div>

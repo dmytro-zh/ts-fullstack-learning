@@ -1,12 +1,16 @@
 import { ApolloServer } from '@apollo/server';
+import { GraphQLError } from 'graphql';
+import { APP_ROLES } from '@ts-fullstack-learning/shared';
 import { ProductService } from './services/product.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
 import { OrderService } from './services/order.service';
+import type { GraphQLContext } from './server-context';
 import { formatGraphQLError } from './errors/format-graphql-error';
 import { DomainError } from './errors/domain-error';
 import { ERROR_CODES } from './errors/codes';
 import { prisma } from './lib/prisma';
+import { requireAuth, requireRole } from './auth/guards';
 
 const typeDefs = /* GraphQL */ `
   enum OrderStatus {
@@ -153,13 +157,36 @@ const storeService = new StoreService();
 const checkoutLinkService = new CheckoutLinkService();
 const orderService = new OrderService();
 
+function requireGraphqlAuth(ctx: GraphQLContext) {
+  // Reuse your guard and return a non-null userId for convenience
+  return requireAuth(ctx.auth.userId);
+}
+
+function requireMerchantOrOwner(ctx: GraphQLContext) {
+  return requireRole(ctx.auth.role, [APP_ROLES.MERCHANT, APP_ROLES.PLATFORM_OWNER]);
+}
+
 const resolvers = {
   Query: {
     health: () => 'OK',
-    products: () => productService.getProducts(),
-    product: (_: unknown, args: { id: string }) => productService.getProduct(args.id),
-    stores: () => storeService.getStores(),
+
+    products: (_: unknown, __: unknown, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      return productService.getProducts();
+    },
+
+    product: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      return productService.getProduct(args.id);
+    },
+
+    stores: (_: unknown, __: unknown, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      return storeService.getStores(ctx);
+    },
+
     checkoutLink: async (_: unknown, args: { slug: string }) => {
+      // Public (checkout)
       const link = await checkoutLinkService.getBySlug(args.slug);
 
       if (!link || !link.active) {
@@ -182,9 +209,18 @@ const resolvers = {
 
       return link;
     },
-    orders: (_: unknown, args: { storeId: string }) => orderService.getByStore(args.storeId),
-    order: (_: unknown, args: { id: string }) => orderService.getById(args.id),
+
+    orders: (_: unknown, args: { storeId: string }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      return orderService.getByStore(ctx, args.storeId);
+    },
+
+    order: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      return orderService.getById(ctx, args.id);
+    },
   },
+
   Mutation: {
     addProduct: (
       _: unknown,
@@ -196,7 +232,12 @@ const resolvers = {
         imageUrl?: string;
         quantity?: number;
       },
-    ) => productService.addProduct(args),
+      ctx: GraphQLContext,
+    ) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      return productService.addProduct(ctx, args);
+    },
 
     updateProduct: (
       _: unknown,
@@ -207,17 +248,34 @@ const resolvers = {
         imageUrl?: string;
         quantity?: number;
       },
-    ) => productService.updateProduct(args),
+      ctx: GraphQLContext,
+    ) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      return productService.updateProduct(ctx, args);
+    },
 
-    deleteProduct: (_: unknown, args: { id: string }) => productService.deleteProduct(args.id),
+    deleteProduct: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      return productService.deleteProduct(ctx, args.id);
+    },
 
-    createStore: (_: unknown, args: { input: { name: string; email?: string } }) =>
-      storeService.createStore(args.input),
+    createStore: (_: unknown, args: { input: { name: string; email?: string } }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      return storeService.createStore(ctx, args.input);
+    },
 
     createCheckoutLink: (
       _: unknown,
       args: { input: { slug: string; productId: string; storeId?: string } },
-    ) => checkoutLinkService.createLink(args.input),
+      ctx: GraphQLContext,
+    ) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      return checkoutLinkService.createLink(ctx, args.input);
+    },
 
     checkoutByLink: (
       _: unknown,
@@ -231,11 +289,19 @@ const resolvers = {
           shippingNote?: string;
         };
       },
-    ) => checkoutLinkService.checkoutByLink(args.input),
+    ) => {
+      // Public (checkout)
+      return checkoutLinkService.checkoutByLink(args.input);
+    },
 
-    updateOrderStatus: (_: unknown, args: { orderId: string; status: string }) =>
-      orderService.updateStatus(args.orderId, args.status),
+    updateOrderStatus: (_: unknown, args: { orderId: string; status: string }, ctx: GraphQLContext) => {
+      requireGraphqlAuth(ctx);
+      requireMerchantOrOwner(ctx);
+      // Optional: you can validate enum value here if you want to harden input
+      return orderService.updateStatus(ctx, args.orderId, args.status);
+    },
   },
+
   Product: {
     images: async (parent: { id: string }) => {
       const images = await prisma.productImage.findMany({
@@ -249,7 +315,7 @@ const resolvers = {
 };
 
 export function createApolloServer() {
-  return new ApolloServer({
+  return new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
     formatError: formatGraphQLError,

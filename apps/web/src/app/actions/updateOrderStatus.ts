@@ -1,7 +1,6 @@
 'use server';
 
-import { GraphQLClient } from 'graphql-request';
-import { getEnv } from '../../lib/env';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 import {
   UpdateOrderStatusDocument,
   type UpdateOrderStatusMutation,
@@ -9,13 +8,12 @@ import {
 } from '../../graphql/generated/graphql';
 
 export async function updateOrderStatusAction(input: UpdateOrderStatusMutationVariables) {
-  const { GRAPHQL_URL } = getEnv();
-  const client = new GraphQLClient(GRAPHQL_URL);
+  const client = await createWebGraphQLClient();
 
-  const data = await client.request<
-    UpdateOrderStatusMutation,
-    UpdateOrderStatusMutationVariables
-  >(UpdateOrderStatusDocument, input);
+  const data = await client.request<UpdateOrderStatusMutation, UpdateOrderStatusMutationVariables>(
+    UpdateOrderStatusDocument,
+    input,
+  );
 
   return data.updateOrderStatus;
 }
