@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
 const baseLinkStyle: React.CSSProperties = {
@@ -11,6 +11,11 @@ const baseLinkStyle: React.CSSProperties = {
   color: '#4b5563',
   border: '1px solid transparent',
 };
+
+export type MeResponse =
+  | { ok: true; user: null }
+  | { ok: true; user: { id: string; role: AppRole | string | null } }
+  | { ok: false; error?: string };
 
 function TopNavSkeleton() {
   const pill: React.CSSProperties = {
@@ -32,15 +37,61 @@ function TopNavSkeleton() {
   );
 }
 
-export function TopNav() {
-  const { data, status } = useSession();
+function isAppRole(value: unknown): value is AppRole {
+  return (
+    value === APP_ROLES.PLATFORM_OWNER ||
+    value === APP_ROLES.MERCHANT ||
+    value === APP_ROLES.BUYER
+  );
+}
 
-  if (status === 'loading') {
-    return <TopNavSkeleton />;
-  }
+function getRoleFromMeResponse(data: MeResponse | null): AppRole | null {
+  if (!data || !data.ok) return null;
+  const roleValue = data.user?.role ?? null;
+  return isAppRole(roleValue) ? roleValue : null;
+}
 
-  const role = (data?.user as { role?: AppRole } | undefined)?.role;
-  const isAuthed = status === 'authenticated';
+export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
+  // If server provided initialMe, we can render immediately with no skeleton.
+  // Only show skeleton when initialMe is missing (eg. component used without TopNavServer).
+  const [loading, setLoading] = useState(initialMe === undefined);
+  const [role, setRole] = useState<AppRole | null>(() => getRoleFromMeResponse(initialMe ?? null));
+
+  useEffect(() => {
+    // If initialMe was provided (even if not authed), do not refetch on mount.
+    if (initialMe !== undefined) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!res.ok) {
+          if (!cancelled) setRole(null);
+          return;
+        }
+
+        const data = (await res.json()) as MeResponse;
+        if (cancelled) return;
+
+        setRole(getRoleFromMeResponse(data));
+      } catch {
+        if (!cancelled) setRole(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialMe]);
+
+  if (loading) return <TopNavSkeleton />;
+
+  const isAuthed = role !== null;
   const canSeeAdmin = role === APP_ROLES.PLATFORM_OWNER;
 
   return (
@@ -108,7 +159,9 @@ export function TopNav() {
       ) : (
         <button
           type="button"
-          onClick={() => void signOut({ callbackUrl: '/' })}
+          onClick={() => {
+            window.location.href = '/api/auth/logout';
+          }}
           style={{
             padding: '6px 11px',
             borderRadius: 999,
