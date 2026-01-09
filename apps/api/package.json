@@ -12,7 +12,11 @@
     "prisma:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "rimraf prisma/dev.db && pnpm run prisma:migrate --name init && pnpm run db:seed",
-    "test": "vitest run --dir src"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run \"src/**/*.unit.test.ts\" \"src/**/__tests__/unit/**/*.test.ts\"",
+    "test:integration": "vitest run \"src/**/__tests__/integration/**/*.test.ts\"",
+    "test:gql": "vitest run src/__tests__/graphql"
   },
   "keywords": [],
   "author": "",
