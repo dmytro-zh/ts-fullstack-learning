@@ -11,5 +11,9 @@ export default defineConfig({
     ],
 
     exclude: ['**/node_modules/**', '**/.git/**'],
+
+    setupFiles: process.env.NODE_ENV === 'test'
+      ? ['src/__tests__/integration/setup.ts']
+      : [],
   },
 });
