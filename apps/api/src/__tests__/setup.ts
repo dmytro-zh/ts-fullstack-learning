@@ -1,6 +1,14 @@
-import 'dotenv/config';
 import { beforeAll, beforeEach, afterEach } from 'vitest';
-import { resetTestDb } from './integration/reset-test-db';
+import { config as dotenv } from 'dotenv';
+import path from 'node:path';
+
+// Load apps/api/.env.test no matter where tests are started from
+dotenv({ path: path.resolve(process.cwd(), '.env.test') });
+
+// Ensure DATABASE_URL exists for any test that imports Prisma stuff
+process.env.DATABASE_URL ??= 'file:./prisma/test.db';
+
+const isIntegrationSuite = process.env.TEST_SUITE === 'integration';
 
 function assertTestDb() {
   const url = process.env.DATABASE_URL ?? '';
@@ -16,19 +24,19 @@ function assertTestDb() {
   }
 }
 
-function shouldResetDb() {
-  const url = process.env.DATABASE_URL ?? '';
-  return url.includes('test.db');
-}
-
 beforeAll(() => {
-  assertTestDb();
+  // Strict checks only for integration tests
+  if (isIntegrationSuite) assertTestDb();
 });
 
 beforeEach(async () => {
-  if (shouldResetDb()) await resetTestDb();
+  if (!isIntegrationSuite) return;
+  const { resetTestDb } = await import('./integration/reset-test-db');
+  await resetTestDb();
 });
 
 afterEach(async () => {
-  if (shouldResetDb()) await resetTestDb();
+  if (!isIntegrationSuite) return;
+  const { resetTestDb } = await import('./integration/reset-test-db');
+  await resetTestDb();
 });

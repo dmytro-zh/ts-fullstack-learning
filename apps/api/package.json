@@ -15,8 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "cross-env NODE_ENV=test TEST_SUITE=integration vitest run src/__tests__/integration --passWithNoTests",
-    "test:unit": "cross-env NODE_ENV=test vitest run src/**/*.unit.test.ts src/**/__tests__/unit/**/*.test.ts --passWithNoTests",
-    "db:migrate:test:ci": "prisma migrate deploy --schema=prisma/schema.prisma",
+    "test:unit": "cross-env NODE_ENV=test TEST_SUITE=unit vitest run src/**/*.unit.test.ts src/**/__tests__/unit/**/*.test.ts --passWithNoTests",
+    "db:migrate:test:ci": "dotenv -e .env.test -- prisma migrate deploy --schema=prisma/schema.prisma",
     "test:integration:ci": "pnpm run db:migrate:test:ci && pnpm run test:integration",
     "test:gql": "vitest run src/__tests__/graphql"
   },

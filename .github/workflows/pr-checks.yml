@@ -44,15 +44,14 @@ jobs:
       - name: Typecheck
         run: pnpm -w run typecheck
 
+      - name: API test db migrate (sqlite)
+        run: pnpm -F api run db:migrate:test:ci
+
       - name: API unit tests
         run: pnpm -F api run test:unit
-        env:
-          DATABASE_URL: file:./apps/api/prisma/test.db
 
       - name: API integration tests (CI)
         run: pnpm -F api run test:integration:ci
-        env:
-          DATABASE_URL: file:./apps/api/prisma/test.db
 
       - name: API build
         run: pnpm -F api run build
