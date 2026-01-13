@@ -32,6 +32,9 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Prisma generate (api)
+        run: pnpm -F api run prisma:generate
+
       - name: Format check
         run: pnpm -w run format:check
 
@@ -41,17 +44,14 @@ jobs:
       - name: Typecheck
         run: pnpm -w run typecheck
 
-      - name: Prisma generate (api)
-        run: pnpm -F api prisma:generate
-
       - name: API unit tests
-        run: pnpm -F api test:unit
+        run: pnpm -F api run test:unit
 
       - name: API integration tests (CI)
-        run: pnpm -F api test:integration:ci
+        run: pnpm -F api run test:integration:ci
 
       - name: API build
-        run: pnpm -F api build
+        run: pnpm -F api run build
 
       - name: Web build
-        run: pnpm -F web build
+        run: pnpm -F web run build
