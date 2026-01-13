@@ -1,0 +1,57 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Optional: formatting check (only if script exists)
+      - name: Format check
+        run: pnpm -w run format:check
+        continue-on-error: true
+
+      # Optional: lint (only if script exists)
+      - name: Lint
+        run: pnpm -w run lint
+        continue-on-error: true
+
+      - name: Typecheck
+        run: pnpm -w run typecheck
+
+      - name: API unit tests
+        run: pnpm -F api test:unit
+
+      - name: API integration tests
+        run: pnpm -F api test:integration
+
+      - name: API build
+        run: pnpm -F api build
+
+      - name: Web build
+        run: pnpm -F web build
+        
