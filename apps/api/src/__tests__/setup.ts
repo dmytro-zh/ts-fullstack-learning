@@ -16,16 +16,19 @@ function assertTestDb() {
   }
 }
 
-const isIntegration = process.env.TEST_SUITE === 'integration';
+function shouldResetDb() {
+  const url = process.env.DATABASE_URL ?? '';
+  return url.includes('test.db');
+}
 
 beforeAll(() => {
   assertTestDb();
 });
 
 beforeEach(async () => {
-  if (isIntegration) await resetTestDb();
+  if (shouldResetDb()) await resetTestDb();
 });
 
 afterEach(async () => {
-  if (isIntegration) await resetTestDb();
+  if (shouldResetDb()) await resetTestDb();
 });

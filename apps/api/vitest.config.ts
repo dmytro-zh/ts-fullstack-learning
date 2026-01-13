@@ -4,7 +4,8 @@ import path from 'node:path';
 
 dotenv({ path: path.resolve(__dirname, '.env.test') });
 
-const isIntegration = process.env.TEST_SUITE === 'integration';
+const dbUrl = process.env.DATABASE_URL ?? '';
+const usesSqliteTestDb = dbUrl.includes('test.db');
 
 export default defineConfig({
   test: {
@@ -15,7 +16,7 @@ export default defineConfig({
     setupFiles: ['src/__tests__/setup.ts'],
 
     // Critical: sqlite file cannot be shared between parallel test files
-    ...(isIntegration
+    ...(usesSqliteTestDb
       ? {
           fileParallelism: false,
           maxConcurrency: 1,
