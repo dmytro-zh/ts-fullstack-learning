@@ -46,9 +46,13 @@ jobs:
 
       - name: API unit tests
         run: pnpm -F api run test:unit
+        env:
+          DATABASE_URL: file:./apps/api/prisma/test.db
 
       - name: API integration tests (CI)
         run: pnpm -F api run test:integration:ci
+        env:
+          DATABASE_URL: file:./apps/api/prisma/test.db
 
       - name: API build
         run: pnpm -F api run build
