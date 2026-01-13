@@ -1,5 +1,3 @@
-// apps/api/src/__tests__/integration/checkout-link.service.integration.test.ts
-
 import { describe, it, expect } from 'vitest';
 import { CheckoutLinkService } from '../../services/checkout-link.service';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
