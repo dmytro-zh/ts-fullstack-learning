@@ -55,4 +55,3 @@ jobs:
 
       - name: Web build
         run: pnpm -F web build
-        
