@@ -123,6 +123,15 @@ export class CheckoutLinkService {
 
       const product = link.product;
 
+      // Do not allow checkout for inactive/soft-deleted products
+      if (product.deletedAt || product.isActive === false) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
+
       if (product.quantity <= 0 || product.quantity < quantity) {
         throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Product is out of stock', {
           field: 'quantity',
