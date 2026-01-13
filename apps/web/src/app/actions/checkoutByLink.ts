@@ -8,7 +8,9 @@ const CHECKOUT_BY_LINK = /* GraphQL */ `
       id
       total
       quantity
-      product { name }
+      product {
+        name
+      }
       email
       shippingAddress
     }

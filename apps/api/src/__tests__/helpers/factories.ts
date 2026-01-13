@@ -1,4 +1,6 @@
-export function makeStore(args?: Partial<{ id: string; ownerId: string; name: string; email: string }>) {
+export function makeStore(
+  args?: Partial<{ id: string; ownerId: string; name: string; email: string }>,
+) {
   return {
     id: args?.id ?? 'store_1',
     ownerId: args?.ownerId ?? 'owner_1',
@@ -7,7 +9,9 @@ export function makeStore(args?: Partial<{ id: string; ownerId: string; name: st
   };
 }
 
-export function makeProduct(args?: Partial<{ id: string; storeId: string; name: string; price: number }>) {
+export function makeProduct(
+  args?: Partial<{ id: string; storeId: string; name: string; price: number }>,
+) {
   return {
     id: args?.id ?? 'product_1',
     storeId: args?.storeId ?? 'store_1',

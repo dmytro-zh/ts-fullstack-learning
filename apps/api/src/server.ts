@@ -261,7 +261,11 @@ const resolvers = {
       return productService.deleteProduct(ctx, args.id);
     },
 
-    createStore: (_: unknown, args: { input: { name: string; email?: string } }, ctx: GraphQLContext) => {
+    createStore: (
+      _: unknown,
+      args: { input: { name: string; email?: string } },
+      ctx: GraphQLContext,
+    ) => {
       requireGraphqlAuth(ctx);
       requireMerchantOrOwner(ctx);
       return storeService.createStore(ctx, args.input);
@@ -294,7 +298,11 @@ const resolvers = {
       return checkoutLinkService.checkoutByLink(args.input);
     },
 
-    updateOrderStatus: (_: unknown, args: { orderId: string; status: string }, ctx: GraphQLContext) => {
+    updateOrderStatus: (
+      _: unknown,
+      args: { orderId: string; status: string },
+      ctx: GraphQLContext,
+    ) => {
       requireGraphqlAuth(ctx);
       requireMerchantOrOwner(ctx);
       // Optional: you can validate enum value here if you want to harden input

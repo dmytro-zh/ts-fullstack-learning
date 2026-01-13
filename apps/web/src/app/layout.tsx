@@ -66,8 +66,7 @@ export default async function RootLayout({
                   border: '1px solid rgba(148,163,184,0.35)',
                   background:
                     'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))',
-                  boxShadow:
-                    '0 14px 40px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.12)',
+                  boxShadow: '0 14px 40px rgba(15,23,42,0.12), 0 0 0 1px rgba(148,163,184,0.12)',
                   padding: '9px 16px',
                   display: 'flex',
                   alignItems: 'center',
@@ -94,8 +93,7 @@ export default async function RootLayout({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow:
-                        '0 10px 24px rgba(37,99,235,0.42), 0 0 0 1px rgba(15,23,42,0.35)',
+                      boxShadow: '0 10px 24px rgba(37,99,235,0.42), 0 0 0 1px rgba(15,23,42,0.35)',
                     }}
                   >
                     <span

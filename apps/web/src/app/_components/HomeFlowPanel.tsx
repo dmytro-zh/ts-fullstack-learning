@@ -187,9 +187,7 @@ export function HomeFlowPanel() {
 
   const cardAnimStyle = {
     opacity: isLeaving ? 0 : 1,
-    transform: isLeaving
-      ? 'scale(0.96) translateY(4px)'
-      : 'scale(1) translateY(0)',
+    transform: isLeaving ? 'scale(0.96) translateY(4px)' : 'scale(1) translateY(0)',
     transition: 'opacity 160ms ease-out, transform 160ms ease-out',
     pointerEvents: isLeaving ? 'none' : 'auto',
   } as const;
@@ -210,10 +208,8 @@ export function HomeFlowPanel() {
           borderRadius: 40,
           padding: 30,
           border: '1px solid rgba(191,219,254,0.9)',
-          background:
-            'radial-gradient(circle at top left, #e0f2fe, #f5f3ff 45%, #f9fafb 100%)',
-          boxShadow:
-            '0 30px 80px rgba(15,23,42,0.18), 0 0 0 1px rgba(148,163,184,0.12)',
+          background: 'radial-gradient(circle at top left, #e0f2fe, #f5f3ff 45%, #f9fafb 100%)',
+          boxShadow: '0 30px 80px rgba(15,23,42,0.18), 0 0 0 1px rgba(148,163,184,0.12)',
         }}
       >
         <div
@@ -248,7 +244,8 @@ export function HomeFlowPanel() {
               color: '#6b7280',
             }}
           >
-            Tap through. Watch a store name appear, a product land, a link form, and a paid order show up.
+            Tap through. Watch a store name appear, a product land, a link form, and a paid order
+            show up.
           </p>
 
           <div
@@ -274,8 +271,7 @@ export function HomeFlowPanel() {
                   width: `${progress}%`,
                   height: '100%',
                   borderRadius: 999,
-                  background:
-                    'linear-gradient(90deg, #22c55e, #0ea5e9, #6366f1)',
+                  background: 'linear-gradient(90deg, #22c55e, #0ea5e9, #6366f1)',
                   transition: 'width 200ms ease-out',
                 }}
               />
@@ -382,8 +378,7 @@ export function HomeFlowPanel() {
                 style={{
                   borderRadius: 999,
                   border: '1px solid #020617',
-                  background:
-                    'linear-gradient(135deg, #020617 0, #0f172a 45%, #020617 100%)',
+                  background: 'linear-gradient(135deg, #020617 0, #0f172a 45%, #020617 100%)',
                   padding: '7px 16px',
                   cursor: 'pointer',
                   fontSize: 11,
@@ -526,8 +521,7 @@ export function HomeFlowPanel() {
                 style={{
                   borderRadius: 22,
                   border: '1px solid #e5e7eb',
-                  background:
-                    'linear-gradient(135deg, #f0f9ff 0, #ecfeff 40%, #faf5ff 100%)',
+                  background: 'linear-gradient(135deg, #f0f9ff 0, #ecfeff 40%, #faf5ff 100%)',
                   padding: 20,
                   maxWidth: 820,
                   width: '100%',
@@ -558,9 +552,7 @@ export function HomeFlowPanel() {
                     style={{
                       borderRadius: 999,
                       border:
-                        productPhase === 'attached'
-                          ? '1px solid #16a34a'
-                          : '1px solid #0f172a',
+                        productPhase === 'attached' ? '1px solid #16a34a' : '1px solid #0f172a',
                       padding: '7px 16px',
                       fontSize: 12,
                       fontWeight: 600,
@@ -575,16 +567,12 @@ export function HomeFlowPanel() {
                           ? '0 0 0 3px rgba(34,197,94,0.25)'
                           : '0 10px 24px rgba(15,23,42,0.35)',
                       transform:
-                        productPhase === 'pressing'
-                          ? 'scale(0.97) translateY(1px)'
-                          : 'scale(1)',
+                        productPhase === 'pressing' ? 'scale(0.97) translateY(1px)' : 'scale(1)',
                       transition:
                         'box-shadow 220ms ease-out, transform 220ms ease-out, background 220ms ease-out, border-color 220ms ease-out',
                     }}
                   >
-                    {productPhase === 'attached'
-                      ? 'Product added'
-                      : 'Add product'}
+                    {productPhase === 'attached' ? 'Product added' : 'Add product'}
                   </button>
                 </div>
 
@@ -632,7 +620,8 @@ export function HomeFlowPanel() {
                       color: '#6b7280',
                     }}
                   >
-                    Soft scarf for cold evening walks. In stock and ready to sell from Evening light market.
+                    Soft scarf for cold evening walks. In stock and ready to sell from Evening light
+                    market.
                   </span>
                   <div
                     style={{
@@ -644,9 +633,7 @@ export function HomeFlowPanel() {
                       padding: '4px 9px',
                       borderRadius: 999,
                       background: productAttached ? '#ecfdf3' : '#f3f4f6',
-                      border: productAttached
-                        ? '1px solid #86efac'
-                        : '1px solid #e5e7eb',
+                      border: productAttached ? '1px solid #86efac' : '1px solid #e5e7eb',
                       color: productAttached ? '#166534' : '#6b7280',
                     }}
                   >
@@ -660,11 +647,7 @@ export function HomeFlowPanel() {
                           : '#d1d5db',
                       }}
                     />
-                    <span>
-                      {productAttached
-                        ? 'Attached to store'
-                        : 'Attaching to store...'}
-                    </span>
+                    <span>{productAttached ? 'Attached to store' : 'Attaching to store...'}</span>
                   </div>
                 </div>
               </div>
@@ -695,8 +678,7 @@ export function HomeFlowPanel() {
                 style={{
                   borderRadius: 22,
                   border: '1px solid #e5e7eb',
-                  background:
-                    'linear-gradient(135deg, #eff6ff 0, #e0f2fe 35%, #f5f3ff 100%)',
+                  background: 'linear-gradient(135deg, #eff6ff 0, #e0f2fe 35%, #f5f3ff 100%)',
                   padding: 20,
                   maxWidth: 820,
                   width: '100%',
@@ -755,10 +737,7 @@ export function HomeFlowPanel() {
                     type="button"
                     style={{
                       borderRadius: 999,
-                      border:
-                        linkPhase === 'ready'
-                          ? '1px solid #0ea5e9'
-                          : '1px solid #0f172a',
+                      border: linkPhase === 'ready' ? '1px solid #0ea5e9' : '1px solid #0f172a',
                       padding: '8px 18px',
                       fontSize: 12,
                       fontWeight: 600,
@@ -773,9 +752,7 @@ export function HomeFlowPanel() {
                           ? '0 10px 26px rgba(56,189,248,0.4)'
                           : '0 10px 24px rgba(15,23,42,0.45)',
                       transform:
-                        linkPhase === 'generating'
-                          ? 'scale(0.97) translateY(1px)'
-                          : 'scale(1)',
+                        linkPhase === 'generating' ? 'scale(0.97) translateY(1px)' : 'scale(1)',
                       transition:
                         'box-shadow 220ms ease-out, transform 220ms ease-out, background 220ms ease-out, border-color 220ms ease-out',
                     }}
@@ -790,10 +767,7 @@ export function HomeFlowPanel() {
                   style={{
                     marginTop: 8,
                     borderRadius: 999,
-                    border:
-                      linkPhase === 'ready'
-                        ? '1px solid #0ea5e9'
-                        : '1px solid #d1d5db',
+                    border: linkPhase === 'ready' ? '1px solid #0ea5e9' : '1px solid #d1d5db',
                     background: '#ffffff',
                     padding: '9px 14px',
                     display: 'flex',
@@ -825,15 +799,10 @@ export function HomeFlowPanel() {
                     style={{
                       fontSize: 11,
                       borderRadius: 999,
-                      border:
-                        linkPhase === 'ready'
-                          ? '1px solid #0ea5e9'
-                          : '1px solid #d1d5db',
+                      border: linkPhase === 'ready' ? '1px solid #0ea5e9' : '1px solid #d1d5db',
                       padding: '5px 10px',
-                      background:
-                        linkPhase === 'ready' ? '#eff6ff' : '#f9fafb',
-                      color:
-                        linkPhase === 'ready' ? '#075985' : '#4b5563',
+                      background: linkPhase === 'ready' ? '#eff6ff' : '#f9fafb',
+                      color: linkPhase === 'ready' ? '#075985' : '#4b5563',
                       fontWeight: 500,
                     }}
                   >
@@ -869,8 +838,7 @@ export function HomeFlowPanel() {
                   style={{
                     borderRadius: 22,
                     border: '1px solid #e5e7eb',
-                    background:
-                      'linear-gradient(135deg, #f9fafb 0, #eff6ff 40%, #ecfdf3 100%)',
+                    background: 'linear-gradient(135deg, #f9fafb 0, #eff6ff 40%, #ecfdf3 100%)',
                     padding: 20,
                     maxWidth: 820,
                     width: '100%',
@@ -954,9 +922,7 @@ export function HomeFlowPanel() {
                             ? '0 0 0 3px rgba(34,197,94,0.25)'
                             : '0 10px 24px rgba(22,163,74,0.45)',
                         transform:
-                          purchasePhase === 'buying'
-                            ? 'scale(0.97) translateY(1px)'
-                            : 'scale(1)',
+                          purchasePhase === 'buying' ? 'scale(0.97) translateY(1px)' : 'scale(1)',
                         transition:
                           'box-shadow 220ms ease-out, transform 220ms ease-out, background 220ms ease-out',
                       }}
@@ -983,8 +949,7 @@ export function HomeFlowPanel() {
                       ? '0 26px 60px rgba(22,163,74,0.45)'
                       : '0 18px 40px rgba(22,163,74,0.32)',
                     transform: orderPulse ? 'scale(1.02)' : 'scale(1)',
-                    transition:
-                      'box-shadow 260ms ease-out, transform 260ms ease-out',
+                    transition: 'box-shadow 260ms ease-out, transform 260ms ease-out',
                     display: 'grid',
                     gap: 10,
                     textAlign: 'center',

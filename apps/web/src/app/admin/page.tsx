@@ -55,8 +55,8 @@ export default function AdminPage() {
           </h1>
 
           <p style={{ margin: 0, fontSize: 13, color: '#6b7280', lineHeight: 1.6 }}>
-            This area is restricted to PLATFORM_OWNER. Later we will add store onboarding, merchant management,
-            and internal controls here.
+            This area is restricted to PLATFORM_OWNER. Later we will add store onboarding, merchant
+            management, and internal controls here.
           </p>
         </div>
 
@@ -72,9 +72,13 @@ export default function AdminPage() {
             backdropFilter: 'blur(18px)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}
+          >
             <div style={{ display: 'grid', gap: 4 }}>
-              <div style={{ fontWeight: 800, fontSize: 14, letterSpacing: -0.01 }}>Owner actions</div>
+              <div style={{ fontWeight: 800, fontSize: 14, letterSpacing: -0.01 }}>
+                Owner actions
+              </div>
               <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
                 Quick links and placeholders for the future admin features.
               </div>
@@ -208,9 +212,7 @@ export default function AdminPage() {
               fontWeight: 650,
             }}
           >
-            <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 4 }}>
-              Guard behavior
-            </div>
+            <div style={{ color: '#0f172a', fontWeight: 800, marginBottom: 4 }}>Guard behavior</div>
             <div>- Not signed in =&gt; redirect to /login</div>
             <div>- Signed in as MERCHANT =&gt; redirect to /forbidden</div>
             <div>- Signed in as PLATFORM_OWNER =&gt; allowed</div>

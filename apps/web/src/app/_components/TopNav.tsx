@@ -39,9 +39,7 @@ function TopNavSkeleton() {
 
 function isAppRole(value: unknown): value is AppRole {
   return (
-    value === APP_ROLES.PLATFORM_OWNER ||
-    value === APP_ROLES.MERCHANT ||
-    value === APP_ROLES.BUYER
+    value === APP_ROLES.PLATFORM_OWNER || value === APP_ROLES.MERCHANT || value === APP_ROLES.BUYER
   );
 }
 

@@ -1,7 +1,8 @@
 import { createApolloServer } from '../../server';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 
-export type TestAuth = { userId: string; role: string };
+export type AppRole = (typeof APP_ROLES)[keyof typeof APP_ROLES];
+export type TestAuth = { userId: string; role: AppRole };
 
 export function makeAuthContext(auth: TestAuth) {
   return {
@@ -15,7 +16,10 @@ export async function createTestApolloServer() {
   const server = createApolloServer();
   await server.start();
 
-  async function exec(args: { query: string; variables?: Record<string, unknown> }, auth?: TestAuth) {
+  async function exec(
+    args: { query: string; variables?: Record<string, unknown> },
+    auth?: TestAuth,
+  ) {
     const res = await server.executeOperation(
       { query: args.query, variables: args.variables ?? {} },
       auth ? makeAuthContext(auth) : undefined,

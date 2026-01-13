@@ -69,8 +69,8 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
   const handleStatusChange = (orderId: string, nextStatus: OrderStatusEnum) => {
     setError(null);
 
-    setOrders(prev =>
-      prev.map(o =>
+    setOrders((prev) =>
+      prev.map((o) =>
         o.id === orderId
           ? {
               ...o,
@@ -84,9 +84,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
       try {
         await updateOrderStatusAction({ orderId, status: nextStatus });
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to update order status',
-        );
+        setError(err instanceof Error ? err.message : 'Failed to update order status');
       }
     });
   };
@@ -97,9 +95,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      {error && (
-        <p style={{ margin: 0, color: '#b91c1c', fontSize: 13 }}>{error}</p>
-      )}
+      {error && <p style={{ margin: 0, color: '#b91c1c', fontSize: 13 }}>{error}</p>}
 
       <ul
         style={{
@@ -110,7 +106,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           gap: 12,
         }}
       >
-        {orders.map(o => {
+        {orders.map((o) => {
           const currentStatus = o.status ?? OrderStatus.New;
           const colors = statusColors(currentStatus);
           const createdAt = new Date(o.createdAt).toLocaleString();
@@ -139,11 +135,9 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
               >
                 <div style={{ display: 'grid', gap: 4 }}>
                   <strong style={{ color: '#111827' }}>
-                    {(o.product?.name ?? 'Unknown product')} × {quantity}
+                    {o.product?.name ?? 'Unknown product'} × {quantity}
                   </strong>
-                  <span style={{ fontSize: 13, color: '#6b7280' }}>
-                    {createdAt}
-                  </span>
+                  <span style={{ fontSize: 13, color: '#6b7280' }}>{createdAt}</span>
                 </div>
 
                 <div
@@ -170,12 +164,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
 
                   <select
                     value={currentStatus}
-                    onChange={e =>
-                      handleStatusChange(
-                        o.id,
-                        e.target.value as OrderStatusEnum,
-                      )
-                    }
+                    onChange={(e) => handleStatusChange(o.id, e.target.value as OrderStatusEnum)}
                     disabled={isPending}
                     style={{
                       padding: '6px 10px',
@@ -187,7 +176,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
                       cursor: isPending ? 'wait' : 'pointer',
                     }}
                   >
-                    {STATUS_OPTIONS.map(status => (
+                    {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
                         {STATUS_LABELS[status]}
                       </option>
@@ -214,9 +203,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
       </ul>
 
       {isPending && (
-        <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>
-          Saving status changes...
-        </p>
+        <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>Saving status changes...</p>
       )}
     </div>
   );

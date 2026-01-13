@@ -8,18 +8,9 @@ export default function ThankYouAnimation() {
     <div className={styles.outer}>
       <div className={styles.heartWrapper}>
         <div className={styles.glow} />
-        <svg
-          className={styles.heartSvg}
-          viewBox="0 0 200 200"
-          aria-hidden="true"
-        >
+        <svg className={styles.heartSvg} viewBox="0 0 200 200" aria-hidden="true">
           <defs>
-            <radialGradient
-              id="ty-heart-gradient"
-              cx="50%"
-              cy="30%"
-              r="70%"
-            >
+            <radialGradient id="ty-heart-gradient" cx="50%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#fecaca" />
               <stop offset="30%" stopColor="#fb7185" />
               <stop offset="65%" stopColor="#e11d48" />

@@ -443,7 +443,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
                     {formattedRevenue30d}
                   </span>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>Last 30 days of paid orders</span>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                    Last 30 days of paid orders
+                  </span>
                 </div>
 
                 <div
@@ -497,7 +499,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <>
                     <div style={{ display: 'grid', gap: 4 }}>
                       <span style={{ fontSize: 12, color: '#6b7280' }}>Best seller (30d)</span>
-                      <span style={{ fontSize: 16, fontWeight: 600 }}>{bestSellingProduct.name}</span>
+                      <span style={{ fontSize: 16, fontWeight: 600 }}>
+                        {bestSellingProduct.name}
+                      </span>
                       <span style={{ fontSize: 12, color: '#4b5563' }}>
                         {bestSellingProduct.unitsSold} pcs - {bestSellingProduct.ordersCount} orders
                       </span>
@@ -544,7 +548,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div
+                  style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}
+                >
                   <Link
                     href="/stores"
                     style={{
@@ -621,7 +627,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         justifyItems: 'center',
                       }}
                     >
-                      <span>This store has no products yet. Add one to create a checkout link.</span>
+                      <span>
+                        This store has no products yet. Add one to create a checkout link.
+                      </span>
                       <Link
                         href={`/products?store=${encodeURIComponent(activeStore.id)}`}
                         style={{
@@ -661,7 +669,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             }}
                           >
                             <div style={{ display: 'grid', gap: 2 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  minWidth: 0,
+                                }}
+                              >
                                 <Link
                                   href={`/products/${encodeURIComponent(p.id)}?store=${encodeURIComponent(
                                     activeStore.id,
@@ -704,7 +719,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 13, fontWeight: 600 }}>${p.price.toFixed(2)}</span>
+                              <span style={{ fontSize: 13, fontWeight: 600 }}>
+                                ${p.price.toFixed(2)}
+                              </span>
                               <Link
                                 href={`/checkout-links?productId=${encodeURIComponent(
                                   p.id,
@@ -807,7 +824,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                               }}
                             >
                               <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'baseline',
+                                    gap: 6,
+                                    minWidth: 0,
+                                  }}
+                                >
                                   <span
                                     style={{
                                       fontSize: 13,
@@ -836,7 +860,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                   </span>
                                 </div>
 
-                                <span style={{ fontSize: 11, color: '#6b7280' }}>{createdAtLabel}</span>
+                                <span style={{ fontSize: 11, color: '#6b7280' }}>
+                                  {createdAtLabel}
+                                </span>
 
                                 <span
                                   style={{
@@ -850,8 +876,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                                 </span>
                               </div>
 
-                              <div style={{ display: 'grid', justifyItems: 'flex-end', textAlign: 'right', gap: 2 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600 }}>${o.total.toFixed(2)}</span>
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  justifyItems: 'flex-end',
+                                  textAlign: 'right',
+                                  gap: 2,
+                                }}
+                              >
+                                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                                  ${o.total.toFixed(2)}
+                                </span>
                                 <span style={{ fontSize: 11, color: '#16a34a' }}>Paid</span>
                               </div>
                             </div>

@@ -44,7 +44,9 @@ export async function GET() {
   const data = (await upstream.json()) as UpstreamAuth;
 
   const me: MeResponse =
-    data.userId && data.role ? { ok: true, user: { id: data.userId, role: data.role } } : { ok: true, user: null };
+    data.userId && data.role
+      ? { ok: true, user: { id: data.userId, role: data.role } }
+      : { ok: true, user: null };
 
   return NextResponse.json(me, { status: 200 });
 }

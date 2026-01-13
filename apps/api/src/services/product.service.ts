@@ -77,18 +77,12 @@ export class ProductService {
 
     const userId = ctx.auth.userId;
     if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
     if (!ownsStore) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const quantity = data.quantity ?? 0;
@@ -114,34 +108,21 @@ export class ProductService {
 
     const userId = ctx.auth.userId;
     if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const product = await this.repo.findById(data.id);
     if (!product) {
-      throw new DomainError(
-        ERROR_CODES.PRODUCT_NOT_FOUND,
-        'Product not found',
-        { field: 'id' },
-      );
+      throw new DomainError(ERROR_CODES.PRODUCT_NOT_FOUND, 'Product not found', { field: 'id' });
     }
 
     if (!product.storeId) {
-      throw new DomainError(
-        ERROR_CODES.NOT_FOUND,
-        'Product store not found',
-      );
+      throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
     }
 
     const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
     if (!ownsStore) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const updateData: Prisma.ProductUpdateInput = {
@@ -161,10 +142,7 @@ export class ProductService {
   async deleteProduct(ctx: GraphQLContext, id: string) {
     const userId = ctx.auth.userId;
     if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     if (!id || id.trim().length === 0) {
@@ -185,10 +163,7 @@ export class ProductService {
       }
 
       if (!product.storeId) {
-        throw new DomainError(
-          ERROR_CODES.NOT_FOUND,
-          'Product store not found',
-        );
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
       }
 
       const ownsStore = await tx.store.findFirst({
@@ -197,10 +172,7 @@ export class ProductService {
       });
 
       if (!ownsStore) {
-        throw new DomainError(
-          ERROR_CODES.FORBIDDEN,
-          'Access denied',
-        );
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
       }
 
       // Deactivate checkout links for this product

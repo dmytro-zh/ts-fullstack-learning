@@ -31,11 +31,7 @@ function ctx(userId: string | null, role: any): GraphQLContext {
   return { auth: { userId, role } };
 }
 
-function expectDomainError(
-  err: unknown,
-  code: string,
-  field?: string,
-) {
+function expectDomainError(err: unknown, code: string, field?: string) {
   expect(err).toBeInstanceOf(DomainError);
   const e = err as DomainError;
   expect(e.code).toBe(code);
@@ -290,9 +286,9 @@ describe('ProductService', () => {
     it('throws FORBIDDEN when not merchant', async () => {
       const service = new ProductService(repo as any);
 
-      await expect(
-        service.deleteProduct(ctx('u1', APP_ROLES.BUYER), 'p1'),
-      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
+      await expect(service.deleteProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).rejects.toMatchObject({
+        code: ERROR_CODES.FORBIDDEN,
+      });
     });
 
     it('throws INVALID_CHECKOUT_INPUT when id is empty', async () => {
@@ -329,7 +325,10 @@ describe('ProductService', () => {
       const service = new ProductService(repo as any);
 
       const tx = {
-        product: { findFirst: vi.fn().mockResolvedValue({ id: 'p1', storeId: null }), update: vi.fn() },
+        product: {
+          findFirst: vi.fn().mockResolvedValue({ id: 'p1', storeId: null }),
+          update: vi.fn(),
+        },
         store: { findFirst: vi.fn() },
         checkoutLink: { updateMany: vi.fn() },
       };
@@ -345,7 +344,10 @@ describe('ProductService', () => {
       const service = new ProductService(repo as any);
 
       const tx = {
-        product: { findFirst: vi.fn().mockResolvedValue({ id: 'p1', storeId: 's1' }), update: vi.fn() },
+        product: {
+          findFirst: vi.fn().mockResolvedValue({ id: 'p1', storeId: 's1' }),
+          update: vi.fn(),
+        },
         store: { findFirst: vi.fn().mockResolvedValue(null) },
         checkoutLink: { updateMany: vi.fn() },
       };

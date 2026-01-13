@@ -2,10 +2,7 @@ import Link from 'next/link';
 import { createWebGraphQLClient } from '../../../lib/graphql-client';
 import { headers, cookies } from 'next/headers';
 import { print, type DocumentNode } from 'graphql';
-import {
-  ProductByIdDocument,
-  type ProductByIdQuery,
-} from '../../../graphql/generated/graphql';
+import { ProductByIdDocument, type ProductByIdQuery } from '../../../graphql/generated/graphql';
 import { ProductDetails } from './ProductDetails';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -21,7 +18,10 @@ function getServerBaseUrl(h: Headers) {
   return `${proto}://${host}`;
 }
 
-async function _gqlRequest<TData>(args: { query: DocumentNode; variables?: Record<string, unknown> }) {
+async function _gqlRequest<TData>(args: {
+  query: DocumentNode;
+  variables?: Record<string, unknown>;
+}) {
   const h = await headers();
   const baseUrl = getServerBaseUrl(h);
 
@@ -44,7 +44,9 @@ async function _gqlRequest<TData>(args: { query: DocumentNode; variables?: Recor
   const json = (await res.json()) as { data?: TData; errors?: unknown };
 
   if (!res.ok || json.errors) {
-    throw new Error(`GraphQL request failed: ${res.status}${json.errors ? ' (graphql errors)' : ''}`);
+    throw new Error(
+      `GraphQL request failed: ${res.status}${json.errors ? ' (graphql errors)' : ''}`,
+    );
   }
 
   return json.data as TData;
@@ -69,7 +71,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     data = await fetchProduct(id);
   } catch {
     return (
-      <main style={{ padding: '32px 16px 40px', minHeight: '100vh', boxSizing: 'border-box', color: '#020617' }}>
+      <main
+        style={{
+          padding: '32px 16px 40px',
+          minHeight: '100vh',
+          boxSizing: 'border-box',
+          color: '#020617',
+        }}
+      >
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>Failed to load product.</div>
       </main>
     );
@@ -79,7 +88,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   if (!product) {
     return (
-      <main style={{ padding: '32px 16px 40px', minHeight: '100vh', boxSizing: 'border-box', color: '#020617' }}>
+      <main
+        style={{
+          padding: '32px 16px 40px',
+          minHeight: '100vh',
+          boxSizing: 'border-box',
+          color: '#020617',
+        }}
+      >
         <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gap: 12 }}>
           <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>Product not found</h1>
           <p style={{ margin: 0, fontSize: 13, color: '#4b5563' }}>
@@ -151,7 +167,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   return (
     <main style={pageBgStyle}>
       <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gap: 18 }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
           <div style={{ display: 'grid', gap: 6 }}>
             <div style={{ fontSize: 12, color: '#64748b', fontWeight: 800 }}>Product</div>
             <h1 style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>{product.name}</h1>
@@ -166,7 +190,9 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
                 Back to products
               </Link>
             )}
-            <Link href="/dashboard" style={buttonLink}>Back to dashboard</Link>
+            <Link href="/dashboard" style={buttonLink}>
+              Back to dashboard
+            </Link>
           </div>
         </header>
 

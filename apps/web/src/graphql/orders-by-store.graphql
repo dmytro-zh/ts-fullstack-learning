@@ -8,7 +8,13 @@ query OrdersByStore($storeId: ID!) {
     createdAt
     customerName
     email
-    product { id name price }
-    checkoutLink { slug }
+    product {
+      id
+      name
+      price
+    }
+    checkoutLink {
+      slug
+    }
   }
 }

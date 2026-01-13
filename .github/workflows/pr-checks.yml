@@ -10,7 +10,9 @@ concurrency:
 
 jobs:
   checks:
+    name: checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -30,24 +32,23 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # Optional: formatting check (only if script exists)
       - name: Format check
         run: pnpm -w run format:check
-        continue-on-error: true
 
-      # Optional: lint (only if script exists)
       - name: Lint
         run: pnpm -w run lint
-        continue-on-error: true
 
       - name: Typecheck
         run: pnpm -w run typecheck
 
+      - name: Prisma generate (api)
+        run: pnpm -F api prisma:generate
+
       - name: API unit tests
         run: pnpm -F api test:unit
 
-      - name: API integration tests
-        run: pnpm -F api test:integration
+      - name: API integration tests (CI)
+        run: pnpm -F api test:integration:ci
 
       - name: API build
         run: pnpm -F api build
