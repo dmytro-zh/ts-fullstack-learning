@@ -23,8 +23,8 @@
     "apps/web/src/**/*.{ts,tsx,js,jsx}": [
       "pnpm -F web lint"
     ],
-    "*.{json,md,css,scss,mdx}": [
-      "pnpm format"
+    "*.{yml,yaml,json,md,css,scss,mdx}": [
+      "prettier --write"
     ]
   },
   "devDependencies": {
