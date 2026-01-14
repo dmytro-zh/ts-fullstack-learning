@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import { config as dotenv } from 'dotenv';
 import path from 'node:path';
 
-dotenv({ path: path.resolve(__dirname, '.env.test') });
+dotenv({ path: path.resolve(__dirname, '.env.test'), override: true });
 
 const dbUrl = process.env.DATABASE_URL ?? '';
 const usesSqliteTestDb = dbUrl.includes('test.db');
