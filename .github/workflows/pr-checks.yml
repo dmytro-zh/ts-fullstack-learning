@@ -51,8 +51,8 @@ jobs:
       - name: API test db migrate (sqlite)
         run: pnpm -C apps/api run db:migrate:test:ci
 
-      - name: API unit tests
-        run: pnpm -C apps/api run test:unit
+      - name: API unit tests (coverage)
+        run: pnpm -C apps/api run test:unit:coverage
 
       - name: API integration tests (CI)
         run: pnpm -C apps/api run test:integration:ci

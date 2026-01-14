@@ -14,6 +14,31 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/.git/**'],
     setupFiles: ['src/__tests__/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'lcov'],
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.test.ts',
+        'src/**/__tests__/**',
+
+        'src/server.ts',
+        'src/server-context.ts',
+        'src/repositories/**',
+        'src/lib/**',
+        'src/errors/format-graphql-error.ts',
+
+        'src/**/generated/**',
+        'src/**/types/**',
+        'src/index.ts',
+      ],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 0,
+        statements: 0,
+      },
+    },
 
     // Critical: sqlite file cannot be shared between parallel test files
     ...(usesSqliteTestDb
