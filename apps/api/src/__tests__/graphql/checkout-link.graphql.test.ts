@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { prisma } from '../../lib/prisma';
+import { prismaTest as prisma } from '../integration/db';
 import { createTestApolloServer, defaultMerchantAuth } from '../helpers/apollo';
 
 const CREATE_STORE = `
@@ -44,21 +44,30 @@ describe('CheckoutLink GraphQL flow', () => {
   const productName = `Test CL ${Date.now()}`;
 
   let api: Awaited<ReturnType<typeof createTestApolloServer>>;
+  let storeId: string | null = null;
+  let productId: string | null = null;
+  let checkoutLinkId: string | null = null;
 
   beforeAll(async () => {
     api = await createTestApolloServer();
   });
 
   afterAll(async () => {
-    await prisma.checkoutLink
-      .deleteMany({ where: { slug: { startsWith: 'test-slug-' } } })
-      .catch(() => {});
-    await prisma.product
-      .deleteMany({ where: { name: { startsWith: 'Test CL ' } } })
-      .catch(() => {});
-    await prisma.store
-      .deleteMany({ where: { name: { startsWith: 'Test Store ' } } })
-      .catch(() => {});
+    if (checkoutLinkId) {
+      await prisma.order.deleteMany({ where: { checkoutLinkId } }).catch(() => {});
+      await prisma.checkoutLink.deleteMany({ where: { id: checkoutLinkId } }).catch(() => {});
+    }
+
+    if (productId) {
+      await prisma.cartItem.deleteMany({ where: { productId } }).catch(() => {});
+      await prisma.productImage.deleteMany({ where: { productId } }).catch(() => {});
+      await prisma.product.deleteMany({ where: { id: productId } }).catch(() => {});
+    }
+
+    if (storeId) {
+      await prisma.order.deleteMany({ where: { storeId } }).catch(() => {});
+      await prisma.store.deleteMany({ where: { id: storeId } }).catch(() => {});
+    }
 
     await api.stop();
   });
@@ -72,7 +81,7 @@ describe('CheckoutLink GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const storeId = (storeData as any)?.createStore?.id;
+    storeId = (storeData as any)?.createStore?.id ?? null;
     expect(storeId).toBeTruthy();
 
     const productData = await api.exec(
@@ -83,7 +92,7 @@ describe('CheckoutLink GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const productId = (productData as any)?.addProduct?.id;
+    productId = (productData as any)?.addProduct?.id ?? null;
     expect(productId).toBeTruthy();
 
     const linkData = await api.exec(
@@ -94,6 +103,7 @@ describe('CheckoutLink GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
+    checkoutLinkId = (linkData as any)?.createCheckoutLink?.id ?? null;
     expect((linkData as any)?.createCheckoutLink?.slug).toBe(slug);
 
     const fetchedData = await api.exec(
