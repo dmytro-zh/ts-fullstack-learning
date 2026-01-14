@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    env:
+      DATABASE_URL: file:./prisma/test.db
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,7 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Prisma generate (api)
-        run: pnpm -F api run prisma:generate
+        run: pnpm -C apps/api run prisma:generate
 
       - name: Format check
         run: pnpm -w run format:check
@@ -45,16 +48,16 @@ jobs:
         run: pnpm -w run typecheck
 
       - name: API test db migrate (sqlite)
-        run: pnpm -F api run db:migrate:test:ci
+        run: pnpm -C apps/api run db:migrate:test:ci
 
       - name: API unit tests
-        run: pnpm -F api run test:unit
+        run: pnpm -C apps/api run test:unit
 
       - name: API integration tests (CI)
-        run: pnpm -F api run test:integration:ci
+        run: pnpm -C apps/api run test:integration:ci
 
       - name: API build
-        run: pnpm -F api run build
+        run: pnpm -C apps/api run build
 
       - name: Web build
-        run: pnpm -F web run build
+        run: pnpm -C apps/web run build
