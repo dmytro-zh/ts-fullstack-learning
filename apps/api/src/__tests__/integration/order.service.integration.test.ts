@@ -49,11 +49,7 @@ async function seedMerchantWithStoreAndProduct(opts?: { ownerId?: string }) {
   return { ownerId, store, product };
 }
 
-async function seedOrder(params: {
-  storeId: string | null;
-  productId: string;
-  status: any;
-}) {
+async function seedOrder(params: { storeId: string | null; productId: string; status: any }) {
   return prismaTest.order.create({
     data: {
       customerName: 'John Doe',
@@ -87,7 +83,10 @@ describe('OrderService (integration)', () => {
     });
 
     const service = new OrderService();
-    const res = await service.getByStore(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), store.id);
+    const res = await service.getByStore(
+      ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
+      store.id,
+    );
 
     const ids = res.map((o: any) => o.id);
 
@@ -164,7 +163,11 @@ describe('OrderService (integration)', () => {
     const service = new OrderService();
 
     await expect(
-      service.updateStatus(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), order.id, 'COMPLETED'),
+      service.updateStatus(
+        ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
+        order.id,
+        'COMPLETED',
+      ),
     ).rejects.toMatchObject({ code: ERROR_CODES.INVALID_ORDER_STATUS_TRANSITION });
   });
 

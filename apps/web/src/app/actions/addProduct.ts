@@ -1,7 +1,10 @@
 'use server';
 
 import { createWebGraphQLClient } from '../../lib/graphql-client';
-import { AddProductDocument, type AddProductMutationVariables } from '../../graphql/generated/graphql';
+import {
+  AddProductDocument,
+  type AddProductMutationVariables,
+} from '../../graphql/generated/graphql';
 
 type Input = AddProductMutationVariables;
 

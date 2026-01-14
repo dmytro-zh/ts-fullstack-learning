@@ -39,8 +39,7 @@
 
 .heartCore {
   transform-origin: 50% 60%;
-  filter:
-    drop-shadow(0 14px 30px rgba(127, 29, 29, 0.75))
+  filter: drop-shadow(0 14px 30px rgba(127, 29, 29, 0.75))
     drop-shadow(0 0 22px rgba(248, 113, 113, 0.45));
   animation: beat-grow 2.2s ease-in-out 1 forwards;
 }

@@ -19,17 +19,11 @@ export class StoreService {
 
     const { userId, role } = ctx.auth;
     if (!userId || !role) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     if (role !== APP_ROLES.MERCHANT && role !== APP_ROLES.PLATFORM_OWNER) {
-      throw new DomainError(
-        ERROR_CODES.FORBIDDEN,
-        'Access denied',
-      );
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     return this.repo.create({
@@ -48,10 +42,7 @@ export class StoreService {
 
     if (role === APP_ROLES.MERCHANT) {
       if (!userId) {
-        throw new DomainError(
-          ERROR_CODES.FORBIDDEN,
-          'Access denied',
-        );
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
       }
 
       return this.repo.findAllByOwner(userId);
@@ -69,10 +60,7 @@ export class StoreService {
 
     if (role === APP_ROLES.MERCHANT) {
       if (!userId) {
-        throw new DomainError(
-          ERROR_CODES.FORBIDDEN,
-          'Access denied',
-        );
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
       }
 
       return this.repo.findByIdForOwner(id, userId);

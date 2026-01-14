@@ -27,10 +27,10 @@ describe('StoreService', () => {
 
       const service = new StoreService(repo as any);
 
-      const result = await service.createStore(
-        ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),
-        { name: 'My Store', email: 'a@b.com' },
-      );
+      const result = await service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        name: 'My Store',
+        email: 'a@b.com',
+      });
 
       expect(repo.create).toHaveBeenCalledWith({
         name: 'My Store',
@@ -46,10 +46,9 @@ describe('StoreService', () => {
 
       const service = new StoreService(repo as any);
 
-      await service.createStore(
-        ctx({ userId: 'u2', role: APP_ROLES.PLATFORM_OWNER }),
-        { name: 'Owner Store' },
-      );
+      await service.createStore(ctx({ userId: 'u2', role: APP_ROLES.PLATFORM_OWNER }), {
+        name: 'Owner Store',
+      });
 
       expect(repo.create).toHaveBeenCalledWith({
         name: 'Owner Store',
@@ -169,10 +168,7 @@ describe('StoreService', () => {
 
       const service = new StoreService(repo as any);
 
-      const result = await service.getStore(
-        ctx({ userId: 'u9', role: APP_ROLES.MERCHANT }),
-        's1',
-      );
+      const result = await service.getStore(ctx({ userId: 'u9', role: APP_ROLES.MERCHANT }), 's1');
 
       expect(repo.findByIdForOwner).toHaveBeenCalledWith('s1', 'u9');
       expect(result).toEqual({ id: 's1' });

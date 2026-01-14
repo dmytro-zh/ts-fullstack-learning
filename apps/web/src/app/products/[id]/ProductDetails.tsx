@@ -296,7 +296,7 @@ export function ProductDetails({
   };
 
   const savedImagesFromProps = useMemo(
-    () => ((product.images ?? []) as ProductImage[]),
+    () => (product.images ?? []) as ProductImage[],
     [product.images],
   );
 
@@ -658,7 +658,8 @@ export function ProductDetails({
         const imagesFromServer = await attachSessionToProduct(uploadSession, primaryDraftId);
 
         setOptimisticSavedImages(imagesFromServer as unknown as ProductImage[]);
-        const nextPrimary = imagesFromServer.find((i) => i.isPrimary) ?? imagesFromServer[0] ?? null;
+        const nextPrimary =
+          imagesFromServer.find((i) => i.isPrimary) ?? imagesFromServer[0] ?? null;
         setSelectedSavedImageId(nextPrimary?.id ?? null);
 
         await cleanupSession(uploadSession);
@@ -838,7 +839,10 @@ export function ProductDetails({
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <SecondaryButton onClick={continueEditing}>Continue editing</SecondaryButton>
-              <DangerButton onClick={() => void discardAndLeave()} title="Discard changes and leave">
+              <DangerButton
+                onClick={() => void discardAndLeave()}
+                title="Discard changes and leave"
+              >
                 Discard and leave
               </DangerButton>
             </div>
@@ -979,7 +983,11 @@ export function ProductDetails({
         <div style={{ display: 'grid', gap: 6 }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ fontSize: 14, fontWeight: 900 }}>Images</div>
-            {hasDraft ? <SubtleTag tone="warning">Draft</SubtleTag> : <SubtleTag tone="success">Saved</SubtleTag>}
+            {hasDraft ? (
+              <SubtleTag tone="warning">Draft</SubtleTag>
+            ) : (
+              <SubtleTag tone="success">Saved</SubtleTag>
+            )}
           </div>
           <p style={helperText}>Upload images, choose the primary, then Save to apply.</p>
         </div>
@@ -1230,7 +1238,11 @@ export function ProductDetails({
                 {isSaving ? 'Saving...' : 'Save'}
               </PrimaryButton>
 
-              <SecondaryButton disabled={isSaving} onClick={() => void onCancel()} title="Discard changes">
+              <SecondaryButton
+                disabled={isSaving}
+                onClick={() => void onCancel()}
+                title="Discard changes"
+              >
                 Cancel
               </SecondaryButton>
             </div>

@@ -42,28 +42,36 @@ describe('OrderService', () => {
   describe('getByStore', () => {
     it('throws FORBIDDEN when missing userId', async () => {
       const service = new OrderService();
-      await expect(service.getByStore(ctx({ userId: null, role: APP_ROLES.MERCHANT }), 's1')).rejects.toMatchObject({
+      await expect(
+        service.getByStore(ctx({ userId: null, role: APP_ROLES.MERCHANT }), 's1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
     });
 
     it('throws FORBIDDEN when role is not MERCHANT', async () => {
       const service = new OrderService();
-      await expect(service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1')).rejects.toMatchObject({
+      await expect(
+        service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
     });
 
     it('throws on invalid storeId', async () => {
       const service = new OrderService();
-      await expect(service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), '')).rejects.toBeTruthy();
+      await expect(
+        service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), ''),
+      ).rejects.toBeTruthy();
     });
 
     it('throws FORBIDDEN when user does not own store', async () => {
       repoMock.isStoreOwnedBy.mockResolvedValueOnce(false);
 
       const service = new OrderService();
-      await expect(service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 's1')).rejects.toMatchObject({
+      await expect(
+        service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 's1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
 
@@ -86,14 +94,18 @@ describe('OrderService', () => {
   describe('getById', () => {
     it('throws FORBIDDEN when missing userId', async () => {
       const service = new OrderService();
-      await expect(service.getById(ctx({ userId: null, role: APP_ROLES.MERCHANT }), 'o1')).rejects.toMatchObject({
+      await expect(
+        service.getById(ctx({ userId: null, role: APP_ROLES.MERCHANT }), 'o1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
     });
 
     it('throws FORBIDDEN when role is not MERCHANT', async () => {
       const service = new OrderService();
-      await expect(service.getById(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 'o1')).rejects.toMatchObject({
+      await expect(
+        service.getById(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 'o1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
     });
@@ -112,7 +124,9 @@ describe('OrderService', () => {
       repoMock.findById.mockResolvedValueOnce({ id: 'o1', storeId: null });
 
       const service = new OrderService();
-      await expect(service.getById(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1')).rejects.toMatchObject({
+      await expect(
+        service.getById(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.NOT_FOUND,
       });
     });
@@ -122,7 +136,9 @@ describe('OrderService', () => {
       repoMock.isStoreOwnedBy.mockResolvedValueOnce(false);
 
       const service = new OrderService();
-      await expect(service.getById(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1')).rejects.toMatchObject({
+      await expect(
+        service.getById(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1'),
+      ).rejects.toMatchObject({
         code: ERROR_CODES.FORBIDDEN,
       });
 
@@ -213,7 +229,11 @@ describe('OrderService', () => {
 
       let err: any;
       try {
-        await service.updateStatus(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1', 'COMPLETED');
+        await service.updateStatus(
+          ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),
+          'o1',
+          'COMPLETED',
+        );
       } catch (e) {
         err = e;
       }
@@ -234,7 +254,11 @@ describe('OrderService', () => {
       repoMock.updateStatus.mockResolvedValueOnce({ id: 'o1', status: 'PAID' });
 
       const service = new OrderService();
-      const res = await service.updateStatus(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1', 'PAID');
+      const res = await service.updateStatus(
+        ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),
+        'o1',
+        'PAID',
+      );
 
       expect(repoMock.updateStatus).toHaveBeenCalledWith('o1', 'PAID');
       expect(res).toEqual({ id: 'o1', status: 'PAID' });
@@ -246,7 +270,11 @@ describe('OrderService', () => {
       repoMock.updateStatus.mockResolvedValueOnce({ id: 'o1', status: 'PROCESSING' });
 
       const service = new OrderService();
-      const res = await service.updateStatus(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1', 'PROCESSING');
+      const res = await service.updateStatus(
+        ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),
+        'o1',
+        'PROCESSING',
+      );
 
       expect(repoMock.updateStatus).toHaveBeenCalledWith('o1', 'PROCESSING');
       expect(res).toEqual({ id: 'o1', status: 'PROCESSING' });

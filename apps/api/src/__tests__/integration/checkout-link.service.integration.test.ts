@@ -44,10 +44,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
     const service = new CheckoutLinkService();
 
     const slug = uniq('my-link');
-    const link = await service.createLink(
-      ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
-      { slug, productId: product.id },
-    );
+    const link = await service.createLink(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), {
+      slug,
+      productId: product.id,
+    });
 
     expect(link.slug).toBe(slug);
     expect(link.active).toBe(true);
@@ -77,10 +77,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
 
     const service = new CheckoutLinkService();
 
-    const link = await service.createLink(
-      ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
-      { slug, productId: product.id },
-    );
+    const link = await service.createLink(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), {
+      slug,
+      productId: product.id,
+    });
 
     expect(link.slug).toBe(slug);
     expect(link.active).toBe(true);
@@ -105,10 +105,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
 
     const service = new CheckoutLinkService();
 
-    const link = await service.createLink(
-      ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
-      { slug, productId: product.id },
-    );
+    const link = await service.createLink(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), {
+      slug,
+      productId: product.id,
+    });
 
     expect(link.id).toBe(existing.id);
     expect(link.active).toBe(true);
@@ -148,10 +148,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
     const service = new CheckoutLinkService();
 
     await expect(
-      service.createLink(
-        ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }),
-        { slug, productId: product.id },
-      ),
+      service.createLink(ctx({ userId: ownerId, role: APP_ROLES.MERCHANT }), {
+        slug,
+        productId: product.id,
+      }),
     ).rejects.toMatchObject({ code: 'INVALID_CHECKOUT_INPUT' });
   });
 
@@ -162,10 +162,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
     const service = new CheckoutLinkService();
 
     await expect(
-      service.createLink(
-        ctx({ userId: ownerId, role: APP_ROLES.BUYER }),
-        { slug: uniq('nope'), productId: product.id },
-      ),
+      service.createLink(ctx({ userId: ownerId, role: APP_ROLES.BUYER }), {
+        slug: uniq('nope'),
+        productId: product.id,
+      }),
     ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
@@ -176,10 +176,10 @@ describe('CheckoutLinkService (integration) - createLink', () => {
     const service = new CheckoutLinkService();
 
     await expect(
-      service.createLink(
-        ctx({ userId: 'other-owner', role: APP_ROLES.MERCHANT }),
-        { slug: uniq('no-access'), productId: product.id },
-      ),
+      service.createLink(ctx({ userId: 'other-owner', role: APP_ROLES.MERCHANT }), {
+        slug: uniq('no-access'),
+        productId: product.id,
+      }),
     ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });

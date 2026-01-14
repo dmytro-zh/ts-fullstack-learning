@@ -1,7 +1,9 @@
 import { test, expect, request } from '@playwright/test';
 
 test('@smoke public checkout link works', async ({ page }) => {
-  const api = await request.newContext({ baseURL: process.env.API_URL ?? 'http://localhost:4000/' });
+  const api = await request.newContext({
+    baseURL: process.env.API_URL ?? 'http://localhost:4000/',
+  });
   const slug = `pw-slug-${Date.now()}`;
 
   // create store
@@ -16,7 +18,8 @@ test('@smoke public checkout link works', async ({ page }) => {
   // create product
   const prodResp = await api.post('', {
     data: {
-      query: 'mutation ($n:String!,$p:Float!,$s:Boolean!,$store:ID){ addProduct(name:$n, price:$p, inStock:$s, storeId:$store){ id name } }',
+      query:
+        'mutation ($n:String!,$p:Float!,$s:Boolean!,$store:ID){ addProduct(name:$n, price:$p, inStock:$s, storeId:$store){ id name } }',
       variables: { n: `PW Product ${Date.now()}`, p: 12.34, s: true, store: storeId },
     },
   });

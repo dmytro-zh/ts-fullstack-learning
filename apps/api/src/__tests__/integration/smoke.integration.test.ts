@@ -7,7 +7,7 @@ describe('integration db setup (smoke)', () => {
       PRAGMA database_list;
     `;
 
-    const main = rows.find((r) => r.file && r.file.length > 0);
+    const main = rows.find((r: { file: string }) => r.file.length > 0);
     expect(main?.file).toContain('test.db');
   });
 

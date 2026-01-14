@@ -22,7 +22,10 @@ function getServerBaseUrl(h: Headers) {
   return `${proto}://${host}`;
 }
 
-async function _gqlRequest<TData>(args: { query: DocumentNode; variables?: Record<string, unknown> }) {
+async function _gqlRequest<TData>(args: {
+  query: DocumentNode;
+  variables?: Record<string, unknown>;
+}) {
   const h = await headers();
   const baseUrl = getServerBaseUrl(h);
 

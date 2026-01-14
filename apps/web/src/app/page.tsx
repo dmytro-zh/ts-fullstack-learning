@@ -77,9 +77,9 @@ export default async function Home() {
                 color: '#4b5563',
               }}
             >
-              Creator checkout is a small control room for people who sell a handful of
-              things: prints, sessions, classes, handmade goods. No theme setup, no
-              storefront to babysit. Just a product, a checkout link, and clear orders.
+              Creator checkout is a small control room for people who sell a handful of things:
+              prints, sessions, classes, handmade goods. No theme setup, no storefront to babysit.
+              Just a product, a checkout link, and clear orders.
             </p>
           </div>
 
@@ -98,8 +98,7 @@ export default async function Home() {
                 padding: '11px 20px',
                 borderRadius: 999,
                 border: '1px solid #020617',
-                background:
-                  'linear-gradient(135deg, #020617 0, #0f172a 40%, #020617 100%)',
+                background: 'linear-gradient(135deg, #020617 0, #0f172a 40%, #020617 100%)',
                 color: '#ecfeff',
                 fontSize: 14,
                 fontWeight: 600,

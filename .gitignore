@@ -56,3 +56,6 @@ apps/api/prisma/prisma/*.db
 
 # local uploads
 /uploads/
+
+# sqlite db files
+apps/api/prisma/*.db

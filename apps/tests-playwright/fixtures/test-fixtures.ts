@@ -10,9 +10,15 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
-  cartPage: async ({ page }, use) => { await use(new CartPage(page)); },
-  homePage: async ({ page }, use) => { await use(new HomePage(page)); },
-  user: async ({}, use) => { await use(roles.defaultUser); },
+  cartPage: async ({ page }, use) => {
+    await use(new CartPage(page));
+  },
+  homePage: async ({ page }, use) => {
+    await use(new HomePage(page));
+  },
+  user: async ({}, use) => {
+    await use(roles.defaultUser);
+  },
 });
 
 export { expect } from '@playwright/test';
