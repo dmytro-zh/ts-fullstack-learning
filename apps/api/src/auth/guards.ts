@@ -39,3 +39,7 @@ export function isMerchantOrOwner(role: AppRole | null): boolean {
 export function isBuyer(role: AppRole | null): boolean {
   return role === APP_ROLES.BUYER;
 }
+
+export function requireMerchantOrOwner(role: AppRole | null): AppRole {
+  return requireRole(role, [APP_ROLES.MERCHANT, APP_ROLES.PLATFORM_OWNER]);
+}

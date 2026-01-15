@@ -1,5 +1,5 @@
 import { APP_ROLES, ProductSchema } from '@ts-fullstack-learning/shared';
-import { isMerchantOrOwner } from '../auth/guards';
+import { requireMerchantOrOwner } from '../auth/guards';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
@@ -65,25 +65,30 @@ export class ProductService {
     }
   }
 
-  getProducts() {
+  getProducts(ctx: GraphQLContext) {
+    requireMerchantOrOwner(ctx.auth.role);
     return this.repo.findAllWithStore();
   }
 
-  getProduct(id: string) {
+  getProduct(ctx: GraphQLContext, id: string) {
+    requireMerchantOrOwner(ctx.auth.role);
     return this.repo.findByIdWithStore(id);
   }
 
   async addProduct(ctx: GraphQLContext, input: CreateProductInput) {
     const data = createProductInput.parse(input);
 
+    requireMerchantOrOwner(ctx.auth.role);
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const quantity = data.quantity ?? 0;
@@ -107,8 +112,9 @@ export class ProductService {
   async updateProduct(ctx: GraphQLContext, input: UpdateProductInput) {
     const data = updateProductInput.parse(input);
 
+    requireMerchantOrOwner(ctx.auth.role);
     const userId = ctx.auth.userId;
-    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -143,8 +149,9 @@ export class ProductService {
   }
 
   async deleteProduct(ctx: GraphQLContext, id: string) {
+    requireMerchantOrOwner(ctx.auth.role);
     const userId = ctx.auth.userId;
-    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 

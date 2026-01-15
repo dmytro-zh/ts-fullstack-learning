@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { StoreRepository } from '../repositories/store.repository';
+import { requireMerchantOrOwner } from '../auth/guards';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 import type { GraphQLContext } from '../server-context';
 import { DomainError } from '../errors/domain-error';
@@ -17,12 +18,9 @@ export class StoreService {
   async createStore(ctx: GraphQLContext, input: StoreInput) {
     const parsed = storeInput.parse(input);
 
-    const { userId, role } = ctx.auth;
-    if (!userId || !role) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
-    }
-
-    if (role !== APP_ROLES.MERCHANT && role !== APP_ROLES.PLATFORM_OWNER) {
+    requireMerchantOrOwner(ctx.auth.role);
+    const userId = ctx.auth.userId;
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -34,38 +32,33 @@ export class StoreService {
   }
 
   async getStores(ctx: GraphQLContext) {
-    const { userId, role } = ctx.auth;
+    requireMerchantOrOwner(ctx.auth.role);
+    const userId = ctx.auth.userId;
+    if (!userId) {
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    }
+
+    const role = ctx.auth.role;
 
     if (role === APP_ROLES.PLATFORM_OWNER) {
       return this.repo.findAll();
     }
 
-    if (role === APP_ROLES.MERCHANT) {
-      if (!userId) {
-        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
-      }
-
-      return this.repo.findAllByOwner(userId);
-    }
-
-    return [];
+    return this.repo.findAllByOwner(userId);
   }
 
   async getStore(ctx: GraphQLContext, id: string) {
-    const { userId, role } = ctx.auth;
+    requireMerchantOrOwner(ctx.auth.role);
+    const role = ctx.auth.role;
+    const userId = ctx.auth.userId;
+    if (!userId) {
+      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    }
 
     if (role === APP_ROLES.PLATFORM_OWNER) {
       return this.repo.findById(id);
     }
 
-    if (role === APP_ROLES.MERCHANT) {
-      if (!userId) {
-        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
-      }
-
-      return this.repo.findByIdForOwner(id, userId);
-    }
-
-    return null;
+    return this.repo.findByIdForOwner(id, userId);
   }
 }

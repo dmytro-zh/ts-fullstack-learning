@@ -166,7 +166,7 @@ describe('CheckoutLinkService (integration) - createLink', () => {
         slug: uniq('nope'),
         productId: product.id,
       }),
-    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
   });
 
   it('forbids MERCHANT when store is not owned by user', async () => {
@@ -180,6 +180,22 @@ describe('CheckoutLinkService (integration) - createLink', () => {
         slug: uniq('no-access'),
         productId: product.id,
       }),
-    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+  });
+
+  it('allows PLATFORM_OWNER to create link for any store', async () => {
+    const ownerId = 'platform-owner';
+    const { store, product } = await seedStoreAndProduct('merchant-owner');
+
+    const service = new CheckoutLinkService();
+
+    const slug = uniq('owner-link');
+    const link = await service.createLink(
+      ctx({ userId: ownerId, role: APP_ROLES.PLATFORM_OWNER }),
+      { slug, productId: product.id },
+    );
+
+    expect(link.slug).toBe(slug);
+    expect(link.storeId).toBe(store.id);
   });
 });

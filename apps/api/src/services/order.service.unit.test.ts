@@ -54,7 +54,7 @@ describe('OrderService', () => {
       await expect(
         service.getByStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1'),
       ).rejects.toMatchObject({
-        code: ERROR_CODES.FORBIDDEN,
+        extensions: { code: 'FORBIDDEN' },
       });
     });
 
@@ -89,6 +89,20 @@ describe('OrderService', () => {
       expect(repoMock.findByStore).toHaveBeenCalledWith('s1');
       expect(res).toEqual([{ id: 'o1' }]);
     });
+
+    it('allows PLATFORM_OWNER without ownership check', async () => {
+      repoMock.findByStore.mockResolvedValueOnce([{ id: 'o1' }]);
+
+      const service = new OrderService();
+      const res = await service.getByStore(
+        ctx({ userId: 'owner-1', role: APP_ROLES.PLATFORM_OWNER }),
+        's1',
+      );
+
+      expect(repoMock.isStoreOwnedBy).not.toHaveBeenCalled();
+      expect(repoMock.findByStore).toHaveBeenCalledWith('s1');
+      expect(res).toEqual([{ id: 'o1' }]);
+    });
   });
 
   describe('getById', () => {
@@ -106,7 +120,7 @@ describe('OrderService', () => {
       await expect(
         service.getById(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 'o1'),
       ).rejects.toMatchObject({
-        code: ERROR_CODES.FORBIDDEN,
+        extensions: { code: 'FORBIDDEN' },
       });
     });
 
@@ -157,6 +171,19 @@ describe('OrderService', () => {
       expect(repoMock.isStoreOwnedBy).toHaveBeenCalledWith('s1', 'u1');
       expect(res).toEqual(order);
     });
+    it('allows PLATFORM_OWNER without ownership check', async () => {
+      const order = { id: 'o1', storeId: 's1' };
+      repoMock.findById.mockResolvedValueOnce(order);
+
+      const service = new OrderService();
+      const res = await service.getById(
+        ctx({ userId: 'owner-1', role: APP_ROLES.PLATFORM_OWNER }),
+        'o1',
+      );
+
+      expect(repoMock.isStoreOwnedBy).not.toHaveBeenCalled();
+      expect(res).toEqual(order);
+    });
   });
 
   describe('updateStatus', () => {
@@ -172,7 +199,7 @@ describe('OrderService', () => {
       await expect(
         service.updateStatus(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 'o1', 'PAID'),
       ).rejects.toMatchObject({
-        code: ERROR_CODES.FORBIDDEN,
+        extensions: { code: 'FORBIDDEN' },
       });
     });
 
@@ -277,6 +304,21 @@ describe('OrderService', () => {
       );
 
       expect(repoMock.updateStatus).toHaveBeenCalledWith('o1', 'PROCESSING');
+      expect(res).toEqual({ id: 'o1', status: 'PROCESSING' });
+    });
+
+    it('allows PLATFORM_OWNER to update without ownership check', async () => {
+      repoMock.findById.mockResolvedValueOnce({ id: 'o1', storeId: 's1', status: 'PAID' });
+      repoMock.updateStatus.mockResolvedValueOnce({ id: 'o1', status: 'PROCESSING' });
+
+      const service = new OrderService();
+      const res = await service.updateStatus(
+        ctx({ userId: 'owner-1', role: APP_ROLES.PLATFORM_OWNER }),
+        'o1',
+        'PROCESSING',
+      );
+
+      expect(repoMock.isStoreOwnedBy).not.toHaveBeenCalled();
       expect(res).toEqual({ id: 'o1', status: 'PROCESSING' });
     });
   });

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { $Enums } from '@prisma/client';
+import { requireMerchantOrOwner } from '../auth/guards';
 import { OrderRepository } from '../repositories/order.repository';
 import type { GraphQLContext } from '../server-context';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
@@ -54,13 +55,17 @@ export class OrderService {
   async getByStore(ctx: GraphQLContext, storeId: string) {
     const id = storeIdSchema.parse(storeId);
 
-    if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    requireMerchantOrOwner(ctx.auth.role);
+    const userId = ctx.auth.userId;
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(id, ctx.auth.userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(id, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     return this.repo.findByStore(id);
@@ -69,25 +74,24 @@ export class OrderService {
   async getById(ctx: GraphQLContext, orderId: string) {
     const id = orderIdSchema.parse(orderId);
 
-    if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    requireMerchantOrOwner(ctx.auth.role);
+    const userId = ctx.auth.userId;
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
     const order = await this.repo.findById(id);
     if (!order) return null;
 
-    const userId = ctx.auth.userId;
-    if (!userId) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
-    }
-
     if (!order.storeId) {
       throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order store not found');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     return order;
@@ -96,7 +100,9 @@ export class OrderService {
   async updateStatus(ctx: GraphQLContext, orderId: string, status: string) {
     const id = orderIdSchema.parse(orderId);
 
-    if (!ctx.auth.userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    requireMerchantOrOwner(ctx.auth.role);
+    const userId = ctx.auth.userId;
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -105,18 +111,15 @@ export class OrderService {
       throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order not found');
     }
 
-    const userId = ctx.auth.userId;
-    if (!userId) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
-    }
-
     if (!order.storeId) {
       throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order store not found');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(order.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const nextStatus = orderStatusSchema.parse(status) as $Enums.OrderStatus;

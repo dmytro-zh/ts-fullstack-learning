@@ -67,7 +67,7 @@ describe('ProductService', () => {
           name: 'X',
           price: 10,
         } as any),
-      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
     });
 
     it('throws FORBIDDEN when no userId', async () => {
@@ -167,6 +167,21 @@ describe('ProductService', () => {
         } as any),
       ).rejects.toBeTruthy();
     });
+
+    it('allows PLATFORM_OWNER without ownership check', async () => {
+      (repo.findBySlug as any).mockResolvedValue(null);
+      (repo.create as any).mockResolvedValue({ id: 'p1' });
+
+      const service = new ProductService(repo as any);
+
+      await service.addProduct(ctx('owner-1', APP_ROLES.PLATFORM_OWNER), {
+        storeId: 's1',
+        name: 'X',
+        price: 10,
+      } as any);
+
+      expect(repo.isStoreOwnedBy).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateProduct', () => {
@@ -180,7 +195,7 @@ describe('ProductService', () => {
           description: null,
           imageUrl: null,
         } as any),
-      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
     });
 
     it('throws PRODUCT_NOT_FOUND when product missing', async () => {
@@ -280,6 +295,22 @@ describe('ProductService', () => {
         }),
       );
     });
+
+    it('allows PLATFORM_OWNER without ownership check', async () => {
+      (repo.findById as any).mockResolvedValue({ id: 'p1', storeId: 's1' });
+      (repo.update as any).mockResolvedValue({ id: 'p1' });
+
+      const service = new ProductService(repo as any);
+
+      await service.updateProduct(ctx('owner-1', APP_ROLES.PLATFORM_OWNER), {
+        id: 'p1',
+        price: 10,
+        description: null,
+        imageUrl: null,
+      } as any);
+
+      expect(repo.isStoreOwnedBy).not.toHaveBeenCalled();
+    });
   });
 
   describe('deleteProduct', () => {
@@ -287,7 +318,7 @@ describe('ProductService', () => {
       const service = new ProductService(repo as any);
 
       await expect(service.deleteProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).rejects.toMatchObject({
-        code: ERROR_CODES.FORBIDDEN,
+        extensions: { code: 'FORBIDDEN' },
       });
     });
 
@@ -402,6 +433,25 @@ describe('ProductService', () => {
       );
 
       expect(res).toEqual({ id: 'p1', isActive: false });
+    });
+
+    it('allows PLATFORM_OWNER without ownership check', async () => {
+      const service = new ProductService(repo as any);
+
+      const tx = {
+        product: {
+          findFirst: vi.fn().mockResolvedValue({ id: 'p1', storeId: 's1' }),
+          update: vi.fn().mockResolvedValue({ id: 'p1', isActive: false }),
+        },
+        store: { findFirst: vi.fn() },
+        checkoutLink: { updateMany: vi.fn() },
+      };
+
+      (prisma.$transaction as any).mockImplementation(async (fn: any) => fn(tx));
+
+      await service.deleteProduct(ctx('owner-1', APP_ROLES.PLATFORM_OWNER), 'p1');
+
+      expect(tx.store.findFirst).not.toHaveBeenCalled();
     });
   });
 });

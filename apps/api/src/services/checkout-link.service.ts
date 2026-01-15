@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { isMerchantOrOwner } from '../auth/guards';
+import { requireMerchantOrOwner } from '../auth/guards';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
 import { DomainError } from '../errors/domain-error';
@@ -34,9 +34,9 @@ export class CheckoutLinkService {
   async createLink(ctx: GraphQLContext, input: LinkInput) {
     const { slug, productId, storeId } = linkInput.parse(input);
 
+    requireMerchantOrOwner(ctx.auth.role);
     const userId = ctx.auth.userId;
-
-    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
