@@ -66,19 +66,19 @@ export class ProductService {
   }
 
   getProducts(ctx: GraphQLContext) {
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     return this.repo.findAllWithStore();
   }
 
   getProduct(ctx: GraphQLContext, id: string) {
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     return this.repo.findByIdWithStore(id);
   }
 
   async addProduct(ctx: GraphQLContext, input: CreateProductInput) {
     const data = createProductInput.parse(input);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -112,7 +112,7 @@ export class ProductService {
   async updateProduct(ctx: GraphQLContext, input: UpdateProductInput) {
     const data = updateProductInput.parse(input);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -149,7 +149,7 @@ export class ProductService {
   }
 
   async deleteProduct(ctx: GraphQLContext, id: string) {
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');

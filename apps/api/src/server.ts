@@ -166,31 +166,31 @@ const resolvers = {
 
     products: (_: unknown, __: unknown, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return productService.getProducts(ctx);
     },
 
     product: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return productService.getProduct(ctx, args.id);
     },
 
     stores: (_: unknown, __: unknown, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return storeService.getStores(ctx);
     },
 
     orders: (_: unknown, args: { storeId: string }, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return orderService.getByStore(ctx, args.storeId);
     },
 
     order: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return orderService.getById(ctx, args.id);
     },
 
@@ -235,7 +235,7 @@ const resolvers = {
       ctx: GraphQLContext,
     ) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return productService.addProduct(ctx, args);
     },
 
@@ -251,13 +251,13 @@ const resolvers = {
       ctx: GraphQLContext,
     ) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return productService.updateProduct(ctx, args);
     },
 
     deleteProduct: (_: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return productService.deleteProduct(ctx, args.id);
     },
 
@@ -267,7 +267,7 @@ const resolvers = {
       ctx: GraphQLContext,
     ) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return storeService.createStore(ctx, args.input);
     },
 
@@ -277,7 +277,7 @@ const resolvers = {
       ctx: GraphQLContext,
     ) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       return checkoutLinkService.createLink(ctx, args.input);
     },
 
@@ -304,7 +304,7 @@ const resolvers = {
       ctx: GraphQLContext,
     ) => {
       requireGraphqlAuth(ctx);
-      requireMerchantOrOwner(ctx.auth.role);
+      requireMerchantOrOwner(ctx);
       // Optional: you can validate enum value here if you want to harden input
       return orderService.updateStatus(ctx, args.orderId, args.status);
     },

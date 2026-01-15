@@ -18,7 +18,7 @@ export class StoreService {
   async createStore(ctx: GraphQLContext, input: StoreInput) {
     const parsed = storeInput.parse(input);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -32,7 +32,7 @@ export class StoreService {
   }
 
   async getStores(ctx: GraphQLContext) {
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -48,7 +48,7 @@ export class StoreService {
   }
 
   async getStore(ctx: GraphQLContext, id: string) {
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const role = ctx.auth.role;
     const userId = ctx.auth.userId;
     if (!userId) {

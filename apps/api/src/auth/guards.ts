@@ -1,6 +1,15 @@
 import { GraphQLError } from 'graphql';
 import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
 
+type AuthLike = { auth: { role: AppRole | null } };
+
+function getRole(input: AppRole | null | AuthLike): AppRole | null {
+  if (typeof input === 'object' && input !== null && 'auth' in input) {
+    return (input as AuthLike).auth.role;
+  }
+  return input as AppRole | null;
+}
+
 export function requireAuth(userId: string | null): string {
   if (!userId) {
     throw new GraphQLError('UNAUTHENTICATED', {
@@ -40,6 +49,6 @@ export function isBuyer(role: AppRole | null): boolean {
   return role === APP_ROLES.BUYER;
 }
 
-export function requireMerchantOrOwner(role: AppRole | null): AppRole {
-  return requireRole(role, [APP_ROLES.MERCHANT, APP_ROLES.PLATFORM_OWNER]);
+export function requireMerchantOrOwner(input: AppRole | null | AuthLike): AppRole {
+  return requireRole(getRole(input), [APP_ROLES.MERCHANT, APP_ROLES.PLATFORM_OWNER]);
 }

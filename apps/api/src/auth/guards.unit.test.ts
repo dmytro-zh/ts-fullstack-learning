@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GraphQLError } from 'graphql';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
-import { requireAuth, requireRole, isOwner, isMerchant } from './guards';
+import { requireAuth, requireRole, requireMerchantOrOwner, isOwner, isMerchant } from './guards';
 
 describe('auth guards', () => {
   it('requireAuth throws UNAUTHENTICATED when userId is null', () => {
@@ -44,6 +44,10 @@ describe('auth guards', () => {
 
   it('requireRole returns role when allowed', () => {
     expect(requireRole(APP_ROLES.MERCHANT, [APP_ROLES.MERCHANT])).toBe(APP_ROLES.MERCHANT);
+  });
+
+  it('requireMerchantOrOwner accepts ctx', () => {
+    expect(requireMerchantOrOwner({ auth: { role: APP_ROLES.MERCHANT } })).toBe(APP_ROLES.MERCHANT);
   });
 
   it('isOwner and isMerchant', () => {

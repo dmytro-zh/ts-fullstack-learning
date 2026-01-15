@@ -55,7 +55,7 @@ export class OrderService {
   async getByStore(ctx: GraphQLContext, storeId: string) {
     const id = storeIdSchema.parse(storeId);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -74,7 +74,7 @@ export class OrderService {
   async getById(ctx: GraphQLContext, orderId: string) {
     const id = orderIdSchema.parse(orderId);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -100,7 +100,7 @@ export class OrderService {
   async updateStatus(ctx: GraphQLContext, orderId: string, status: string) {
     const id = orderIdSchema.parse(orderId);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');

@@ -34,7 +34,7 @@ export class CheckoutLinkService {
   async createLink(ctx: GraphQLContext, input: LinkInput) {
     const { slug, productId, storeId } = linkInput.parse(input);
 
-    requireMerchantOrOwner(ctx.auth.role);
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
