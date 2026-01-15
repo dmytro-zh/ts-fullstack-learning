@@ -67,7 +67,7 @@ describe('StoreService', () => {
 
       await expect(
         service.createStore(ctx({ userId: 'u1', role: null }), { name: 'X' }),
-      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
+      ).rejects.toMatchObject({ extensions: { code: 'UNAUTHENTICATED' } });
 
       expect(repo.create).not.toHaveBeenCalled();
     });
@@ -78,7 +78,7 @@ describe('StoreService', () => {
 
       await expect(
         service.createStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), { name: 'X' }),
-      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
 
       expect(repo.create).not.toHaveBeenCalled();
     });
@@ -134,13 +134,14 @@ describe('StoreService', () => {
       expect(repo.findAll).not.toHaveBeenCalled();
     });
 
-    it('other roles - returns empty array', async () => {
+    it('forbidden - BUYER cannot get stores', async () => {
       const repo = makeRepo();
       const service = new StoreService(repo as any);
 
-      const result = await service.getStores(ctx({ userId: 'u1', role: APP_ROLES.BUYER }));
+      await expect(
+        service.getStores(ctx({ userId: 'u1', role: APP_ROLES.BUYER })),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
 
-      expect(result).toEqual([]);
       expect(repo.findAll).not.toHaveBeenCalled();
       expect(repo.findAllByOwner).not.toHaveBeenCalled();
     });
@@ -185,13 +186,14 @@ describe('StoreService', () => {
       expect(repo.findByIdForOwner).not.toHaveBeenCalled();
     });
 
-    it('other roles - returns null', async () => {
+    it('forbidden - BUYER cannot get store', async () => {
       const repo = makeRepo();
       const service = new StoreService(repo as any);
 
-      const result = await service.getStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1');
+      await expect(
+        service.getStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1'),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
 
-      expect(result).toBeNull();
       expect(repo.findById).not.toHaveBeenCalled();
       expect(repo.findByIdForOwner).not.toHaveBeenCalled();
     });

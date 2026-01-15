@@ -1,4 +1,5 @@
 import { APP_ROLES, ProductSchema } from '@ts-fullstack-learning/shared';
+import { requireMerchantOrOwner } from '../auth/guards';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
@@ -64,25 +65,30 @@ export class ProductService {
     }
   }
 
-  getProducts() {
+  getProducts(ctx: GraphQLContext) {
+    requireMerchantOrOwner(ctx);
     return this.repo.findAllWithStore();
   }
 
-  getProduct(id: string) {
+  getProduct(ctx: GraphQLContext, id: string) {
+    requireMerchantOrOwner(ctx);
     return this.repo.findByIdWithStore(id);
   }
 
   async addProduct(ctx: GraphQLContext, input: CreateProductInput) {
     const data = createProductInput.parse(input);
 
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const quantity = data.quantity ?? 0;
@@ -106,8 +112,9 @@ export class ProductService {
   async updateProduct(ctx: GraphQLContext, input: UpdateProductInput) {
     const data = updateProductInput.parse(input);
 
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -120,9 +127,11 @@ export class ProductService {
       throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const updateData: Prisma.ProductUpdateInput = {
@@ -140,8 +149,9 @@ export class ProductService {
   }
 
   async deleteProduct(ctx: GraphQLContext, id: string) {
+    requireMerchantOrOwner(ctx);
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -166,13 +176,15 @@ export class ProductService {
         throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
       }
 
-      const ownsStore = await tx.store.findFirst({
-        where: { id: product.storeId, ownerId: userId },
-        select: { id: true },
-      });
+      if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+        const ownsStore = await tx.store.findFirst({
+          where: { id: product.storeId, ownerId: userId },
+          select: { id: true },
+        });
 
-      if (!ownsStore) {
-        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+        if (!ownsStore) {
+          throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+        }
       }
 
       // Deactivate checkout links for this product
