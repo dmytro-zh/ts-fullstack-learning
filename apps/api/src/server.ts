@@ -218,7 +218,6 @@ const resolvers = {
 
       return link;
     },
-
   },
 
   Mutation: {
