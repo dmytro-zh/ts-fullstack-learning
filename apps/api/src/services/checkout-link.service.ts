@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { isMerchantOrOwner } from '../auth/guards';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
 import { DomainError } from '../errors/domain-error';
@@ -34,7 +35,8 @@ export class CheckoutLinkService {
     const { slug, productId, storeId } = linkInput.parse(input);
 
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+
+    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -60,14 +62,15 @@ export class CheckoutLinkService {
         },
       );
     }
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await prisma.store.findFirst({
+        where: { id: product.storeId, ownerId: userId },
+        select: { id: true },
+      });
 
-    const ownsStore = await prisma.store.findFirst({
-      where: { id: product.storeId, ownerId: userId },
-      select: { id: true },
-    });
-
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const existing = await this.repo.findBySlug(slug);

@@ -31,3 +31,11 @@ export function isOwner(role: AppRole | null): boolean {
 export function isMerchant(role: AppRole | null): boolean {
   return role === APP_ROLES.MERCHANT;
 }
+
+export function isMerchantOrOwner(role: AppRole | null): boolean {
+  return role === APP_ROLES.MERCHANT || role === APP_ROLES.PLATFORM_OWNER;
+}
+
+export function isBuyer(role: AppRole | null): boolean {
+  return role === APP_ROLES.BUYER;
+}

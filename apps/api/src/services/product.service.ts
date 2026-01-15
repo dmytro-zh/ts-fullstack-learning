@@ -1,4 +1,5 @@
 import { APP_ROLES, ProductSchema } from '@ts-fullstack-learning/shared';
+import { isMerchantOrOwner } from '../auth/guards';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
@@ -107,7 +108,7 @@ export class ProductService {
     const data = updateProductInput.parse(input);
 
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -120,9 +121,11 @@ export class ProductService {
       throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
     }
 
-    const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
-    if (!ownsStore) {
-      throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const ownsStore = await this.repo.isStoreOwnedBy(product.storeId, userId);
+      if (!ownsStore) {
+        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
     }
 
     const updateData: Prisma.ProductUpdateInput = {
@@ -141,7 +144,7 @@ export class ProductService {
 
   async deleteProduct(ctx: GraphQLContext, id: string) {
     const userId = ctx.auth.userId;
-    if (!userId || ctx.auth.role !== APP_ROLES.MERCHANT) {
+    if (!userId || !isMerchantOrOwner(ctx.auth.role)) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
     }
 
@@ -166,13 +169,15 @@ export class ProductService {
         throw new DomainError(ERROR_CODES.NOT_FOUND, 'Product store not found');
       }
 
-      const ownsStore = await tx.store.findFirst({
-        where: { id: product.storeId, ownerId: userId },
-        select: { id: true },
-      });
+      if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+        const ownsStore = await tx.store.findFirst({
+          where: { id: product.storeId, ownerId: userId },
+          select: { id: true },
+        });
 
-      if (!ownsStore) {
-        throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+        if (!ownsStore) {
+          throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+        }
       }
 
       // Deactivate checkout links for this product
