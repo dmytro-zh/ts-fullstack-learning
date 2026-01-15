@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { CheckoutLinkService } from '../../services/checkout-link.service';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 import { prismaTest } from './db';
+import { ERROR_CODES } from '../../errors/codes';
 
 function ctx(auth: { userId: string | null; role: any | null }) {
   return { auth } as any;
@@ -180,7 +181,7 @@ describe('CheckoutLinkService (integration) - createLink', () => {
         slug: uniq('no-access'),
         productId: product.id,
       }),
-    ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
   });
 
   it('allows PLATFORM_OWNER to create link for any store', async () => {
