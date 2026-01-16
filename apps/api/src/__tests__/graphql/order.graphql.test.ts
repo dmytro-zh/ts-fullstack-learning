@@ -28,13 +28,16 @@ const CREATE_LINK = `
 const CHECKOUT_BY_LINK = `
   mutation CheckoutByLink($input: CheckoutByLinkInput!) {
     checkoutByLink(input: $input) {
-      id
-      status
-      total
-      quantity
-      storeId
-      productId
-      checkoutLinkId
+      receiptToken
+      order {
+        id
+        status
+        total
+        quantity
+        storeId
+        productId
+        checkoutLinkId
+      }
     }
   }
 `;
@@ -137,8 +140,10 @@ describe('Order GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const orderId = (checkoutData as any)?.checkoutByLink?.id;
+    const orderId = (checkoutData as any)?.checkoutByLink?.order?.id;
+    const receiptToken = (checkoutData as any)?.checkoutByLink?.receiptToken;
     expect(orderId).toBeTruthy();
+    expect(receiptToken).toBeTruthy();
 
     const ordersData = await api.exec(
       {
@@ -204,11 +209,13 @@ describe('Order GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const orderId = (checkoutData as any)?.checkoutByLink?.id;
-    const initialStatus = (checkoutData as any)?.checkoutByLink?.status;
+    const orderId = (checkoutData as any)?.checkoutByLink?.order?.id;
+    const initialStatus = (checkoutData as any)?.checkoutByLink?.order?.status;
+    const receiptToken = (checkoutData as any)?.checkoutByLink?.receiptToken;
 
     expect(orderId).toBeTruthy();
     expect(initialStatus).toBe('PAID');
+    expect(receiptToken).toBeTruthy();
 
     const updData = await api.exec(
       {
