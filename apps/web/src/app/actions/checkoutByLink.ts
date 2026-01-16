@@ -5,14 +5,17 @@ import { createWebGraphQLClient } from '../../lib/graphql-client';
 const CHECKOUT_BY_LINK = /* GraphQL */ `
   mutation CheckoutByLink($input: CheckoutByLinkInput!) {
     checkoutByLink(input: $input) {
-      id
-      total
-      quantity
-      product {
-        name
+      receiptToken
+      order {
+        id
+        total
+        quantity
+        product {
+          name
+        }
+        email
+        shippingAddress
       }
-      email
-      shippingAddress
     }
   }
 `;
@@ -28,12 +31,15 @@ export type CheckoutByLinkInput = {
 
 type CheckoutByLinkPayload = {
   checkoutByLink: {
-    id: string;
-    total: number;
-    quantity: number;
-    product: { name: string };
-    email: string;
-    shippingAddress: string;
+    receiptToken: string;
+    order: {
+      id: string;
+      total: number;
+      quantity: number;
+      product: { name: string };
+      email: string;
+      shippingAddress: string;
+    };
   };
 };
 

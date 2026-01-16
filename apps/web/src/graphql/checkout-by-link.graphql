@@ -1,7 +1,10 @@
 mutation CheckoutByLink($input: CheckoutByLinkInput!) {
   checkoutByLink(input: $input) {
-    id
-    total
-    status
+    receiptToken
+    order {
+      id
+      total
+      status
+    }
   }
 }

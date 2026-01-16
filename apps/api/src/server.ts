@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { requireAuth, requireMerchantOrOwner } from './auth/guards';
+import { issueReceiptToken, verifyReceiptToken } from './auth/receipt-token';
 import { ProductService } from './services/product.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
@@ -113,6 +114,11 @@ const typeDefs = /* GraphQL */ `
     createdAt: String!
   }
 
+  type CheckoutReceipt {
+    order: Order!
+    receiptToken: String!
+  }
+
   type Query {
     health: String!
     products: [Product!]!
@@ -121,6 +127,7 @@ const typeDefs = /* GraphQL */ `
     checkoutLink(slug: String!): CheckoutLink
     orders(storeId: ID!): [Order!]!
     order(id: ID!): Order
+    orderReceipt(orderId: ID!, token: String!): Order!
   }
 
   type Mutation {
@@ -145,7 +152,7 @@ const typeDefs = /* GraphQL */ `
 
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
-    checkoutByLink(input: CheckoutByLinkInput!): Order!
+    checkoutByLink(input: CheckoutByLinkInput!): CheckoutReceipt!
     updateOrderStatus(orderId: ID!, status: OrderStatus!): Order!
   }
 `;
@@ -192,6 +199,20 @@ const resolvers = {
       requireGraphqlAuth(ctx);
       requireMerchantOrOwner(ctx);
       return orderService.getById(ctx, args.id);
+    },
+
+    orderReceipt: async (_: unknown, args: { orderId: string; token: string }) => {
+      const receipt = await verifyReceiptToken(args.token);
+      if (!receipt || receipt.orderId !== args.orderId) {
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order not found', { field: 'orderId' });
+      }
+
+      const order = await orderService.getByIdForReceipt(args.orderId);
+      if (!order || order.email !== receipt.email) {
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'Order not found', { field: 'orderId' });
+      }
+
+      return order;
     },
 
     checkoutLink: async (_: unknown, args: { slug: string }) => {
@@ -280,7 +301,7 @@ const resolvers = {
       return checkoutLinkService.createLink(ctx, args.input);
     },
 
-    checkoutByLink: (
+    checkoutByLink: async (
       _: unknown,
       args: {
         input: {
@@ -294,7 +315,10 @@ const resolvers = {
       },
     ) => {
       // Public (checkout)
-      return checkoutLinkService.checkoutByLink(args.input);
+      const order = await checkoutLinkService.checkoutByLink(args.input);
+      const receiptToken = await issueReceiptToken({ orderId: order.id, email: order.email });
+
+      return { order, receiptToken };
     },
 
     updateOrderStatus: (

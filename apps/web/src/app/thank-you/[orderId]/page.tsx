@@ -2,8 +2,8 @@ import ThankYouAnimation from './ThankYouAnimation';
 import { createWebGraphQLClient } from '../../../lib/graphql-client';
 
 const ORDER_QUERY = /* GraphQL */ `
-  query Order($id: ID!) {
-    order(id: $id) {
+  query OrderReceipt($orderId: ID!, $token: String!) {
+    orderReceipt(orderId: $orderId, token: $token) {
       id
       total
       quantity
@@ -18,7 +18,7 @@ const ORDER_QUERY = /* GraphQL */ `
 `;
 
 type OrderResponse = {
-  order: {
+  orderReceipt: {
     id: string;
     total: number;
     quantity: number;
@@ -29,19 +29,22 @@ type OrderResponse = {
   };
 };
 
-async function fetchOrder(id: string) {
+async function fetchOrder(id: string, token: string) {
   const client = await createWebGraphQLClient();
-  const data = await client.request<OrderResponse>(ORDER_QUERY, { id });
-  return data.order;
+  const data = await client.request<OrderResponse>(ORDER_QUERY, { orderId: id, token });
+  return data.orderReceipt;
 }
 
 type ThankYouPageProps = {
   params?: Promise<{ orderId: string }>;
+  searchParams?: Promise<{ token?: string }>;
 };
 
-export default async function ThankYouPage({ params }: ThankYouPageProps) {
+export default async function ThankYouPage({ params, searchParams }: ThankYouPageProps) {
   const resolvedParams = params ? await params : undefined;
   const orderId = resolvedParams?.orderId;
+  const resolvedSearch = searchParams ? await searchParams : undefined;
+  const token = resolvedSearch?.token;
 
   if (!orderId) {
     return (
@@ -73,7 +76,72 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
     );
   }
 
-  const order = await fetchOrder(orderId);
+  if (!token) {
+    return (
+      <main
+        style={{
+          minHeight: '100vh',
+          padding: 40,
+          background: '#f7f7f8',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#0f172a',
+        }}
+      >
+        <div
+          style={{
+            background: '#fff',
+            padding: 24,
+            borderRadius: 20,
+            maxWidth: 720,
+            width: '100%',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
+          }}
+        >
+          Missing receipt token.
+        </div>
+      </main>
+    );
+  }
+
+  let order: OrderResponse['orderReceipt'] | null = null;
+  try {
+    order = await fetchOrder(orderId, token);
+  } catch {
+    order = null;
+  }
+
+  if (!order) {
+    return (
+      <main
+        style={{
+          minHeight: '100vh',
+          padding: 40,
+          background: '#f7f7f8',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#0f172a',
+        }}
+      >
+        <div
+          style={{
+            background: '#fff',
+            padding: 24,
+            borderRadius: 20,
+            maxWidth: 720,
+            width: '100%',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
+          }}
+        >
+          Order not found or receipt expired.
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main

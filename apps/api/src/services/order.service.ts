@@ -52,6 +52,11 @@ function assertValidStatusTransition(from: $Enums.OrderStatus, to: $Enums.OrderS
 export class OrderService {
   constructor(private readonly repo = new OrderRepository()) {}
 
+  async getByIdForReceipt(orderId: string) {
+    const id = orderIdSchema.parse(orderId);
+    return this.repo.findById(id);
+  }
+
   async getByStore(ctx: GraphQLContext, storeId: string) {
     const id = storeIdSchema.parse(storeId);
 

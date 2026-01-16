@@ -23,6 +23,9 @@
     "apps/web/src/**/*.{ts,tsx,js,jsx}": [
       "pnpm -F web lint"
     ],
+    "*.{ts,tsx,js,jsx,graphql,gql}": [
+      "prettier --write"
+    ],
     "*.{yml,yaml,json,md,css,scss,mdx}": [
       "prettier --write"
     ]

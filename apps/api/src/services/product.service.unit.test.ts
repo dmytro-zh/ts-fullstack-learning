@@ -57,6 +57,44 @@ describe('ProductService', () => {
     vi.clearAllMocks();
   });
 
+  describe('getProducts', () => {
+    it('returns products for merchant or owner', async () => {
+      (repo.findAllWithStore as any).mockResolvedValue([{ id: 'p1' }]);
+      const service = new ProductService(repo as any);
+
+      const res = await service.getProducts(ctx('u1', APP_ROLES.MERCHANT));
+      expect(repo.findAllWithStore).toHaveBeenCalledTimes(1);
+      expect(res).toEqual([{ id: 'p1' }]);
+    });
+
+    it('throws FORBIDDEN when role is not allowed', async () => {
+      const service = new ProductService(repo as any);
+
+      expect(() => service.getProducts(ctx('u1', APP_ROLES.BUYER))).toThrowError(
+        expect.objectContaining({ extensions: { code: 'FORBIDDEN' } }),
+      );
+    });
+  });
+
+  describe('getProduct', () => {
+    it('returns product by id for merchant or owner', async () => {
+      (repo.findByIdWithStore as any).mockResolvedValue({ id: 'p1' });
+      const service = new ProductService(repo as any);
+
+      const res = await service.getProduct(ctx('u1', APP_ROLES.MERCHANT), 'p1');
+      expect(repo.findByIdWithStore).toHaveBeenCalledWith('p1');
+      expect(res).toEqual({ id: 'p1' });
+    });
+
+    it('throws FORBIDDEN when role is not allowed', async () => {
+      const service = new ProductService(repo as any);
+
+      expect(() => service.getProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).toThrowError(
+        expect.objectContaining({ extensions: { code: 'FORBIDDEN' } }),
+      );
+    });
+  });
+
   describe('addProduct', () => {
     it('throws FORBIDDEN when not merchant', async () => {
       const service = new ProductService(repo as any);
@@ -123,6 +161,27 @@ describe('ProductService', () => {
           description: null,
           imageUrl: null,
           store: { connect: { id: 's1' } },
+        }),
+      );
+    });
+
+    it('uses fallback slug when name has no valid characters', async () => {
+      (repo.isStoreOwnedBy as any).mockResolvedValue(true);
+      (repo.findBySlug as any).mockResolvedValue(null);
+      (repo.create as any).mockResolvedValue({ id: 'p1' });
+
+      const service = new ProductService(repo as any);
+
+      await service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
+        storeId: 's1',
+        name: '!!!',
+        price: 10,
+      } as any);
+
+      expect(repo.findBySlug).toHaveBeenCalledWith('product');
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: 'product',
         }),
       );
     });
@@ -196,6 +255,19 @@ describe('ProductService', () => {
           imageUrl: null,
         } as any),
       ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    });
+
+    it('throws FORBIDDEN when no userId', async () => {
+      const service = new ProductService(repo as any);
+
+      await expect(
+        service.updateProduct(ctx(null, APP_ROLES.MERCHANT), {
+          id: 'p1',
+          price: 10,
+          description: null,
+          imageUrl: null,
+        } as any),
+      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
     });
 
     it('throws PRODUCT_NOT_FOUND when product missing', async () => {
@@ -320,6 +392,14 @@ describe('ProductService', () => {
       await expect(service.deleteProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).rejects.toMatchObject({
         extensions: { code: 'FORBIDDEN' },
       });
+    });
+
+    it('throws FORBIDDEN when no userId', async () => {
+      const service = new ProductService(repo as any);
+
+      await expect(
+        service.deleteProduct(ctx(null, APP_ROLES.MERCHANT), 'p1'),
+      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
     });
 
     it('throws INVALID_CHECKOUT_INPUT when id is empty', async () => {

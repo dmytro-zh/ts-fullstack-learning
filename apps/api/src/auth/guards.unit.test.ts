@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { GraphQLError } from 'graphql';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
-import { requireAuth, requireRole, requireMerchantOrOwner, isOwner, isMerchant } from './guards';
+import {
+  requireAuth,
+  requireRole,
+  requireMerchantOrOwner,
+  isOwner,
+  isMerchant,
+  isMerchantOrOwner,
+  isBuyer,
+} from './guards';
 
 describe('auth guards', () => {
   it('requireAuth throws UNAUTHENTICATED when userId is null', () => {
@@ -50,11 +58,24 @@ describe('auth guards', () => {
     expect(requireMerchantOrOwner({ auth: { role: APP_ROLES.MERCHANT } })).toBe(APP_ROLES.MERCHANT);
   });
 
+  it('requireMerchantOrOwner accepts role directly', () => {
+    expect(requireMerchantOrOwner(APP_ROLES.PLATFORM_OWNER)).toBe(APP_ROLES.PLATFORM_OWNER);
+  });
+
   it('isOwner and isMerchant', () => {
     expect(isOwner(APP_ROLES.PLATFORM_OWNER)).toBe(true);
     expect(isOwner(APP_ROLES.MERCHANT)).toBe(false);
 
     expect(isMerchant(APP_ROLES.MERCHANT)).toBe(true);
     expect(isMerchant(APP_ROLES.BUYER)).toBe(false);
+  });
+
+  it('isMerchantOrOwner and isBuyer', () => {
+    expect(isMerchantOrOwner(APP_ROLES.MERCHANT)).toBe(true);
+    expect(isMerchantOrOwner(APP_ROLES.PLATFORM_OWNER)).toBe(true);
+    expect(isMerchantOrOwner(APP_ROLES.BUYER)).toBe(false);
+
+    expect(isBuyer(APP_ROLES.BUYER)).toBe(true);
+    expect(isBuyer(APP_ROLES.MERCHANT)).toBe(false);
   });
 });
