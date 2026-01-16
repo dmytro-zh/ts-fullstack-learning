@@ -204,6 +204,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         boxSizing: 'border-box',
         color: '#020617',
       }}
+      data-testid="dashboard-page"
     >
       <div
         style={{
@@ -242,6 +243,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 fontSize: 26,
                 letterSpacing: -0.03,
               }}
+              data-testid="dashboard-title"
             >
               One place for tiny stores and orders.
             </h1>
@@ -375,6 +377,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   gap: 6,
                   marginTop: 4,
                 }}
+                data-testid="dashboard-store-list"
               >
                 {stores.map((store) => {
                   const isActive = store.id === activeStore.id;
@@ -586,6 +589,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     gap: 10,
                     minHeight: 220,
                   }}
+                  data-testid="dashboard-products-panel"
                 >
                   <div
                     style={{
@@ -759,6 +763,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     gap: 10,
                     minHeight: 220,
                   }}
+                  data-testid="dashboard-orders-panel"
                 >
                   <div
                     style={{

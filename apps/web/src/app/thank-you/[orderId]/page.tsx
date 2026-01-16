@@ -188,6 +188,7 @@ export default async function ThankYouPage({ params, searchParams }: ThankYouPag
             fontWeight: 700,
             color: '#0f172a',
           }}
+          data-testid="thank-you-title"
         >
           Thank you for your purchase!
         </h1>
@@ -211,6 +212,7 @@ export default async function ThankYouPage({ params, searchParams }: ThankYouPag
             background: '#f9fafb',
             border: '1px solid #e5e7eb',
           }}
+          data-testid="order-details"
         >
           <h2 style={{ margin: 0, marginBottom: 8, fontSize: 20, fontWeight: 600 }}>
             Order details

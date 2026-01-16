@@ -59,6 +59,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           boxSizing: 'border-box',
           color: '#020617',
         }}
+        data-testid="orders-page"
       >
         <div
           style={{
@@ -129,6 +130,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           boxSizing: 'border-box',
           color: '#020617',
         }}
+        data-testid="orders-page"
       >
         <div
           style={{
@@ -154,6 +156,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         boxSizing: 'border-box',
         color: '#020617',
       }}
+      data-testid="orders-page"
     >
       <div
         style={{
@@ -252,6 +255,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 color: '#6b7280',
                 textAlign: 'center',
               }}
+              data-testid="orders-empty"
             >
               No orders yet. Share a checkout link for this store and new orders will appear here.
             </div>
@@ -261,6 +265,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 display: 'grid',
                 gap: 8,
               }}
+              data-testid="orders-list"
             >
               {orders.map((order) => {
                 const quantity = order.quantity ?? 1;
@@ -282,6 +287,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       display: 'grid',
                       gap: 2,
                     }}
+                    data-testid="orders-item"
                   >
                     <div
                       style={{

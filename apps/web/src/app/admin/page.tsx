@@ -13,6 +13,7 @@ export default function AdminPage() {
         display: 'grid',
         placeItems: 'start center',
       }}
+      data-testid="admin-page"
     >
       <div
         style={{
@@ -21,6 +22,7 @@ export default function AdminPage() {
           display: 'grid',
           gap: 14,
         }}
+        data-testid="admin-panel"
       >
         <div style={{ display: 'grid', gap: 8 }}>
           <div
@@ -50,7 +52,7 @@ export default function AdminPage() {
             Admin zone
           </div>
 
-          <h1 style={{ margin: 0, fontSize: 26, letterSpacing: -0.03 }}>
+          <h1 style={{ margin: 0, fontSize: 26, letterSpacing: -0.03 }} data-testid="admin-title">
             Platform owner dashboard
           </h1>
 

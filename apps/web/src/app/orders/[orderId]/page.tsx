@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import { headers, cookies } from 'next/headers';
-import { print, type DocumentNode } from 'graphql';
 import { createWebGraphQLClient } from '../../../lib/graphql-client';
 import {
   StoresOverviewDocument,
@@ -15,48 +13,6 @@ type OrderDetailsPageProps = {
   params: Promise<{ orderId: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
-
-function getServerBaseUrl(h: Headers) {
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const proto = h.get('x-forwarded-proto') ?? 'http';
-  return `${proto}://${host}`;
-}
-
-async function _gqlRequest<TData>(args: {
-  query: DocumentNode;
-  variables?: Record<string, unknown>;
-}) {
-  const h = await headers();
-  const baseUrl = getServerBaseUrl(h);
-
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
-
-  const res = await fetch(`${baseUrl}/api/graphql`, {
-    method: 'POST',
-    cache: 'no-store',
-    headers: {
-      'content-type': 'application/json',
-      ...(cookieHeader ? { cookie: cookieHeader } : {}),
-    },
-    body: JSON.stringify({
-      query: print(args.query),
-      variables: args.variables ?? {},
-    }),
-  });
-
-  const json = (await res.json()) as { data?: TData; errors?: unknown };
-
-  if (!res.ok || json.errors) {
-    throw new Error(
-      `GraphQL request failed: ${res.status}${json.errors ? ' (graphql errors)' : ''}`,
-    );
-  }
-
-  return json.data as TData;
-}
-
-void _gqlRequest;
 
 async function fetchStores(): Promise<StoresOverviewQuery> {
   const client = await createWebGraphQLClient();

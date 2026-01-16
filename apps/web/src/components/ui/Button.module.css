@@ -1,0 +1,92 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.sizeSm {
+  padding: 6px 12px;
+  font-size: var(--font-size-xs);
+}
+
+.sizeMd {
+  padding: 9px 14px;
+  font-size: var(--font-size-sm);
+}
+
+.sizeLg {
+  padding: 12px 18px;
+  font-size: var(--font-size-md);
+}
+
+.shapePill {
+  border-radius: var(--radius-pill);
+}
+
+.shapeRounded {
+  border-radius: var(--radius-md);
+}
+
+.variantPrimary {
+  background: #2563eb;
+  border-color: #1d4ed8;
+  color: #f9fafb;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
+}
+
+.variantPrimary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.variantSecondary {
+  background: #f8fafc;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.variantSecondary:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.variantGhost {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.55);
+  color: #111827;
+}
+
+.variantGhost:hover:not(:disabled) {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: rgba(148, 163, 184, 0.8);
+}
+
+.variantDanger {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.variantDanger:hover:not(:disabled) {
+  background: #dc2626;
+}

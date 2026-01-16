@@ -51,8 +51,14 @@ export default async function CheckoutLinksPage({ searchParams }: PageProps) {
             boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
             color: '#111827',
           }}
+          data-testid="checkout-links-page"
         >
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout links</h1>
+          <h1
+            style={{ margin: 0, fontSize: 24, fontWeight: 700 }}
+            data-testid="checkout-links-title"
+          >
+            Checkout links
+          </h1>
           <CheckoutLinksForm
             products={activeProducts}
             stores={stores ?? []}

@@ -7,13 +7,29 @@ import {
 } from '../../../graphql/generated/graphql';
 import { CheckoutLinkView } from './CheckoutLinkView';
 
+function isCheckoutLinkNotFound(err: unknown): boolean {
+  const anyErr = err as {
+    response?: { errors?: Array<{ extensions?: { code?: string } }> };
+  };
+  return (
+    anyErr?.response?.errors?.some(
+      (error) => error.extensions?.code === 'CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE',
+    ) ?? false
+  );
+}
+
 async function fetchCheckoutLink(slug: string) {
   const client = await createWebGraphQLClient();
-  const data = await client.request<CheckoutLinkQuery, CheckoutLinkQueryVariables>(
-    CheckoutLinkDocument,
-    { slug },
-  );
-  return data.checkoutLink;
+  try {
+    const data = await client.request<CheckoutLinkQuery, CheckoutLinkQueryVariables>(
+      CheckoutLinkDocument,
+      { slug },
+    );
+    return data.checkoutLink;
+  } catch (err) {
+    if (isCheckoutLinkNotFound(err)) return null;
+    throw err;
+  }
 }
 
 type PageProps = {
@@ -37,6 +53,7 @@ export default async function PublicCheckoutPage({ params }: PageProps) {
             padding: 20,
             boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
           }}
+          data-testid="checkout-empty-state"
         >
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout link</h1>
           <p style={{ marginTop: 12 }}>Link not found or inactive.</p>
@@ -60,6 +77,7 @@ export default async function PublicCheckoutPage({ params }: PageProps) {
           boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
           color: '#111827',
         }}
+        data-testid="checkout-page"
       >
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout</h1>
         <CheckoutLinkView link={link} />

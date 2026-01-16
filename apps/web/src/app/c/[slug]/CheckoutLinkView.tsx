@@ -226,7 +226,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
           gap: 10,
         }}
       >
-        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }} data-testid="checkout-form">
           <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
             <span>Name</span>
             <input
@@ -234,6 +234,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               required
               placeholder="John Doe"
+              data-testid="checkout-name"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
           </label>
@@ -246,6 +247,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
               required
               placeholder="you@example.com"
+              data-testid="checkout-email"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
           </label>
@@ -258,6 +260,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               value={form.quantity}
               onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
               required
+              data-testid="checkout-quantity"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
           </label>
@@ -269,6 +272,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               onChange={(e) => setForm((prev) => ({ ...prev, shippingAddress: e.target.value }))}
               required
               placeholder="Street, city, postal code, country"
+              data-testid="checkout-shipping-address"
               style={{
                 padding: '10px 12px',
                 borderRadius: 8,
@@ -285,6 +289,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               value={form.shippingNote}
               onChange={(e) => setForm((prev) => ({ ...prev, shippingNote: e.target.value }))}
               placeholder="Any additional instructions for shipping"
+              data-testid="checkout-note"
               style={{
                 padding: '10px 12px',
                 borderRadius: 8,
@@ -298,6 +303,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
           <button
             type="submit"
             disabled={isPending || disabled}
+            data-testid="checkout-submit"
             style={{
               padding: '10px 12px',
               borderRadius: 8,

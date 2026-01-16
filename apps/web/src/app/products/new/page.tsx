@@ -64,6 +64,7 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
         boxSizing: 'border-box',
         color: '#020617',
       }}
+      data-testid="add-product-page"
     >
       <div style={{ maxWidth: 1120, margin: '0 auto', display: 'grid', gap: 20 }}>
         <header

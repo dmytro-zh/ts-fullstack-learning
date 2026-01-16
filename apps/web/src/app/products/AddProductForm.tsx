@@ -4,6 +4,9 @@ import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import type { Store } from '../../graphql/generated/graphql';
 import { addProductAction } from '../actions/addProduct';
+import { Button } from '../../components/ui/Button';
+import { Input, Select, Textarea } from '../../components/ui/Input';
+import styles from './AddProductForm.module.css';
 
 type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
 
@@ -72,92 +75,46 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
     });
   };
 
-  const fieldBase: React.CSSProperties = {
-    padding: '10px 12px',
-    borderRadius: 8,
-    border: '1px solid #d1d5db',
-    background: '#f9fafb',
-    color: '#0f172a',
-    caretColor: '#2563eb',
-    width: '100%',
-    boxSizing: 'border-box',
-    fontSize: 14,
-  };
-
-  const labelBase: React.CSSProperties = {
-    display: 'grid',
-    gap: 6,
-    fontSize: 13,
-    fontWeight: 500,
-  };
-
   return (
-    <form
-      onSubmit={onSubmit}
-      style={{
-        display: 'grid',
-        gap: 16,
-        width: '100%',
-      }}
-    >
+    <form onSubmit={onSubmit} className={styles.form} data-testid="add-product-form">
       {error && (
-        <p
-          style={{
-            margin: 0,
-            padding: '8px 10px',
-            borderRadius: 8,
-            background: '#fef2f2',
-            color: '#b91c1c',
-            border: '1px solid #fecaca',
-            fontSize: 13,
-          }}
-        >
+        <p className={`${styles.alert} ${styles.alertError}`} data-testid="add-product-error">
           {error}
         </p>
       )}
 
       {message && (
-        <p
-          style={{
-            margin: 0,
-            padding: '8px 10px',
-            borderRadius: 8,
-            background: '#ecfdf3',
-            color: '#166534',
-            border: '1px solid #bbf7d0',
-            fontSize: 13,
-          }}
-        >
+        <p className={`${styles.alert} ${styles.alertSuccess}`} data-testid="add-product-success">
           {message}
         </p>
       )}
 
-      <label style={labelBase}>
-        <span>Name</span>
-        <input
+      <label className={styles.label}>
+        <span className={styles.labelText}>Name</span>
+        <Input
           value={form.name}
           onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
           required
           placeholder="Blue hoodie"
-          style={fieldBase}
+          data-testid="add-product-name"
         />
       </label>
 
-      <label style={labelBase}>
-        <span>Price</span>
-        <input
+      <label className={styles.label}>
+        <span className={styles.labelText}>Price</span>
+        <Input
           type="number"
           step="0.01"
           value={form.price}
           onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
           required
-          style={fieldBase}
+          data-testid="add-product-price"
         />
       </label>
 
-      <label style={labelBase}>
-        <span>Quantity</span>
-        <input
+      <label className={styles.label}>
+        <span className={styles.labelText}>Quantity</span>
+        <Input
           type="number"
           min={0}
           step={1}
@@ -173,17 +130,17 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
               setForm((p) => ({ ...p, quantity: String(Math.floor(numeric)) }));
             }
           }}
-          style={fieldBase}
+          data-testid="add-product-quantity"
         />
       </label>
 
-      <label style={labelBase}>
-        <span>Store (required)</span>
-        <select
+      <label className={styles.label}>
+        <span className={styles.labelText}>Store (required)</span>
+        <Select
           value={form.storeId}
           onChange={(e) => setForm((p) => ({ ...p, storeId: e.target.value }))}
           required
-          style={fieldBase}
+          data-testid="add-product-store"
         >
           <option value="">Select store</option>
           {stores.map((s) => (
@@ -191,77 +148,53 @@ export function AddProductForm({ stores }: { stores: StoreOption[] }) {
               {s.name} {s.email ? `(${s.email})` : ''}
             </option>
           ))}
-        </select>
+        </Select>
         {stores.length === 0 && (
-          <small style={{ color: '#b00', fontSize: 12 }}>Create a store first at /stores.</small>
+          <small className={styles.helper}>Create a store first at /stores.</small>
         )}
       </label>
 
-      <label style={labelBase}>
-        <span>Description (optional)</span>
-        <textarea
+      <label className={styles.label}>
+        <span className={styles.labelText}>Description (optional)</span>
+        <Textarea
           value={form.description}
           onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
           rows={4}
           placeholder="Soft cotton hoodie with embroidered logo."
-          style={{
-            ...fieldBase,
-            resize: 'vertical',
-          }}
+          data-testid="add-product-description"
         />
       </label>
 
-      <label style={labelBase}>
-        <span>Image URL (optional)</span>
-        <input
+      <label className={styles.label}>
+        <span className={styles.labelText}>Image URL (optional)</span>
+        <Input
           value={form.imageUrl}
           onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
           placeholder="https://example.com/image.jpg"
-          style={fieldBase}
+          data-testid="add-product-image-url"
         />
       </label>
 
       {form.imageUrl && (
-        <div
-          style={{
-            maxWidth: '100%',
-            borderRadius: 8,
-            border: '1px solid #e5e7eb',
-            overflow: 'hidden',
-          }}
-        >
+        <div className={styles.preview}>
           <Image
             src={form.imageUrl}
             alt="preview"
             width={400}
             height={400}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              objectFit: 'cover',
-            }}
+            className={styles.previewImage}
           />
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={isPending || !form.storeId}
-        style={{
-          padding: '12px 16px',
-          borderRadius: 999,
-          border: '1px solid #1d4ed8',
-          background: !form.storeId ? '#e5e7eb' : isPending ? '#dbeafe' : '#2563eb',
-          color: !form.storeId ? '#9ca3af' : '#ffffff',
-          fontWeight: 700,
-          cursor: !form.storeId ? 'not-allowed' : isPending ? 'wait' : 'pointer',
-          fontSize: 14,
-          marginTop: 4,
-        }}
+        className={styles.submit}
+        data-testid="add-product-submit"
       >
         {isPending ? 'Saving…' : 'Add product'}
-      </button>
+      </Button>
     </form>
   );
 }
