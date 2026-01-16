@@ -31,9 +31,9 @@ describe('receipt-token', () => {
 
   it('throws when secret is missing', async () => {
     delete process.env.API_JWT_SECRET;
-    await expect(
-      issueReceiptToken({ orderId: 'o1', email: 'buyer@test.dev' }),
-    ).rejects.toThrow('API_JWT_SECRET is missing');
+    await expect(issueReceiptToken({ orderId: 'o1', email: 'buyer@test.dev' })).rejects.toThrow(
+      'API_JWT_SECRET is missing',
+    );
   });
 
   it('returns null when secret is missing in verify', async () => {

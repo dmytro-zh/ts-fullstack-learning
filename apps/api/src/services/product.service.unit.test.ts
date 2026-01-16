@@ -397,9 +397,9 @@ describe('ProductService', () => {
     it('throws FORBIDDEN when no userId', async () => {
       const service = new ProductService(repo as any);
 
-      await expect(service.deleteProduct(ctx(null, APP_ROLES.MERCHANT), 'p1')).rejects.toMatchObject(
-        { code: ERROR_CODES.FORBIDDEN },
-      );
+      await expect(
+        service.deleteProduct(ctx(null, APP_ROLES.MERCHANT), 'p1'),
+      ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
     });
 
     it('throws INVALID_CHECKOUT_INPUT when id is empty', async () => {

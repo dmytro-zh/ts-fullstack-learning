@@ -34,7 +34,8 @@ export async function verifyReceiptToken(token: string): Promise<ReceiptTokenPay
     if (payload.kind !== 'receipt') return null;
 
     const orderId = typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
-    const email = typeof payload.email === 'string' && payload.email.length > 0 ? payload.email : null;
+    const email =
+      typeof payload.email === 'string' && payload.email.length > 0 ? payload.email : null;
 
     if (!orderId || !email) return null;
     return { orderId, email };
