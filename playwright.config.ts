@@ -5,6 +5,20 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 5_000 },
   reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
+  webServer: [
+    {
+      command: 'pnpm -F api dev',
+      url: 'http://localhost:4000/health',
+      timeout: 120_000,
+      reuseExistingServer: true,
+    },
+    {
+      command: 'pnpm -F web build && pnpm -F web start -p 3000',
+      url: 'http://localhost:3000',
+      timeout: 180_000,
+      reuseExistingServer: false,
+    },
+  ],
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',

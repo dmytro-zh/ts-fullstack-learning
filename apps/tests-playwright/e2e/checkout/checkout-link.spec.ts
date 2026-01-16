@@ -1,43 +1,52 @@
-import { test, expect, request } from '@playwright/test';
+import { test } from '../../fixtures/test-fixtures';
+import {
+  createApiClient,
+  createCheckoutLink,
+  createProduct,
+  createStore,
+} from '../../helpers/api-client';
 
-test('@smoke public checkout link works', async ({ page }) => {
-  const api = await request.newContext({
-    baseURL: process.env.API_URL ?? 'http://localhost:4000/',
-  });
+test('@smoke public checkout link works', async ({ pages, roles }) => {
+  test.setTimeout(60_000);
   const slug = `pw-slug-${Date.now()}`;
+  const storeName = `PW Store ${Date.now()}`;
+  const productName = `PW Product ${Date.now()}`;
 
-  // create store
-  const storeResp = await api.post('', {
-    data: {
-      query: 'mutation ($input: StoreInput!){ createStore(input:$input){ id name } }',
-      variables: { input: { name: `PW Store ${Date.now()}`, email: 'store@example.com' } },
-    },
-  });
-  const storeId = (await storeResp.json()).data.createStore.id;
+  const api = await createApiClient(roles.merchant);
+  let storeId = '';
+  let productId = '';
 
-  // create product
-  const prodResp = await api.post('', {
-    data: {
-      query:
-        'mutation ($n:String!,$p:Float!,$s:Boolean!,$store:ID){ addProduct(name:$n, price:$p, inStock:$s, storeId:$store){ id name } }',
-      variables: { n: `PW Product ${Date.now()}`, p: 12.34, s: true, store: storeId },
-    },
-  });
-  const productId = (await prodResp.json()).data.addProduct.id;
-
-  // create checkout link
-  await api.post('', {
-    data: {
-      query: 'mutation ($input: CheckoutLinkInput!){ createCheckoutLink(input:$input){ slug } }',
-      variables: { input: { slug, productId, storeId } },
-    },
-  });
+  try {
+    const store = await createStore(api.gql, { name: storeName, email: 'store@example.com' });
+    storeId = store.id;
+    const product = await createProduct(api.gql, {
+      name: productName,
+      price: 12.34,
+      quantity: 5,
+      storeId,
+    });
+    productId = product.id;
+    await createCheckoutLink(api.gql, { slug, productId, storeId });
+  } finally {
+    await api.dispose();
+  }
 
   // open public checkout
-  await page.goto(`/c/${slug}`);
-  await page.getByLabel('Name').fill('Playwright Buyer');
-  await page.getByLabel('Email').fill('buyer@example.com');
-  await page.getByRole('button', { name: 'Buy now' }).click();
+  await pages.checkout.goto(slug);
+  await pages.checkout.expectLoaded(productName);
+  await pages.checkout.fillCheckout({
+    name: 'Playwright Buyer',
+    email: 'buyer@example.com',
+    shippingAddress: '123 Test Street, Test City',
+  });
+  await pages.checkout.submit();
+  await pages.checkout.waitForThankYouOrThrow();
+  await pages.thankYou.expectVisible();
+});
 
-  await expect(page.getByText('Order')).toContainText('Order');
+test('@smoke checkout link not found shows empty state', async ({ pages }) => {
+  const slug = `missing-${Date.now()}`;
+  await pages.checkout.goto(slug);
+  await pages.checkout.expectEmptyState();
+  await pages.checkout.expectEmptyStateMessage();
 });
