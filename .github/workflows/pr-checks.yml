@@ -17,6 +17,7 @@ jobs:
 
     env:
       DATABASE_URL: file:./prisma/test.db
+      API_JWT_SECRET: ci-playwright-secret
 
     steps:
       - name: Checkout
