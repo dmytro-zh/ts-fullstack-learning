@@ -14,10 +14,10 @@ const mocks = vi.hoisted(() => {
     productRepo: {
       findById: vi.fn(),
     },
+    storeRepo: {
+      findByIdForOwner: vi.fn(),
+    },
     prisma: {
-      store: {
-        findFirst: vi.fn(),
-      },
       $transaction: vi.fn(),
     },
   };
@@ -40,6 +40,13 @@ vi.mock('../repositories/product.repository', () => {
   return { ProductRepository };
 });
 
+vi.mock('../repositories/store.repository', () => {
+  class StoreRepository {
+    findByIdForOwner = mocks.storeRepo.findByIdForOwner;
+  }
+  return { StoreRepository };
+});
+
 vi.mock('../lib/prisma', () => {
   return { prisma: mocks.prisma };
 });
@@ -49,6 +56,7 @@ import { CheckoutLinkService } from './checkout-link.service';
 
 const checkoutLinkRepoMock = mocks.checkoutLinkRepo;
 const productRepoMock = mocks.productRepo;
+const storeRepoMock = mocks.storeRepo;
 const prismaMock = mocks.prisma;
 
 function ctx(auth: { userId: string | null; role: any | null }) {
@@ -320,7 +328,7 @@ describe('createLink', () => {
 
   it('forbids merchant when store is not owned', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
-    prismaMock.store.findFirst.mockResolvedValueOnce(null);
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce(null);
     const service = new CheckoutLinkService();
 
     await expect(
@@ -330,15 +338,12 @@ describe('createLink', () => {
       }),
     ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
 
-    expect(prismaMock.store.findFirst).toHaveBeenCalledWith({
-      where: { id: 's1', ownerId: 'u1' },
-      select: { id: true },
-    });
+    expect(storeRepoMock.findByIdForOwner).toHaveBeenCalledWith('s1', 'u1');
   });
 
   it('returns existing active link for same product/store', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
-    prismaMock.store.findFirst.mockResolvedValueOnce({ id: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
     checkoutLinkRepoMock.findBySlug.mockResolvedValueOnce({
       id: 'l1',
       productId: 'p1',
@@ -358,7 +363,7 @@ describe('createLink', () => {
 
   it('reactivates existing inactive link for same product/store', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
-    prismaMock.store.findFirst.mockResolvedValueOnce({ id: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
     checkoutLinkRepoMock.findBySlug.mockResolvedValueOnce({
       id: 'l1',
       productId: 'p1',
@@ -379,7 +384,7 @@ describe('createLink', () => {
 
   it('throws when slug is taken by different product', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
-    prismaMock.store.findFirst.mockResolvedValueOnce({ id: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
     checkoutLinkRepoMock.findBySlug.mockResolvedValueOnce({
       id: 'l1',
       productId: 'p2',
@@ -398,7 +403,7 @@ describe('createLink', () => {
 
   it('throws when slug is taken by same product but different store', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
-    prismaMock.store.findFirst.mockResolvedValueOnce({ id: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
     checkoutLinkRepoMock.findBySlug.mockResolvedValueOnce({
       id: 'l1',
       productId: 'p1',
@@ -434,7 +439,7 @@ describe('createLink', () => {
       },
     );
 
-    expect(prismaMock.store.findFirst).not.toHaveBeenCalled();
+    expect(storeRepoMock.findByIdForOwner).not.toHaveBeenCalled();
     expect(link).toMatchObject({ id: 'l1' });
   });
 });

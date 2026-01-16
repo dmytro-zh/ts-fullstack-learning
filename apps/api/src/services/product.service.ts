@@ -161,6 +161,7 @@ export class ProductService {
       });
     }
 
+    // Use a transaction because we deactivate links and soft-delete the product together.
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.findFirst({
         where: { id, deletedAt: null, isActive: true },
