@@ -63,6 +63,9 @@ jobs:
       - name: Web build
         run: pnpm -C apps/web run build
 
+      - name: Seed demo data for Playwright
+        run: pnpm -C apps/api run db:seed
+
       - name: Install Playwright (chromium)
         run: pnpm exec playwright install --with-deps chromium
 
