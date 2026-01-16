@@ -4,6 +4,7 @@ dist/
 build/
 coverage/
 test-results/
+playwright-report/
 apps/web/.next/
 apps/web/out/
 apps/web/test-results/

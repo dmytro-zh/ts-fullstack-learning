@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { requireMerchantOrOwner } from '../auth/guards';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
+import { StoreRepository } from '../repositories/store.repository';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 import type { GraphQLContext } from '../server-context';
@@ -29,6 +30,7 @@ export class CheckoutLinkService {
   constructor(
     private readonly repo = new CheckoutLinkRepository(),
     private readonly productRepo = new ProductRepository(),
+    private readonly storeRepo = new StoreRepository(),
   ) {}
 
   async createLink(ctx: GraphQLContext, input: LinkInput) {
@@ -63,10 +65,7 @@ export class CheckoutLinkService {
       );
     }
     if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
-      const ownsStore = await prisma.store.findFirst({
-        where: { id: product.storeId, ownerId: userId },
-        select: { id: true },
-      });
+      const ownsStore = await this.storeRepo.findByIdForOwner(product.storeId, userId);
 
       if (!ownsStore) {
         throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
@@ -108,6 +107,7 @@ export class CheckoutLinkService {
     const parsed = checkoutByLinkInput.parse(input);
     const { slug, customerName, email, quantity, shippingAddress, shippingNote } = parsed;
 
+    // Use a transaction because we update inventory and create an order atomically.
     return prisma.$transaction(async (tx) => {
       const link = await tx.checkoutLink.findUnique({
         where: { slug },

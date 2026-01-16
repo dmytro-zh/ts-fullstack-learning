@@ -1,0 +1,91 @@
+.page {
+  background: #f5f5f6;
+  min-height: 100vh;
+  width: 100vw;
+  padding: 48px 0;
+  box-sizing: border-box;
+}
+
+.card {
+  width: min(780px, 100% - 32px);
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 18px;
+  color: #0f172a;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.alert {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  border: 1px solid transparent;
+}
+
+.alertSuccess {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.alertError {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.listSection {
+  display: grid;
+  gap: 8px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.empty {
+  margin: 0;
+  color: #6b7280;
+}
+
+.list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.storeItem {
+  color: #111827;
+}
+
+.storeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}

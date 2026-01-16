@@ -1,0 +1,158 @@
+.page {
+  padding: 44px 16px 56px;
+  min-height: calc(100vh - 80px);
+  box-sizing: border-box;
+  color: var(--foreground);
+  display: grid;
+  place-items: start center;
+}
+
+.container {
+  width: 100%;
+  max-width: 560px;
+  display: grid;
+  gap: 14px;
+}
+
+.hero {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  padding-top: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  background: rgba(240, 249, 255, 0.9);
+  margin: 0 auto;
+  font-size: var(--font-size-xs);
+  color: #6b7280;
+  gap: 8px;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(circle at 30% 30%, #22c55e 0, #16a34a 50%, #0f766e 100%);
+}
+
+.heading {
+  font-size: 26px;
+  letter-spacing: -0.03em;
+}
+
+.subheading {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.card {
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 18px 55px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(148, 163, 184, 0.1);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+  backdrop-filter: blur(18px);
+}
+
+.cardHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.cardTitle {
+  font-weight: 800;
+  font-size: var(--font-size-md);
+  letter-spacing: -0.01em;
+}
+
+.cardNote {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.noteHighlight {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+}
+
+.label {
+  display: grid;
+  gap: 6px;
+}
+
+.labelText {
+  font-weight: 800;
+  font-size: var(--font-size-xs);
+  color: #0f172a;
+}
+
+.error {
+  border-radius: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(254, 242, 242, 0.9);
+  color: #991b1b;
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: var(--font-size-xs);
+  line-height: 1.35;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.shortcuts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shortcutsLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.shortcutsButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.demoBox {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(248, 250, 252, 0.75);
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+  font-weight: 650;
+}
+
+.demoTitle {
+  color: #0f172a;
+  font-weight: 800;
+  margin-bottom: 4px;
+}

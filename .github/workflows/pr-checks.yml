@@ -17,6 +17,7 @@ jobs:
 
     env:
       DATABASE_URL: file:./prisma/test.db
+      API_JWT_SECRET: ci-playwright-secret
 
     steps:
       - name: Checkout
@@ -62,3 +63,12 @@ jobs:
 
       - name: Web build
         run: pnpm -C apps/web run build
+
+      - name: Seed demo data for Playwright
+        run: pnpm -C apps/api run db:seed
+
+      - name: Install Playwright (chromium)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Playwright smoke (ui + a11y)
+        run: pnpm exec playwright test --project=ui --project=a11y --grep @smoke

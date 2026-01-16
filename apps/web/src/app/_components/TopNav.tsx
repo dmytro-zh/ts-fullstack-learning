@@ -93,16 +93,19 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
   const canSeeAdmin = role === APP_ROLES.PLATFORM_OWNER;
 
   return (
-    <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+    <nav
+      data-testid="top-nav"
+      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+    >
       {isAuthed ? (
         <>
-          <Link href="/products" style={baseLinkStyle}>
+          <Link href="/products" style={baseLinkStyle} data-testid="nav-products">
             Products
           </Link>
-          <Link href="/stores" style={baseLinkStyle}>
+          <Link href="/stores" style={baseLinkStyle} data-testid="nav-stores">
             Stores
           </Link>
-          <Link href="/dashboard" style={baseLinkStyle}>
+          <Link href="/dashboard" style={baseLinkStyle} data-testid="nav-dashboard">
             Dashboard
           </Link>
 
@@ -119,6 +122,7 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
               boxShadow: '0 10px 26px rgba(37,99,235,0.30)',
               whiteSpace: 'nowrap',
             }}
+            data-testid="nav-checkout-links"
           >
             Checkout links
           </Link>
@@ -132,6 +136,7 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
                 background: 'rgba(255,255,255,0.75)',
                 color: '#111827',
               }}
+              data-testid="nav-admin"
             >
               Admin
             </Link>
@@ -151,6 +156,7 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
             color: '#111827',
             fontWeight: 600,
           }}
+          data-testid="nav-sign-in"
         >
           Sign in
         </Link>
@@ -170,6 +176,7 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
             fontWeight: 600,
             cursor: 'pointer',
           }}
+          data-testid="nav-sign-out"
         >
           Sign out
         </button>

@@ -1,45 +1,16 @@
 import Link from 'next/link';
-import { print } from 'graphql';
 import { redirect } from 'next/navigation';
-import { headers, cookies } from 'next/headers';
 import { StoresDocument, type StoresQuery } from '../../graphql/generated/graphql';
+import { createWebGraphQLClient } from '../../lib/graphql-client';
 import { createStoreAction as createStoreMutation } from '../actions/createStore';
-
-function getServerBaseUrl(h: Headers) {
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const proto = h.get('x-forwarded-proto') ?? 'http';
-  return `${proto}://${host}`;
-}
+import buttonStyles from '../../components/ui/Button.module.css';
+import inputStyles from '../../components/ui/Input.module.css';
+import styles from './page.module.css';
 
 async function fetchStores() {
-  const h = await headers();
-  const baseUrl = getServerBaseUrl(h);
-
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
-
-  const res = await fetch(`${baseUrl}/api/graphql`, {
-    method: 'POST',
-    cache: 'no-store',
-    headers: {
-      'content-type': 'application/json',
-      ...(cookieHeader ? { cookie: cookieHeader } : {}),
-    },
-    body: JSON.stringify({
-      query: print(StoresDocument),
-      variables: {},
-    }),
-  });
-
-  const json = (await res.json()) as { data?: StoresQuery; errors?: unknown };
-
-  if (!res.ok || json.errors) {
-    throw new Error(
-      `Failed to load stores: ${res.status}${json.errors ? ` (graphql errors)` : ''}`,
-    );
-  }
-
-  return json.data?.stores ?? [];
+  const client = await createWebGraphQLClient();
+  const data = await client.request<StoresQuery>(StoresDocument);
+  return data.stores ?? [];
 }
 
 async function createStoreAction(formData: FormData) {
@@ -77,149 +48,72 @@ export default async function StoresPage({ searchParams }: PageProps) {
   const stores = await fetchStores();
 
   return (
-    <main
-      style={{
-        background: '#f5f5f6',
-        minHeight: '100vh',
-        width: '100vw',
-        padding: '48px 0',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          width: 'min(780px, 100% - 32px)',
-          margin: '0 auto',
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 16,
-          padding: 24,
-          boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
-          display: 'grid',
-          gap: 18,
-          color: '#0f172a',
-          fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Create store</h1>
+    <main className={styles.page} data-testid="stores-page">
+      <div className={styles.card} data-testid="stores-card">
+        <h1 className={styles.title} data-testid="stores-title">
+          Create store
+        </h1>
 
         {wasCreated && (
           <p
-            style={{
-              margin: 0,
-              padding: '8px 10px',
-              borderRadius: 8,
-              background: '#ecfdf3',
-              border: '1px solid #bbf7d0',
-              color: '#15803d',
-              fontSize: 13,
-            }}
+            className={`${styles.alert} ${styles.alertSuccess}`}
+            data-testid="stores-alert-success"
           >
             Store has been created. You can now attach products to this store and receive orders.
           </p>
         )}
 
         {hasError && (
-          <p
-            style={{
-              margin: 0,
-              padding: '8px 10px',
-              borderRadius: 8,
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#b91c1c',
-              fontSize: 13,
-            }}
-          >
+          <p className={`${styles.alert} ${styles.alertError}`} data-testid="stores-alert-error">
             Failed to create store. Please try again.
           </p>
         )}
 
-        <form action={createStoreAction} style={{ display: 'grid', gap: 12 }}>
-          <label style={{ display: 'grid', gap: 6, fontWeight: 600 }}>
+        <form action={createStoreAction} className={styles.form} data-testid="stores-form">
+          <label className={styles.label}>
             Name
             <input
               name="name"
               required
               placeholder="For example: Cozy Scarves Studio"
-              style={{
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: '1px solid #d1d5db',
-                background: '#f9fafb',
-                color: '#0f172a',
-                caretColor: '#2563eb',
-                fontSize: 14,
-                lineHeight: 1.4,
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              className={`${inputStyles.field} ${inputStyles.sizeMd}`}
+              data-testid="stores-name"
             />
           </label>
 
-          <label style={{ display: 'grid', gap: 6, fontWeight: 600 }}>
+          <label className={styles.label}>
             Email (optional)
             <input
               name="email"
               type="email"
               placeholder="owner@example.com"
-              style={{
-                padding: '10px 12px',
-                borderRadius: 10,
-                border: '1px solid #d1d5db',
-                background: '#f9fafb',
-                color: '#0f172a',
-                caretColor: '#2563eb',
-                fontSize: 14,
-                lineHeight: 1.4,
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              className={`${inputStyles.field} ${inputStyles.sizeMd}`}
+              data-testid="stores-email"
             />
           </label>
 
           <button
             type="submit"
-            style={{
-              marginTop: 4,
-              padding: '10px 14px',
-              borderRadius: 10,
-              border: '1px solid #1d4ed8',
-              background: '#2563eb',
-              color: '#fff',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className={`${buttonStyles.button} ${buttonStyles.variantPrimary} ${buttonStyles.sizeMd} ${buttonStyles.shapeRounded}`}
+            data-testid="stores-submit"
           >
             Create store
           </button>
         </form>
 
-        <div style={{ display: 'grid', gap: 8 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Existing stores</h2>
+        <div className={styles.listSection} data-testid="stores-list">
+          <h2 className={styles.subtitle} data-testid="stores-list-title">
+            Existing stores
+          </h2>
           {stores.length === 0 ? (
-            <p style={{ margin: 0, color: '#6b7280' }}>No stores yet.</p>
+            <p className={styles.empty} data-testid="stores-empty">
+              No stores yet.
+            </p>
           ) : (
-            <ul
-              style={{
-                margin: 0,
-                paddingLeft: 18,
-                display: 'grid',
-                gap: 6,
-              }}
-            >
+            <ul className={styles.list} data-testid="stores-items">
               {stores.map((s) => (
-                <li key={s.id} style={{ color: '#111827' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 12,
-                    }}
-                  >
+                <li key={s.id} className={styles.storeItem}>
+                  <div className={styles.storeRow}>
                     <span>
                       {s.name}
                       {s.email ? ` (${s.email})` : ''}
@@ -227,18 +121,7 @@ export default async function StoresPage({ searchParams }: PageProps) {
 
                     <Link
                       href={`/orders?store=${encodeURIComponent(s.id)}`}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: 999,
-                        border: '1px solid #2563eb',
-                        background: '#2563eb',
-                        color: '#fff',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        whiteSpace: 'nowrap',
-                        lineHeight: 1.3,
-                      }}
+                      className={`${buttonStyles.button} ${buttonStyles.variantPrimary} ${buttonStyles.sizeSm} ${buttonStyles.shapePill}`}
                     >
                       View orders
                     </Link>

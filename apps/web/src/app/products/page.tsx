@@ -39,6 +39,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           boxSizing: 'border-box',
           color: '#020617',
         }}
+        data-testid="products-page"
       >
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <h1 style={{ margin: 0, fontSize: 24, letterSpacing: -0.03 }}>Products</h1>
@@ -105,6 +106,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         boxSizing: 'border-box',
         color: '#020617',
       }}
+      data-testid="products-page"
     >
       <div
         style={{
@@ -192,6 +194,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 textDecoration: 'none',
                 boxShadow: '0 14px 30px rgba(37,99,235,0.35)',
               }}
+              data-testid="products-add-product"
             >
               Add product
             </Link>
@@ -207,6 +210,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             display: 'grid',
             gap: 10,
           }}
+          data-testid="products-list"
         >
           {products.length === 0 ? (
             <div
@@ -219,6 +223,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 color: '#6b7280',
                 textAlign: 'center',
               }}
+              data-testid="products-empty"
             >
               This store has no products yet. Add one to start creating checkout links.
             </div>
@@ -246,6 +251,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       justifyContent: 'space-between',
                       gap: 10,
                     }}
+                    data-testid="products-item"
                   >
                     <div style={{ display: 'grid', gap: 2 }}>
                       <Link
@@ -284,6 +290,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           whiteSpace: 'nowrap',
                           boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
                         }}
+                        data-testid="products-create-link"
                       >
                         Create link
                       </Link>

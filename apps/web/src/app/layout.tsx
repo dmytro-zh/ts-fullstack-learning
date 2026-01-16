@@ -154,7 +154,7 @@ export default async function RootLayout({
               borderTop: '1px solid rgba(148,163,184,0.25)',
               padding: '12px 16px 18px',
               fontSize: 11,
-              color: '#9ca3af',
+              color: '#64748b',
               background: 'linear-gradient(to top, rgba(248,250,252,0.96), rgba(248,250,252,0.75))',
             }}
           >

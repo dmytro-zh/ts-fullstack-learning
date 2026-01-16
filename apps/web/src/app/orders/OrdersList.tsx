@@ -90,12 +90,20 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
   };
 
   if (orders.length === 0) {
-    return <p style={{ marginTop: 8 }}>No orders yet for this store.</p>;
+    return (
+      <p style={{ marginTop: 8 }} data-testid="orders-empty">
+        No orders yet for this store.
+      </p>
+    );
   }
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      {error && <p style={{ margin: 0, color: '#b91c1c', fontSize: 13 }}>{error}</p>}
+      {error && (
+        <p style={{ margin: 0, color: '#b91c1c', fontSize: 13 }} data-testid="orders-error">
+          {error}
+        </p>
+      )}
 
       <ul
         style={{
@@ -105,6 +113,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           display: 'grid',
           gap: 12,
         }}
+        data-testid="orders-list"
       >
         {orders.map((o) => {
           const currentStatus = o.status ?? OrderStatus.New;
@@ -124,6 +133,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
                 display: 'grid',
                 gap: 8,
               }}
+              data-testid="orders-item"
             >
               <div
                 style={{

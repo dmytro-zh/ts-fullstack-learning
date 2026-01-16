@@ -3,7 +3,7 @@ import { HomeFlowPanel } from './_components/HomeFlowPanel';
 
 export default async function Home() {
   return (
-    <main
+    <section
       style={{
         padding: '40px 16px 56px',
         minHeight: 'calc(100vh - 80px)',
@@ -105,6 +105,7 @@ export default async function Home() {
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
               }}
+              data-testid="home-open-dashboard"
             >
               Open dashboard
             </Link>
@@ -121,6 +122,7 @@ export default async function Home() {
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
               }}
+              data-testid="home-add-product"
             >
               Add a product
             </Link>
@@ -130,7 +132,7 @@ export default async function Home() {
             style={{
               margin: 0,
               fontSize: 12,
-              color: '#9ca3af',
+              color: '#64748b',
               display: 'flex',
               justifyContent: 'center',
               gap: 10,
@@ -147,6 +149,6 @@ export default async function Home() {
 
         <HomeFlowPanel />
       </div>
-    </main>
+    </section>
   );
 }

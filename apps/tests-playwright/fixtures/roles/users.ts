@@ -1,3 +1,4 @@
 export const roles = {
-  defaultUser: { email: 'test@example.com', password: 'password123' },
+  merchant: { email: 'merchant@local.dev', password: 'merchant' },
+  owner: { email: 'owner@local.dev', password: 'owner' },
 };

@@ -1,24 +1,19 @@
-import { test as base } from '@playwright/test';
-import { CartPage } from '../pages/cart/cart.page';
-import { HomePage } from '../pages/home/home.page';
+import { test as base, expect } from '@playwright/test';
+import { createAppPages, type AppPages } from '../pages/app.pages';
 import { roles } from './roles/users';
 
 type Fixtures = {
-  cartPage: CartPage;
-  homePage: HomePage;
-  user: { email: string; password: string };
+  pages: AppPages;
+  roles: typeof roles;
 };
 
 export const test = base.extend<Fixtures>({
-  cartPage: async ({ page }, use) => {
-    await use(new CartPage(page));
+  pages: async ({ page }, use) => {
+    await use(createAppPages(page));
   },
-  homePage: async ({ page }, use) => {
-    await use(new HomePage(page));
-  },
-  user: async ({}, use) => {
-    await use(roles.defaultUser);
+  roles: async ({}, use) => {
+    await use(roles);
   },
 });
 
-export { expect } from '@playwright/test';
+export { expect };

@@ -461,7 +461,7 @@ export function HomeFlowPanel() {
                     />
                     <span
                       style={{
-                        color: storeSaved ? '#16a34a' : '#9ca3af',
+                        color: storeSaved ? '#16a34a' : '#475569',
                       }}
                     >
                       {storeSaved ? 'Saved' : 'Saving...'}
@@ -487,7 +487,7 @@ export function HomeFlowPanel() {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      color: demoStoreName ? '#020617' : '#9ca3af',
+                      color: demoStoreName ? '#020617' : '#475569',
                     }}
                   >
                     {demoStoreName || 'Evening light market'}
@@ -601,7 +601,7 @@ export function HomeFlowPanel() {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         maxWidth: '70%',
-                        color: demoProductName ? '#020617' : '#9ca3af',
+                        color: demoProductName ? '#020617' : '#475569',
                       }}
                     >
                       {demoProductName || 'Your product name'}

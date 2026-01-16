@@ -8,23 +8,24 @@ export class HomePage {
     await this.page.goto('/');
   }
 
-  async addFirstProductToCart() {
-    const first = this.page.locator(homeLocators.productItem).first();
-    await expect(first).toBeVisible();
-    await first.locator(homeLocators.addToCartBtn).click();
+  openDashboard() {
+    return this.page.getByTestId(homeLocators.openDashboard);
   }
 
-  cartItems() {
-    return this.page.locator(homeLocators.cartItem);
+  addProduct() {
+    return this.page.getByTestId(homeLocators.addProduct);
   }
 
-  async removeFirstCartItem() {
-    const item = this.cartItems().first();
-    await expect(item).toBeVisible();
-    await item.locator(homeLocators.removeFromCartBtn).click();
+  mainHeading() {
+    return this.page.getByRole('heading', { level: 1 });
   }
 
-  async assertCartEmpty() {
-    await expect(this.page.locator(homeLocators.cartEmpty)).toBeVisible();
+  async expectPrimaryActions() {
+    await expect(this.openDashboard()).toBeVisible();
+    await expect(this.addProduct()).toBeVisible();
+  }
+
+  async expectHeadingVisible() {
+    await expect(this.mainHeading()).toBeVisible();
   }
 }
