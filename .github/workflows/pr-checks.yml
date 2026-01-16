@@ -62,3 +62,9 @@ jobs:
 
       - name: Web build
         run: pnpm -C apps/web run build
+
+      - name: Install Playwright (chromium)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Playwright smoke (ui + a11y)
+        run: pnpm exec playwright test --project=ui --project=a11y --grep @smoke
