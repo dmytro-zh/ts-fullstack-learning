@@ -186,6 +186,33 @@ describe('OrderService', () => {
     });
   });
 
+  describe('getByIdForReceipt', () => {
+    it('returns null when order not found', async () => {
+      repoMock.findById.mockResolvedValueOnce(null);
+
+      const service = new OrderService();
+      const res = await service.getByIdForReceipt('o1');
+
+      expect(repoMock.findById).toHaveBeenCalledWith('o1');
+      expect(res).toBeNull();
+    });
+
+    it('returns order when found', async () => {
+      const order = { id: 'o1' };
+      repoMock.findById.mockResolvedValueOnce(order);
+
+      const service = new OrderService();
+      const res = await service.getByIdForReceipt('o1');
+
+      expect(res).toEqual(order);
+    });
+
+    it('throws on invalid id', async () => {
+      const service = new OrderService();
+      await expect(service.getByIdForReceipt('')).rejects.toBeTruthy();
+    });
+  });
+
   describe('updateStatus', () => {
     it('throws FORBIDDEN when missing userId', async () => {
       const service = new OrderService();
@@ -305,6 +332,35 @@ describe('OrderService', () => {
 
       expect(repoMock.updateStatus).toHaveBeenCalledWith('o1', 'PROCESSING');
       expect(res).toEqual({ id: 'o1', status: 'PROCESSING' });
+    });
+
+    it('allows NEW -> PENDING_PAYMENT transition', async () => {
+      repoMock.findById.mockResolvedValueOnce({ id: 'o1', storeId: 's1', status: 'NEW' });
+      repoMock.isStoreOwnedBy.mockResolvedValueOnce(true);
+      repoMock.updateStatus.mockResolvedValueOnce({ id: 'o1', status: 'PENDING_PAYMENT' });
+
+      const service = new OrderService();
+      const res = await service.updateStatus(
+        ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),
+        'o1',
+        'PENDING_PAYMENT',
+      );
+
+      expect(repoMock.updateStatus).toHaveBeenCalledWith('o1', 'PENDING_PAYMENT');
+      expect(res).toEqual({ id: 'o1', status: 'PENDING_PAYMENT' });
+    });
+
+    it('throws INVALID_ORDER_STATUS_TRANSITION for unknown current status', async () => {
+      repoMock.findById.mockResolvedValueOnce({ id: 'o1', storeId: 's1', status: 'UNKNOWN' });
+      repoMock.isStoreOwnedBy.mockResolvedValueOnce(true);
+
+      const service = new OrderService();
+      await expect(
+        service.updateStatus(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), 'o1', 'PAID'),
+      ).rejects.toMatchObject({
+        code: ERROR_CODES.INVALID_ORDER_STATUS_TRANSITION,
+        field: 'status',
+      });
     });
 
     it('allows PLATFORM_OWNER to update without ownership check', async () => {
