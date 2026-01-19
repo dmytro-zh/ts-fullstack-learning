@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CheckoutLinkService } from '../../services/checkout-link.service';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES } from '@ts-fullstack-learning/shared';
 import { prismaTest } from './db';
 import { ERROR_CODES } from '../../errors/codes';
 
@@ -13,6 +13,18 @@ function uniq(prefix: string) {
 }
 
 async function seedStoreAndProduct(ownerId: string) {
+  await prismaTest.user.upsert({
+    where: { id: ownerId },
+    update: { role: APP_ROLES.MERCHANT, plan: APP_PLANS.PRO },
+    create: {
+      id: ownerId,
+      email: `${ownerId}@test.dev`,
+      role: APP_ROLES.MERCHANT,
+      passwordHash: 'test-hash',
+      plan: APP_PLANS.PRO,
+    },
+  });
+
   const store = await prismaTest.store.create({
     data: {
       name: 'Test Store',
@@ -173,6 +185,17 @@ describe('CheckoutLinkService (integration) - createLink', () => {
   it('forbids MERCHANT when store is not owned by user', async () => {
     const ownerId = 'owner_1';
     const { product } = await seedStoreAndProduct(ownerId);
+    await prismaTest.user.upsert({
+      where: { id: 'other-owner' },
+      update: { role: APP_ROLES.MERCHANT, plan: APP_PLANS.PRO },
+      create: {
+        id: 'other-owner',
+        email: 'other-owner@test.dev',
+        role: APP_ROLES.MERCHANT,
+        passwordHash: 'test-hash',
+        plan: APP_PLANS.PRO,
+      },
+    });
 
     const service = new CheckoutLinkService();
 

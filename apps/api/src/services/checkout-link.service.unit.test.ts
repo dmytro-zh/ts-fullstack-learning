@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/shared';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 
@@ -10,12 +10,16 @@ const mocks = vi.hoisted(() => {
       create: vi.fn(),
       findBySlug: vi.fn(),
       update: vi.fn(),
+      countByOwner: vi.fn(),
     },
     productRepo: {
       findById: vi.fn(),
     },
     storeRepo: {
       findByIdForOwner: vi.fn(),
+    },
+    userRepo: {
+      getBillingForUser: vi.fn(),
     },
     prisma: {
       $transaction: vi.fn(),
@@ -29,6 +33,7 @@ vi.mock('../repositories/checkout-link.repository', () => {
     create = mocks.checkoutLinkRepo.create;
     findBySlug = mocks.checkoutLinkRepo.findBySlug;
     update = mocks.checkoutLinkRepo.update;
+    countByOwner = mocks.checkoutLinkRepo.countByOwner;
   }
   return { CheckoutLinkRepository };
 });
@@ -47,6 +52,13 @@ vi.mock('../repositories/store.repository', () => {
   return { StoreRepository };
 });
 
+vi.mock('../repositories/user.repository', () => {
+  class UserRepository {
+    getBillingForUser = mocks.userRepo.getBillingForUser;
+  }
+  return { UserRepository };
+});
+
 vi.mock('../lib/prisma', () => {
   return { prisma: mocks.prisma };
 });
@@ -57,6 +69,7 @@ import { CheckoutLinkService } from './checkout-link.service';
 const checkoutLinkRepoMock = mocks.checkoutLinkRepo;
 const productRepoMock = mocks.productRepo;
 const storeRepoMock = mocks.storeRepo;
+const userRepoMock = mocks.userRepo;
 const prismaMock = mocks.prisma;
 
 function ctx(auth: { userId: string | null; role: any | null }) {
@@ -65,6 +78,8 @@ function ctx(auth: { userId: string | null; role: any | null }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  checkoutLinkRepoMock.countByOwner.mockResolvedValue(0);
+  userRepoMock.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
 });
 
 describe('checkoutByLink', () => {
@@ -339,6 +354,23 @@ describe('createLink', () => {
     ).rejects.toMatchObject({ code: ERROR_CODES.FORBIDDEN });
 
     expect(storeRepoMock.findByIdForOwner).toHaveBeenCalledWith('s1', 'u1');
+  });
+
+  it('forbids when FREE plan hits checkout link limit', async () => {
+    productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
+    userRepoMock.getBillingForUser.mockResolvedValueOnce({ plan: APP_PLANS.FREE });
+    checkoutLinkRepoMock.countByOwner.mockResolvedValueOnce(FREE_PLAN_LIMITS.checkoutLinks);
+    const service = new CheckoutLinkService();
+
+    await expect(
+      service.createLink(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        slug: 'limit-hit',
+        productId: 'p1',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.PLAN_LIMIT_EXCEEDED });
+
+    expect(checkoutLinkRepoMock.create).not.toHaveBeenCalled();
   });
 
   it('returns existing active link for same product/store', async () => {

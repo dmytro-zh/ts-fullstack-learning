@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/shared';
 import { ProductService } from './product.service';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
@@ -25,6 +25,11 @@ type Repo = {
   create: (data: any) => Promise<any>;
   findById: (id: string) => Promise<any>;
   update: (id: string, data: any) => Promise<any>;
+  countByOwner: (ownerId: string) => Promise<number>;
+};
+
+type UserRepo = {
+  getBillingForUser: (id: string) => Promise<{ plan: string } | null>;
 };
 
 function ctx(userId: string | null, role: any): GraphQLContext {
@@ -42,6 +47,7 @@ function expectDomainError(err: unknown, code: string, field?: string) {
 
 describe('ProductService', () => {
   let repo: Repo;
+  let userRepo: UserRepo;
 
   beforeEach(() => {
     repo = {
@@ -52,6 +58,10 @@ describe('ProductService', () => {
       create: vi.fn(),
       findById: vi.fn(),
       update: vi.fn(),
+      countByOwner: vi.fn(),
+    };
+    userRepo = {
+      getBillingForUser: vi.fn().mockResolvedValue({ plan: APP_PLANS.PRO }),
     };
 
     vi.clearAllMocks();
@@ -60,7 +70,7 @@ describe('ProductService', () => {
   describe('getProducts', () => {
     it('returns products for merchant or owner', async () => {
       (repo.findAllWithStore as any).mockResolvedValue([{ id: 'p1' }]);
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const res = await service.getProducts(ctx('u1', APP_ROLES.MERCHANT));
       expect(repo.findAllWithStore).toHaveBeenCalledTimes(1);
@@ -68,7 +78,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when role is not allowed', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       expect(() => service.getProducts(ctx('u1', APP_ROLES.BUYER))).toThrowError(
         expect.objectContaining({ extensions: { code: 'FORBIDDEN' } }),
@@ -79,7 +89,7 @@ describe('ProductService', () => {
   describe('getProduct', () => {
     it('returns product by id for merchant or owner', async () => {
       (repo.findByIdWithStore as any).mockResolvedValue({ id: 'p1' });
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const res = await service.getProduct(ctx('u1', APP_ROLES.MERCHANT), 'p1');
       expect(repo.findByIdWithStore).toHaveBeenCalledWith('p1');
@@ -87,7 +97,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when role is not allowed', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       expect(() => service.getProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).toThrowError(
         expect.objectContaining({ extensions: { code: 'FORBIDDEN' } }),
@@ -97,7 +107,7 @@ describe('ProductService', () => {
 
   describe('addProduct', () => {
     it('throws FORBIDDEN when not merchant', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.addProduct(ctx('u1', APP_ROLES.BUYER), {
@@ -109,7 +119,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when no userId', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.addProduct(ctx(null, APP_ROLES.MERCHANT), {
@@ -122,7 +132,7 @@ describe('ProductService', () => {
 
     it('throws FORBIDDEN when merchant does not own store', async () => {
       (repo.isStoreOwnedBy as any).mockResolvedValue(false);
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
@@ -135,12 +145,30 @@ describe('ProductService', () => {
       expect(repo.isStoreOwnedBy).toHaveBeenCalledWith('s1', 'u1');
     });
 
+    it('forbids when FREE plan hits product limit', async () => {
+      (repo.isStoreOwnedBy as any).mockResolvedValue(true);
+      (repo.countByOwner as any).mockResolvedValue(FREE_PLAN_LIMITS.products);
+      userRepo.getBillingForUser = vi.fn().mockResolvedValue({ plan: APP_PLANS.FREE });
+
+      const service = new ProductService(repo as any, userRepo as any);
+
+      await expect(
+        service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
+          storeId: 's1',
+          name: 'X',
+          price: 10,
+        } as any),
+      ).rejects.toMatchObject({ code: ERROR_CODES.PLAN_LIMIT_EXCEEDED });
+
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
     it('creates product with generated slug, normalized fields, and quantity defaults', async () => {
       (repo.isStoreOwnedBy as any).mockResolvedValue(true);
       (repo.findBySlug as any).mockResolvedValue(null);
       (repo.create as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
         storeId: 's1',
@@ -170,7 +198,7 @@ describe('ProductService', () => {
       (repo.findBySlug as any).mockResolvedValue(null);
       (repo.create as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
         storeId: 's1',
@@ -196,7 +224,7 @@ describe('ProductService', () => {
 
       (repo.create as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
         storeId: 's1',
@@ -216,7 +244,7 @@ describe('ProductService', () => {
     });
 
     it('throws validation error for invalid input (example: empty storeId)', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
@@ -231,7 +259,7 @@ describe('ProductService', () => {
       (repo.findBySlug as any).mockResolvedValue(null);
       (repo.create as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.addProduct(ctx('owner-1', APP_ROLES.PLATFORM_OWNER), {
         storeId: 's1',
@@ -245,7 +273,7 @@ describe('ProductService', () => {
 
   describe('updateProduct', () => {
     it('throws FORBIDDEN when not merchant', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.updateProduct(ctx('u1', APP_ROLES.BUYER), {
@@ -258,7 +286,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when no userId', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.updateProduct(ctx(null, APP_ROLES.MERCHANT), {
@@ -272,7 +300,7 @@ describe('ProductService', () => {
 
     it('throws PRODUCT_NOT_FOUND when product missing', async () => {
       (repo.findById as any).mockResolvedValue(null);
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.updateProduct(ctx('u1', APP_ROLES.MERCHANT), {
@@ -286,7 +314,7 @@ describe('ProductService', () => {
 
     it('throws NOT_FOUND when product has no storeId', async () => {
       (repo.findById as any).mockResolvedValue({ id: 'p1', storeId: null });
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.updateProduct(ctx('u1', APP_ROLES.MERCHANT), {
@@ -302,7 +330,7 @@ describe('ProductService', () => {
       (repo.findById as any).mockResolvedValue({ id: 'p1', storeId: 's1' });
       (repo.isStoreOwnedBy as any).mockResolvedValue(false);
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.updateProduct(ctx('u1', APP_ROLES.MERCHANT), {
@@ -321,7 +349,7 @@ describe('ProductService', () => {
       (repo.isStoreOwnedBy as any).mockResolvedValue(true);
       (repo.update as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.updateProduct(ctx('u1', APP_ROLES.MERCHANT), {
         id: 'p1',
@@ -349,7 +377,7 @@ describe('ProductService', () => {
       (repo.isStoreOwnedBy as any).mockResolvedValue(true);
       (repo.update as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.updateProduct(ctx('u1', APP_ROLES.MERCHANT), {
         id: 'p1',
@@ -372,7 +400,7 @@ describe('ProductService', () => {
       (repo.findById as any).mockResolvedValue({ id: 'p1', storeId: 's1' });
       (repo.update as any).mockResolvedValue({ id: 'p1' });
 
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await service.updateProduct(ctx('owner-1', APP_ROLES.PLATFORM_OWNER), {
         id: 'p1',
@@ -387,7 +415,7 @@ describe('ProductService', () => {
 
   describe('deleteProduct', () => {
     it('throws FORBIDDEN when not merchant', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(service.deleteProduct(ctx('u1', APP_ROLES.BUYER), 'p1')).rejects.toMatchObject({
         extensions: { code: 'FORBIDDEN' },
@@ -395,7 +423,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when no userId', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.deleteProduct(ctx(null, APP_ROLES.MERCHANT), 'p1'),
@@ -403,7 +431,7 @@ describe('ProductService', () => {
     });
 
     it('throws INVALID_CHECKOUT_INPUT when id is empty', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       await expect(
         service.deleteProduct(ctx('u1', APP_ROLES.MERCHANT), '   '),
@@ -411,7 +439,7 @@ describe('ProductService', () => {
     });
 
     it('throws PRODUCT_NOT_FOUND when product does not exist', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const tx = {
         product: { findFirst: vi.fn().mockResolvedValue(null), update: vi.fn() },
@@ -433,7 +461,7 @@ describe('ProductService', () => {
     });
 
     it('throws NOT_FOUND when product has no storeId', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const tx = {
         product: {
@@ -452,7 +480,7 @@ describe('ProductService', () => {
     });
 
     it('throws FORBIDDEN when store is not owned by user', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const tx = {
         product: {
@@ -478,7 +506,7 @@ describe('ProductService', () => {
     });
 
     it('deactivates checkout links and soft deletes product on success', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const tx = {
         product: {
@@ -516,7 +544,7 @@ describe('ProductService', () => {
     });
 
     it('allows PLATFORM_OWNER without ownership check', async () => {
-      const service = new ProductService(repo as any);
+      const service = new ProductService(repo as any, userRepo as any);
 
       const tx = {
         product: {
