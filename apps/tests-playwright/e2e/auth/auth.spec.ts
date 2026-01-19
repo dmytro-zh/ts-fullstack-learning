@@ -28,3 +28,21 @@ test('@smoke owner sees admin link', async ({ pages, roles }) => {
   await pages.admin.expectVisible();
   await pages.admin.expectTitleVisible();
 });
+
+test('@smoke buyer can register via UI', async ({ pages }) => {
+  const seed = Date.now();
+  const email = `buyer+${seed}@example.com`;
+  const password = `Buyer!${seed}Aa`;
+
+  await pages.register.register({ email, password });
+
+  await pages.nav.signOut();
+  await pages.nav.expectSignedOut();
+});
+
+test('@smoke signed-in user is redirected from register', async ({ pages, roles }) => {
+  await pages.login.login(roles.merchant);
+
+  await pages.register.goto();
+  await pages.register.expectRedirectedToDashboard();
+});

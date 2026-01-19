@@ -1,40 +1,28 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Text } from '../../components/ui/Text';
 import styles from './page.module.css';
 
-type MeResponse = {
-  userId: string | null;
-  role: string | null;
-};
+const PASSWORD_RULES = [
+  'At least 12 characters',
+  'At least 1 uppercase letter',
+  'At least 1 lowercase letter',
+  'At least 1 number',
+  'At least 1 symbol',
+  'No spaces',
+];
 
-async function hasApiSession(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/auth/me', {
-      cache: 'no-store',
-      credentials: 'include',
-    });
-
-    if (!res.ok) return false;
-
-    const data = (await res.json()) as MeResponse;
-    return Boolean(data.userId) && Boolean(data.role);
-  } catch {
-    return false;
-  }
-}
-
-export default function LoginPage() {
+export default function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [confirm, setConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
@@ -43,31 +31,15 @@ export default function LoginPage() {
     return fromQuery && fromQuery.startsWith('/') ? fromQuery : '/dashboard';
   }, [searchParams]);
 
-  const registerUrl = useMemo(() => {
-    return `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-  }, [callbackUrl]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      const ok = await hasApiSession();
-      if (!cancelled && ok) {
-        router.replace(callbackUrl);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [router, callbackUrl]);
+  const passwordsMatch = password.length > 0 && password === confirm;
+  const canSubmit = Boolean(email.trim()) && Boolean(password) && passwordsMatch && !submitting;
 
   const onSubmit = async () => {
     setErrorText(null);
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -75,7 +47,14 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        setErrorText('Invalid email or password.');
+        const text = await res.text();
+        if (res.status === 409) {
+          setErrorText('Email is already registered.');
+        } else if (res.status === 400) {
+          setErrorText('Please check your email and password.');
+        } else {
+          setErrorText(`Registration failed: ${text}`);
+        }
         return;
       }
 
@@ -87,38 +66,26 @@ export default function LoginPage() {
     }
   };
 
-  const canSubmit = Boolean(email.trim()) && Boolean(password) && !submitting;
-
-  const fillMerchant = () => {
-    setEmail('merchant@local.dev');
-    setPassword('Merchant!2025');
-  };
-
-  const fillOwner = () => {
-    setEmail('owner@local.dev');
-    setPassword('Owner!2025Secure');
-  };
-
   return (
-    <main className={styles.page} data-testid="login-page">
+    <main className={styles.page} data-testid="register-page">
       <div className={styles.container}>
         <div className={styles.hero}>
           <div className={styles.badge}>
             <span className={styles.badgeDot} />
-            Sign in
+            Create account
           </div>
 
           <Text as="h1" variant="title" className={styles.heading}>
-            Welcome back.
+            Welcome to the dashboard.
           </Text>
           <Text as="p" variant="muted" className={styles.subheading}>
-            Use your merchant or platform owner credentials to access dashboard tools.
+            Create a buyer account to view orders and manage checkout.
           </Text>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <div className={styles.cardTitle}>Sign in</div>
+            <div className={styles.cardTitle}>Sign up</div>
             <div className={styles.cardNote}>
               You will be redirected to: <span className={styles.noteHighlight}>{callbackUrl}</span>
             </div>
@@ -134,7 +101,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 size="lg"
-                data-testid="login-email"
+                data-testid="register-email"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void onSubmit();
                 }}
@@ -145,18 +112,49 @@ export default function LoginPage() {
               <span className={styles.labelText}>Password</span>
               <Input
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                placeholder="Create a strong password"
                 size="lg"
-                data-testid="login-password"
+                data-testid="register-password"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void onSubmit();
+                }}
+              />
+            </label>
+
+            <label className={styles.label}>
+              <span className={styles.labelText}>Confirm password</span>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Repeat password"
+                size="lg"
+                data-testid="register-confirm"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void onSubmit();
                 }}
               />
             </label>
           </div>
+
+          <div className={styles.rules}>
+            <div className={styles.rulesTitle}>Password rules</div>
+            <ul>
+              {PASSWORD_RULES.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
+            </ul>
+          </div>
+
+          {confirm.length > 0 && !passwordsMatch ? (
+            <div role="status" className={styles.error}>
+              Passwords do not match.
+            </div>
+          ) : null}
 
           {errorText ? (
             <div role="status" className={styles.error}>
@@ -170,41 +168,21 @@ export default function LoginPage() {
               size="lg"
               disabled={!canSubmit}
               onClick={() => void onSubmit()}
-              data-testid="login-submit"
+              data-testid="register-submit"
             >
-              {submitting ? 'Signing in...' : 'Sign in'}
+              {submitting ? 'Creating account...' : 'Create account'}
             </Button>
 
             <div className={styles.footer}>
-              New here?{' '}
+              Already have an account?{' '}
               <button
                 type="button"
                 className={styles.linkButton}
-                onClick={() => router.push(registerUrl)}
-                data-testid="login-register-link"
+                onClick={() => router.push('/login')}
+                data-testid="register-login-link"
               >
-                Create account
+                Sign in
               </button>
-            </div>
-
-            <div className={styles.shortcuts}>
-              <div className={styles.shortcutsLabel}>Dev shortcuts:</div>
-
-              <div className={styles.shortcutsButtons}>
-                <Button type="button" variant="ghost" size="sm" onClick={fillMerchant}>
-                  Continue as Merchant
-                </Button>
-
-                <Button type="button" variant="ghost" size="sm" onClick={fillOwner}>
-                  Continue as Owner
-                </Button>
-              </div>
-            </div>
-
-            <div className={styles.demoBox}>
-              <div className={styles.demoTitle}>Demo users</div>
-              <div>merchant@local.dev / Merchant!2025</div>
-              <div>owner@local.dev / Owner!2025Secure</div>
             </div>
           </div>
         </div>
