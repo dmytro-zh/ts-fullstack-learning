@@ -88,6 +88,38 @@ describe('auth.service', () => {
     ).rejects.toBeTruthy();
   });
 
+  it('registerUser rejects invalid email', async () => {
+    await expect(
+      registerUser({
+        email: 'not-an-email',
+        password: 'StrongPass1!',
+      }),
+    ).rejects.toBeTruthy();
+
+    expect(prismaUser.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('loginUser normalizes email before lookup', async () => {
+    prismaUser.findUnique.mockResolvedValueOnce({
+      id: 'u1',
+      email: 'buyer@example.com',
+      role: APP_ROLES.BUYER,
+      passwordHash: 'hashed',
+    });
+
+    (verifyPassword as ReturnType<typeof vi.fn>).mockResolvedValueOnce(true);
+
+    await loginUser({
+      email: ' Buyer@Example.com ',
+      password: 'StrongPass1!',
+    });
+
+    expect(prismaUser.findUnique).toHaveBeenCalledWith({
+      where: { email: 'buyer@example.com' },
+      select: { id: true, email: true, role: true, passwordHash: true },
+    });
+  });
+
   it('loginUser throws INVALID_CREDENTIALS when user not found', async () => {
     prismaUser.findUnique.mockResolvedValueOnce(null);
 
