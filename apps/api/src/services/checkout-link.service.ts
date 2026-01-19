@@ -4,10 +4,11 @@ import { requireMerchantOrOwner } from '../auth/guards';
 import { CheckoutLinkRepository } from '../repositories/checkout-link.repository';
 import { ProductRepository } from '../repositories/product.repository';
 import { StoreRepository } from '../repositories/store.repository';
+import { UserRepository } from '../repositories/user.repository';
+import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/shared';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 import type { GraphQLContext } from '../server-context';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -31,6 +32,7 @@ export class CheckoutLinkService {
     private readonly repo = new CheckoutLinkRepository(),
     private readonly productRepo = new ProductRepository(),
     private readonly storeRepo = new StoreRepository(),
+    private readonly userRepo = new UserRepository(),
   ) {}
 
   async createLink(ctx: GraphQLContext, input: LinkInput) {
@@ -64,11 +66,25 @@ export class CheckoutLinkService {
         },
       );
     }
+
     if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
       const ownsStore = await this.storeRepo.findByIdForOwner(product.storeId, userId);
 
       if (!ownsStore) {
         throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
+    }
+
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const billing = await this.userRepo.getBillingForUser(userId);
+      if (!billing) {
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'User not found');
+      }
+      if (billing.plan === APP_PLANS.FREE) {
+        const count = await this.repo.countByOwner(userId);
+        if (count >= FREE_PLAN_LIMITS.checkoutLinks) {
+          throw new DomainError(ERROR_CODES.PLAN_LIMIT_EXCEEDED, 'Checkout link limit reached');
+        }
       }
     }
 

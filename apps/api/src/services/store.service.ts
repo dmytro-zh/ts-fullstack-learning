@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { StoreRepository } from '../repositories/store.repository';
 import { requireMerchantOrOwner } from '../auth/guards';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/shared';
 import type { GraphQLContext } from '../server-context';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
+import { UserRepository } from '../repositories/user.repository';
 
 const storeInput = z.object({
   name: z.string().min(1),
@@ -13,7 +14,10 @@ const storeInput = z.object({
 type StoreInput = z.infer<typeof storeInput>;
 
 export class StoreService {
-  constructor(private readonly repo = new StoreRepository()) {}
+  constructor(
+    private readonly repo = new StoreRepository(),
+    private readonly userRepo = new UserRepository(),
+  ) {}
 
   async createStore(ctx: GraphQLContext, input: StoreInput) {
     const parsed = storeInput.parse(input);
@@ -22,6 +26,19 @@ export class StoreService {
     const userId = ctx.auth.userId;
     if (!userId) {
       throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+    }
+
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const billing = await this.userRepo.getBillingForUser(userId);
+      if (!billing) {
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'User not found');
+      }
+      if (billing.plan === APP_PLANS.FREE) {
+        const count = await this.repo.countByOwner(userId);
+        if (count >= FREE_PLAN_LIMITS.stores) {
+          throw new DomainError(ERROR_CODES.PLAN_LIMIT_EXCEEDED, 'Store limit reached');
+        }
+      }
     }
 
     return this.repo.create({

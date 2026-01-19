@@ -63,4 +63,13 @@ export class ProductRepository {
 
     return Boolean(store);
   }
+
+  countByOwner(ownerId: string) {
+    return prisma.product.count({
+      where: {
+        ...ACTIVE_PRODUCT_WHERE,
+        store: { ownerId },
+      },
+    });
+  }
 }

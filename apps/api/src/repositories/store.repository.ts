@@ -35,4 +35,8 @@ export class StoreRepository {
       where: { id, ownerId },
     });
   }
+
+  countByOwner(ownerId: string) {
+    return prisma.store.count({ where: { ownerId } });
+  }
 }
