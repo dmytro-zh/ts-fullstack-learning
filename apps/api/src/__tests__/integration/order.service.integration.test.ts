@@ -22,6 +22,7 @@ async function seedMerchantWithStoreAndProduct(opts?: { ownerId?: string }) {
     data: {
       email: `${ownerId}@test.dev`,
       role: APP_ROLES.MERCHANT,
+      passwordHash: 'PLACEHOLDER_HASH',
     },
   });
 
