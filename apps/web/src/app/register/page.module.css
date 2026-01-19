@@ -1,0 +1,129 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px 64px;
+}
+
+.container {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  gap: 32px;
+}
+
+.hero {
+  display: grid;
+  gap: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+.heading {
+  margin: 0;
+}
+
+.subheading {
+  margin: 0;
+  max-width: 520px;
+}
+
+.card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  padding: 28px;
+  display: grid;
+  gap: 20px;
+}
+
+.cardHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cardNote {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.noteHighlight {
+  color: #111827;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.label {
+  display: grid;
+  gap: 8px;
+}
+
+.labelText {
+  font-size: 13px;
+  color: #374151;
+}
+
+.rules {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.rulesTitle {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.rules ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.actions {
+  display: grid;
+  gap: 12px;
+}
+
+.footer {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #111827;
+  text-decoration: underline;
+  cursor: pointer;
+}
