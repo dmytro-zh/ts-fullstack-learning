@@ -156,3 +156,19 @@
   font-weight: 800;
   margin-bottom: 4px;
 }
+
+.footer {
+  font-size: var(--font-size-xs);
+  color: #64748b;
+  text-align: center;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #0f172a;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}

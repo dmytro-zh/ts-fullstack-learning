@@ -43,6 +43,10 @@ export default function LoginPage() {
     return fromQuery && fromQuery.startsWith('/') ? fromQuery : '/dashboard';
   }, [searchParams]);
 
+  const registerUrl = useMemo(() => {
+    return `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  }, [callbackUrl]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -170,6 +174,18 @@ export default function LoginPage() {
             >
               {submitting ? 'Signing in...' : 'Sign in'}
             </Button>
+
+            <div className={styles.footer}>
+              New here?{' '}
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => router.push(registerUrl)}
+                data-testid="login-register-link"
+              >
+                Create account
+              </button>
+            </div>
 
             <div className={styles.shortcuts}>
               <div className={styles.shortcutsLabel}>Dev shortcuts:</div>
