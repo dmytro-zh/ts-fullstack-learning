@@ -12,6 +12,9 @@ import { prisma } from './lib/prisma';
 import type { GraphQLContext } from './server-context';
 import { getRequestAuth } from './auth/get-request-auth';
 import { issueApiToken } from './auth/issue-api-token';
+import { ZodError } from 'zod';
+import { registerUser, loginUser } from './auth/auth.service';
+import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -83,37 +86,53 @@ function normalizeProductImages(images: Array<{ id: string; url: string; isPrima
 /**
  * API auth (prod-like):
  * Web calls POST /auth/login and receives an access token (JWS).
+ * Web calls POST /auth/register to create a BUYER and auto-login.
  * Web then sends Authorization: Bearer <token> to /graphql.
  */
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/register', async (req, res) => {
   try {
-    const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
-    const password = typeof req.body?.password === 'string' ? req.body.password : '';
-
-    if (!email || !password) return res.status(400).json({ error: 'email/password required' });
-
-    // demo users (same as web)
-    const isMerchant = email === 'merchant@local.dev' && password === 'merchant';
-    const isOwner = email === 'owner@local.dev' && password === 'owner';
-
-    if (!isMerchant && !isOwner) return res.status(401).json({ error: 'Invalid credentials' });
-
-    // IMPORTANT: token.sub must be real DB userId, to make ownership checks work
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { id: true, email: true, role: true },
+    const { token } = await registerUser({
+      email: req.body?.email,
+      password: req.body?.password,
     });
 
-    if (!user) return res.status(404).json({ error: 'User not found in DB' });
+    return res.status(201).json({ token });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(400).json({ error: 'Invalid input', details: err.issues });
+    }
 
-    const token = await issueApiToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
+    if (err instanceof AuthError) {
+      if (err.code === AUTH_ERROR_CODES.EMAIL_TAKEN) {
+        return res.status(409).json({ error: 'Email already registered' });
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to register' });
+  }
+});
+
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { token } = await loginUser({
+      email: req.body?.email,
+      password: req.body?.password,
     });
 
     return res.status(200).json({ token });
   } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(400).json({ error: 'Invalid input', details: err.issues });
+    }
+
+    if (err instanceof AuthError) {
+      if (err.code === AUTH_ERROR_CODES.INVALID_CREDENTIALS) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+    }
+
     // eslint-disable-next-line no-console
     console.error(err);
     return res.status(500).json({ error: 'Failed to login' });
