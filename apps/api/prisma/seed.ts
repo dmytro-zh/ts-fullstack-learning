@@ -17,20 +17,22 @@ async function main() {
   // 1) Demo users (idempotent)
   const merchant = await prisma.user.upsert({
     where: { email: 'merchant@local.dev' },
-    update: { role: APP_ROLES.MERCHANT },
+    update: { role: APP_ROLES.MERCHANT, passwordHash: 'PLACEHOLDER_HASH' },
     create: {
       email: 'merchant@local.dev',
       role: APP_ROLES.MERCHANT,
+      passwordHash: 'PLACEHOLDER_HASH',
     },
     select: { id: true },
   });
 
   await prisma.user.upsert({
     where: { email: 'owner@local.dev' },
-    update: { role: APP_ROLES.PLATFORM_OWNER },
+    update: { role: APP_ROLES.PLATFORM_OWNER, passwordHash: 'PLACEHOLDER_HASH' },
     create: {
       email: 'owner@local.dev',
       role: APP_ROLES.PLATFORM_OWNER,
+      passwordHash: 'PLACEHOLDER_HASH',
     },
     select: { id: true },
   });

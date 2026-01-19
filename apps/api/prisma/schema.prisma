@@ -127,5 +127,6 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   role      AppRole
+  passwordHash String
   createdAt DateTime @default(now())
 }

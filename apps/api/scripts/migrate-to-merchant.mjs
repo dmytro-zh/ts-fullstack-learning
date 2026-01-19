@@ -8,15 +8,15 @@ async function main() {
 
   const merchant = await prisma.user.upsert({
     where: { email: merchantEmail },
-    update: { role: 'MERCHANT' },
-    create: { email: merchantEmail, role: 'MERCHANT' },
+    update: { role: 'MERCHANT', passwordHash: 'PLACEHOLDER_HASH' },
+    create: { email: merchantEmail, role: 'MERCHANT', passwordHash: 'PLACEHOLDER_HASH' },
     select: { id: true, email: true, role: true },
   });
 
   await prisma.user.upsert({
     where: { email: ownerEmail },
-    update: { role: 'PLATFORM_OWNER' },
-    create: { email: ownerEmail, role: 'PLATFORM_OWNER' },
+    update: { role: 'PLATFORM_OWNER', passwordHash: 'PLACEHOLDER_HASH' },
+    create: { email: ownerEmail, role: 'PLATFORM_OWNER', passwordHash: 'PLACEHOLDER_HASH' },
     select: { id: true },
   });
 
