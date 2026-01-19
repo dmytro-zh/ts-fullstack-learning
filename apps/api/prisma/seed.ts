@@ -1,5 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { hashPassword } from '../src/auth/password';
+
+const MERCHANT_EMAIL = 'merchant@local.dev';
+const OWNER_EMAIL = 'owner@local.dev';
+const MERCHANT_PASSWORD = 'Merchant!2025';
+const OWNER_PASSWORD = 'Owner!2025Secure';
 
 const prisma = new PrismaClient();
 
@@ -13,26 +19,30 @@ function slugifyName(name: string): string {
 
 async function main() {
   const demoStoreId = 'demo-store';
+  const [merchantPasswordHash, ownerPasswordHash] = await Promise.all([
+    hashPassword(MERCHANT_PASSWORD),
+    hashPassword(OWNER_PASSWORD),
+  ]);
 
   // 1) Demo users (idempotent)
   const merchant = await prisma.user.upsert({
-    where: { email: 'merchant@local.dev' },
-    update: { role: APP_ROLES.MERCHANT, passwordHash: 'PLACEHOLDER_HASH' },
+    where: { email: MERCHANT_EMAIL },
+    update: { role: APP_ROLES.MERCHANT, passwordHash: merchantPasswordHash },
     create: {
-      email: 'merchant@local.dev',
+      email: MERCHANT_EMAIL,
       role: APP_ROLES.MERCHANT,
-      passwordHash: 'PLACEHOLDER_HASH',
+      passwordHash: merchantPasswordHash,
     },
     select: { id: true },
   });
 
   await prisma.user.upsert({
-    where: { email: 'owner@local.dev' },
-    update: { role: APP_ROLES.PLATFORM_OWNER, passwordHash: 'PLACEHOLDER_HASH' },
+    where: { email: OWNER_EMAIL },
+    update: { role: APP_ROLES.PLATFORM_OWNER, passwordHash: ownerPasswordHash },
     create: {
-      email: 'owner@local.dev',
+      email: OWNER_EMAIL,
       role: APP_ROLES.PLATFORM_OWNER,
-      passwordHash: 'PLACEHOLDER_HASH',
+      passwordHash: ownerPasswordHash,
     },
     select: { id: true },
   });

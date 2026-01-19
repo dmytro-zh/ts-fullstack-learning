@@ -87,12 +87,12 @@ export default function LoginPage() {
 
   const fillMerchant = () => {
     setEmail('merchant@local.dev');
-    setPassword('merchant');
+    setPassword('Merchant!2025');
   };
 
   const fillOwner = () => {
     setEmail('owner@local.dev');
-    setPassword('owner');
+    setPassword('Owner!2025Secure');
   };
 
   return (
@@ -187,8 +187,8 @@ export default function LoginPage() {
 
             <div className={styles.demoBox}>
               <div className={styles.demoTitle}>Demo users</div>
-              <div>merchant@local.dev / merchant</div>
-              <div>owner@local.dev / owner</div>
+              <div>merchant@local.dev / Merchant!2025</div>
+              <div>owner@local.dev / Owner!2025Secure</div>
             </div>
           </div>
         </div>

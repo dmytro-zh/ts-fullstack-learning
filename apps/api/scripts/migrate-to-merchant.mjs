@@ -1,4 +1,20 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const MERCHANT_EMAIL = 'merchant@local.dev';
+const OWNER_EMAIL = 'owner@local.dev';
+const MERCHANT_PASSWORD = 'Merchant!2025';
+const OWNER_PASSWORD = 'Owner!2025Secure';
+const SALT_ROUNDS = 12;
+
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
+      if (err) return reject(err);
+      resolve(hash);
+    });
+  });
+}
 
 const prisma = new PrismaClient();
 
@@ -6,17 +22,22 @@ async function main() {
   const merchantEmail = 'merchant@local.dev';
   const ownerEmail = 'owner@local.dev';
 
+  const [merchantHash, ownerHash] = await Promise.all([
+    hashPassword(MERCHANT_PASSWORD),
+    hashPassword(OWNER_PASSWORD),
+  ]);
+
   const merchant = await prisma.user.upsert({
-    where: { email: merchantEmail },
-    update: { role: 'MERCHANT', passwordHash: 'PLACEHOLDER_HASH' },
-    create: { email: merchantEmail, role: 'MERCHANT', passwordHash: 'PLACEHOLDER_HASH' },
+    where: { email: MERCHANT_EMAIL },
+    update: { role: 'MERCHANT', passwordHash: merchantHash },
+    create: { email: MERCHANT_EMAIL, role: 'MERCHANT', passwordHash: merchantHash },
     select: { id: true, email: true, role: true },
   });
 
   await prisma.user.upsert({
-    where: { email: ownerEmail },
-    update: { role: 'PLATFORM_OWNER', passwordHash: 'PLACEHOLDER_HASH' },
-    create: { email: ownerEmail, role: 'PLATFORM_OWNER', passwordHash: 'PLACEHOLDER_HASH' },
+    where: { email: OWNER_EMAIL },
+    update: { role: 'PLATFORM_OWNER', passwordHash: ownerHash },
+    create: { email: OWNER_EMAIL, role: 'PLATFORM_OWNER', passwordHash: ownerHash },
     select: { id: true },
   });
 
