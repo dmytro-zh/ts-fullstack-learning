@@ -9,3 +9,4 @@ export const ProductSchema = z.object({
 
 export type Product = z.infer<typeof ProductSchema>;
 export * from './auth/roles.js';
+export * from './billing/plans.js';
