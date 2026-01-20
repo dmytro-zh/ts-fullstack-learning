@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { getStripe } from '../lib/stripe';
+import { UserRepository } from '../repositories/user.repository';
 
 const createCheckoutSessionInput = z.object({
   userId: z.string().min(1),
@@ -16,7 +17,7 @@ export async function createProCheckoutSession(input: CreateCheckoutSessionInput
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, stripeCustomerId: true },
   });
 
   if (!user) {
@@ -24,11 +25,24 @@ export async function createProCheckoutSession(input: CreateCheckoutSessionInput
   }
 
   const stripe = getStripe();
+  const userRepo = new UserRepository();
+
+  let stripeCustomerId = user.stripeCustomerId ?? null;
+
+  if (!stripeCustomerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { userId: user.id },
+    });
+
+    stripeCustomerId = customer.id;
+    await userRepo.setStripeCustomerId(user.id, stripeCustomerId);
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: data.priceId, quantity: 1 }],
-    customer_email: user.email,
+    customer: stripeCustomerId,
     success_url: data.successUrl,
     cancel_url: data.cancelUrl,
     metadata: { userId: user.id, plan: 'PRO' },

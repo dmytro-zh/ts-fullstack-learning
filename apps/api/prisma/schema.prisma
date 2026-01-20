@@ -142,5 +142,7 @@ model User {
   passwordHash String
   plan      BillingPlan @default(FREE)
   subscriptionStatus SubscriptionStatus?
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
   createdAt DateTime @default(now())
 }
