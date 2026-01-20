@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseEnv = Object.fromEntries(
+  Object.entries(process.env).filter(([, value]) => typeof value === 'string'),
+) as Record<string, string>;
+
 export default defineConfig({
   testDir: 'apps/tests-playwright',
   timeout: 30_000,
@@ -15,7 +19,7 @@ export default defineConfig({
       timeout: 120_000,
       reuseExistingServer: true,
       env: {
-        ...process.env,
+        ...baseEnv,
         API_JWT_SECRET: process.env.API_JWT_SECRET ?? 'playwright-dev-secret',
       },
     },
