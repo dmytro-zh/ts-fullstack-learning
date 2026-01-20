@@ -91,6 +91,7 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
 
   const isAuthed = role !== null;
   const canSeeAdmin = role === APP_ROLES.PLATFORM_OWNER;
+  const canSeeBilling = role === APP_ROLES.MERCHANT || role === APP_ROLES.PLATFORM_OWNER;
 
   return (
     <nav
@@ -126,6 +127,12 @@ export function TopNav({ initialMe }: { initialMe?: MeResponse | null }) {
           >
             Checkout links
           </Link>
+
+          {canSeeBilling ? (
+            <Link href="/billing" style={baseLinkStyle} data-testid="nav-billing">
+              Billing
+            </Link>
+          ) : null}
 
           {canSeeAdmin ? (
             <Link
