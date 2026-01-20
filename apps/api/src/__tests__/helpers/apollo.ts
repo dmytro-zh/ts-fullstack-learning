@@ -1,5 +1,6 @@
 import { createApolloServer } from '../../server';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES, type AppPlan } from '@ts-fullstack-learning/shared';
+import { prismaTest } from '../integration/db';
 
 export type AppRole = (typeof APP_ROLES)[keyof typeof APP_ROLES];
 export type TestAuth = { userId: string; role: AppRole };
@@ -51,3 +52,19 @@ export const defaultMerchantAuth: TestAuth = {
   userId: 'test-owner',
   role: APP_ROLES.MERCHANT,
 };
+
+export async function ensureTestUser(auth: TestAuth, plan: AppPlan = APP_PLANS.PRO) {
+  const email = `${auth.userId}@test.local`;
+
+  await prismaTest.user.upsert({
+    where: { id: auth.userId },
+    update: { email, role: auth.role, plan },
+    create: {
+      id: auth.userId,
+      email,
+      role: auth.role,
+      passwordHash: 'test-hash',
+      plan,
+    },
+  });
+}

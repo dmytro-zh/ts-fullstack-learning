@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestApolloServer, defaultMerchantAuth } from '../helpers/apollo';
+import { createTestApolloServer, defaultMerchantAuth, ensureTestUser } from '../helpers/apollo';
 
 const CREATE_STORE = `
   mutation CreateStore($input: StoreInput!) {
@@ -83,6 +83,7 @@ describe('Order GraphQL flow', () => {
 
   beforeAll(async () => {
     api = await createTestApolloServer();
+    await ensureTestUser(defaultMerchantAuth);
   });
 
   afterAll(async () => {
