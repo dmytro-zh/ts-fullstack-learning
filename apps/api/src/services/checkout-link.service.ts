@@ -9,6 +9,7 @@ import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/s
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 import type { GraphQLContext } from '../server-context';
+import type { Prisma } from '@prisma/client';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -124,7 +125,7 @@ export class CheckoutLinkService {
     const { slug, customerName, email, quantity, shippingAddress, shippingNote } = parsed;
 
     // Use a transaction because we update inventory and create an order atomically.
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const link = await tx.checkoutLink.findUnique({
         where: { slug },
         include: {
