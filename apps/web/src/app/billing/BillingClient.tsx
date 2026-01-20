@@ -68,57 +68,93 @@ export default function BillingClient() {
   return (
     <main className={styles.page} data-testid="billing-page">
       <div className={styles.container}>
-        <div className={styles.hero}>
-          <div className={styles.badge}>
-            <span className={styles.badgeDot} />
-            Billing
-          </div>
-          <Text as="h1" variant="title" className={styles.heading}>
-            Your plan, made simple.
-          </Text>
-          <Text as="p" variant="muted" className={styles.subheading}>
-            Upgrade to Pro to remove all limits. Stripe runs in test mode for now.
-          </Text>
-        </div>
-
-        {statusMessage ? <div className={styles.status}>{statusMessage}</div> : null}
-        {errorText ? <div className={styles.error}>{errorText}</div> : null}
-
-        <div className={styles.grid}>
-          <div className={styles.card}>
-            <div className={styles.cardTag}>Free</div>
-            <div className={styles.cardTitle}>Starter</div>
-            <div className={styles.cardPrice}>$0 / month</div>
-            <ul className={styles.list}>
-              {FREE_FEATURES.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className={`${styles.card} ${styles.cardHighlight}`}>
-            <div className={styles.cardTag}>Pro</div>
-            <div className={styles.cardTitle}>Unlimited</div>
-            <div className={styles.cardPrice}>$29 / month (test)</div>
-            <ul className={styles.list}>
-              {PRO_FEATURES.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-
-            <div className={styles.actions}>
-              <Button
-                type="button"
-                size="lg"
-                onClick={() => void onUpgrade()}
-                disabled={submitting}
-                data-testid="billing-upgrade"
-              >
-                {submitting ? 'Starting checkout...' : 'Upgrade to Pro'}
-              </Button>
+        <section className={styles.panel}>
+          <div className={styles.hero}>
+            <span className={styles.badge}>Billing</span>
+            <Text as="h1" variant="title" className={styles.heading}>
+              Your plan, made simple.
+            </Text>
+            <Text as="p" variant="muted" className={styles.subheading}>
+              Start on Free, upgrade when you need higher limits. Stripe runs in test mode for now.
+            </Text>
+            <div className={styles.heroMeta}>
+              <span>Limits apply to stores, products, and checkout links.</span>
+              <span className={styles.metaDivider}>•</span>
+              <span>Cancel anytime.</span>
             </div>
           </div>
-        </div>
+
+          {statusMessage ? (
+            <div className={`${styles.banner} ${styles.bannerSuccess}`}>{statusMessage}</div>
+          ) : null}
+          {errorText ? (
+            <div className={`${styles.banner} ${styles.bannerError}`}>{errorText}</div>
+          ) : null}
+
+          <div className={styles.grid}>
+            <div className={styles.card}>
+              <div className={styles.planHeader}>
+                <span className={styles.planTag}>Free</span>
+                <div className={styles.planTitle}>Starter</div>
+                <div className={styles.planPrice}>
+                  <span className={styles.planPriceValue}>$0</span>
+                  <span className={styles.planPriceUnit}>/ month</span>
+                </div>
+                <p className={styles.planDesc}>No card required.</p>
+              </div>
+              <div className={styles.planBody}>
+                <ul className={styles.featureList}>
+                  {FREE_FEATURES.map((item) => (
+                    <li key={item} className={styles.featureItem}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className={styles.cardFooter}>
+                <span className={styles.footerNote}>No credit card required.</span>
+              </div>
+            </div>
+
+            <div className={`${styles.card} ${styles.cardHighlight}`}>
+              <span className={styles.popularPill}>Most popular</span>
+              <div className={styles.planHeader}>
+                <span className={styles.planTag}>Pro</span>
+                <div className={styles.planTitle}>Unlimited</div>
+                <div className={styles.planPrice}>
+                  <span className={styles.planPriceValue}>$29</span>
+                  <span className={styles.planPriceUnit}>/ month (test)</span>
+                </div>
+                <p className={styles.planDesc}>Best for active merchants.</p>
+              </div>
+              <div className={styles.planBody}>
+                <ul className={styles.featureList}>
+                  {PRO_FEATURES.map((item) => (
+                    <li key={item} className={styles.featureItem}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className={styles.cardFooter}>
+                <div className={styles.actions}>
+                  <Button
+                    type="button"
+                    size="lg"
+                    onClick={() => void onUpgrade()}
+                    disabled={submitting}
+                    className={styles.upgradeButton}
+                    data-testid="billing-upgrade"
+                  >
+                    {submitting ? 'Starting checkout...' : 'Upgrade to Pro'}
+                  </Button>
+                  <span className={styles.actionNote}>Charged in Stripe test mode.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
