@@ -7,11 +7,11 @@ import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import crypto from 'node:crypto';
+import { handleStripeWebhook } from './billing/stripe-webhook';
 import { createApolloServer } from './server';
 import { prisma } from './lib/prisma';
 import type { GraphQLContext } from './server-context';
 import { getRequestAuth } from './auth/get-request-auth';
-import { issueApiToken } from './auth/issue-api-token';
 import { ZodError } from 'zod';
 import { registerUser, loginUser } from './auth/auth.service';
 import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
@@ -28,7 +28,12 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 app.use(cors());
-app.use(express.json());
+const jsonMiddleware = express.json();
+
+app.use((req, res, next) => {
+  if (req.path === '/billing/webhook') return next();
+  return jsonMiddleware(req, res, next);
+});
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -500,6 +505,8 @@ async function start() {
       },
     }),
   );
+
+  app.post('/billing/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
 
   app.get('/debug/auth', async (req, res) => {
     const auth = await getRequestAuth(req);
