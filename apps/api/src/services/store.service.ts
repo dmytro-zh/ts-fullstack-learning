@@ -33,6 +33,13 @@ export class StoreService {
       if (!billing) {
         throw new DomainError(ERROR_CODES.NOT_FOUND, 'User not found');
       }
+      if (
+        billing.plan === APP_PLANS.PRO &&
+        billing.subscriptionStatus &&
+        billing.subscriptionStatus !== 'ACTIVE'
+      ) {
+        throw new DomainError(ERROR_CODES.SUBSCRIPTION_INACTIVE, 'Subscription is not active');
+      }
       if (billing.plan === APP_PLANS.FREE) {
         const count = await this.repo.countByOwner(userId);
         if (count >= FREE_PLAN_LIMITS.stores) {

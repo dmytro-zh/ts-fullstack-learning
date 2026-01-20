@@ -110,6 +110,7 @@ describe('StoreService', () => {
 
       expect(repo.create).not.toHaveBeenCalled();
     });
+
     it('forbidden - FREE plan hits store limit', async () => {
       const repo = makeRepo();
       const userRepo = makeUserRepo();
@@ -121,6 +122,23 @@ describe('StoreService', () => {
       await expect(
         service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), { name: 'X' }),
       ).rejects.toMatchObject({ code: ERROR_CODES.PLAN_LIMIT_EXCEEDED });
+
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('forbids when PRO subscription is past due', async () => {
+      const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({
+        plan: APP_PLANS.PRO,
+        subscriptionStatus: 'PAST_DUE',
+      });
+
+      const service = new StoreService(repo as any, userRepo as any);
+
+      await expect(
+        service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), { name: 'X' }),
+      ).rejects.toMatchObject({ code: ERROR_CODES.SUBSCRIPTION_INACTIVE });
 
       expect(repo.create).not.toHaveBeenCalled();
     });

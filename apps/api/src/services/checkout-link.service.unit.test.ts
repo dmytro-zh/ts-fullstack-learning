@@ -373,6 +373,26 @@ describe('createLink', () => {
     expect(checkoutLinkRepoMock.create).not.toHaveBeenCalled();
   });
 
+  it('forbids when PRO subscription is past due', async () => {
+    productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
+    userRepoMock.getBillingForUser.mockResolvedValueOnce({
+      plan: APP_PLANS.PRO,
+      subscriptionStatus: 'PAST_DUE',
+    });
+
+    const service = new CheckoutLinkService();
+
+    await expect(
+      service.createLink(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        slug: 'past-due',
+        productId: 'p1',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.SUBSCRIPTION_INACTIVE });
+
+    expect(checkoutLinkRepoMock.create).not.toHaveBeenCalled();
+  });
+
   it('returns existing active link for same product/store', async () => {
     productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
     storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });

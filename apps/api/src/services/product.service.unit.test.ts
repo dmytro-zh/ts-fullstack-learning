@@ -29,7 +29,9 @@ type Repo = {
 };
 
 type UserRepo = {
-  getBillingForUser: (id: string) => Promise<{ plan: string } | null>;
+  getBillingForUser: (
+    id: string,
+  ) => Promise<{ plan: string; subscriptionStatus?: string | null } | null>;
 };
 
 function ctx(userId: string | null, role: any): GraphQLContext {
@@ -159,6 +161,26 @@ describe('ProductService', () => {
           price: 10,
         } as any),
       ).rejects.toMatchObject({ code: ERROR_CODES.PLAN_LIMIT_EXCEEDED });
+
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('forbids when PRO subscription is past due', async () => {
+      (repo.isStoreOwnedBy as any).mockResolvedValue(true);
+      userRepo.getBillingForUser = vi.fn().mockResolvedValue({
+        plan: APP_PLANS.PRO,
+        subscriptionStatus: 'PAST_DUE',
+      });
+
+      const service = new ProductService(repo as any, userRepo as any);
+
+      await expect(
+        service.addProduct(ctx('u1', APP_ROLES.MERCHANT), {
+          storeId: 's1',
+          name: 'X',
+          price: 10,
+        } as any),
+      ).rejects.toMatchObject({ code: ERROR_CODES.SUBSCRIPTION_INACTIVE });
 
       expect(repo.create).not.toHaveBeenCalled();
     });
