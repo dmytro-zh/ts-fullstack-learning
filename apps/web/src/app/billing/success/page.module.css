@@ -1,0 +1,226 @@
+.page {
+  min-height: calc(100vh - 80px);
+  padding: 24px 16px 56px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: start center;
+  background:
+    radial-gradient(520px 360px at 16% -6%, rgba(59, 130, 246, 0.06), transparent 70%),
+    radial-gradient(620px 420px at 92% 0%, rgba(248, 221, 185, 0.06), transparent 72%), #f6f7fb;
+}
+
+.container {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+}
+
+.panel {
+  width: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(148, 163, 184, 0.06);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: rgba(15, 23, 42, 0.55);
+  width: fit-content;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.checkmark {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, rgba(37, 99, 235, 0.18), rgba(59, 130, 246, 0.05));
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  display: grid;
+  place-items: center;
+  color: #1d4ed8;
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12);
+}
+
+.checkmark::before {
+  content: '✓';
+}
+
+.heroText {
+  display: grid;
+  gap: 6px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #0b1220;
+}
+
+.subheading {
+  margin: 0;
+  max-width: 560px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statusCard,
+.stepsCard {
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(248, 250, 252, 0.7);
+  color: #0f172a;
+  display: grid;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.statusCard {
+  border-color: rgba(37, 99, 235, 0.3);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.statusTitle {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.statusBody {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.stepsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.stepsList {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+  list-style: none;
+}
+
+.stepsList li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.stepsList li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.sessionMeta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.sessionCode {
+  font-family:
+    'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.primaryButton {
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+.secondaryButton {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: #1f2937;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondaryButton:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  color: #1d4ed8;
+}
+
+.supportNote {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 24px 16px 48px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}

@@ -169,7 +169,7 @@ app.post('/billing/checkout-session', async (req, res) => {
     }
 
     const baseUrl = (process.env.WEB_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/g, '');
-    const successUrl = `${baseUrl}/billing?status=success&session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/billing?status=cancelled`;
 
     const session = await createProCheckoutSession({
