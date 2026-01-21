@@ -1,8 +1,14 @@
-import { APP_ROLES, ProductSchema } from '@ts-fullstack-learning/shared';
+import {
+  APP_PLANS,
+  APP_ROLES,
+  FREE_PLAN_LIMITS,
+  ProductSchema,
+} from '@ts-fullstack-learning/shared';
 import { requireMerchantOrOwner } from '../auth/guards';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { ProductRepository } from '../repositories/product.repository';
+import { UserRepository } from '../repositories/user.repository';
 import { prisma } from '../lib/prisma';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
@@ -50,7 +56,10 @@ function slugifyName(name: string): string {
 }
 
 export class ProductService {
-  constructor(private readonly repo = new ProductRepository()) {}
+  constructor(
+    private readonly repo = new ProductRepository(),
+    private readonly userRepo = new UserRepository(),
+  ) {}
 
   private async generateUniqueSlug(name: string): Promise<string> {
     const base = slugifyName(name) || 'product';
@@ -88,6 +97,26 @@ export class ProductService {
       const ownsStore = await this.repo.isStoreOwnedBy(data.storeId, userId);
       if (!ownsStore) {
         throw new DomainError(ERROR_CODES.FORBIDDEN, 'Access denied');
+      }
+    }
+
+    if (ctx.auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      const billing = await this.userRepo.getBillingForUser(userId);
+      if (!billing) {
+        throw new DomainError(ERROR_CODES.NOT_FOUND, 'User not found');
+      }
+      if (
+        billing.plan === APP_PLANS.PRO &&
+        billing.subscriptionStatus &&
+        billing.subscriptionStatus !== 'ACTIVE'
+      ) {
+        throw new DomainError(ERROR_CODES.SUBSCRIPTION_INACTIVE, 'Subscription is not active');
+      }
+      if (billing.plan === APP_PLANS.FREE) {
+        const count = await this.repo.countByOwner(userId);
+        if (count >= FREE_PLAN_LIMITS.products) {
+          throw new DomainError(ERROR_CODES.PLAN_LIMIT_EXCEEDED, 'Product limit reached');
+        }
       }
     }
 

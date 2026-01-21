@@ -1,19 +1,30 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const baseEnv = Object.fromEntries(
+  Object.entries(process.env).filter(([, value]) => typeof value === 'string'),
+) as Record<string, string>;
+
 export default defineConfig({
   testDir: 'apps/tests-playwright',
   timeout: 30_000,
   expect: { timeout: 5_000 },
   reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
+  globalSetup: 'apps/tests-playwright/global-setup.ts',
+  globalTeardown: 'apps/tests-playwright/global-teardown.ts',
   webServer: [
     {
-      command: 'pnpm -F api dev',
+      command:
+        'pnpm -C apps/api exec prisma migrate deploy --schema=prisma/schema.prisma && pnpm -C apps/api run db:seed && pnpm -C apps/api dev',
       url: 'http://localhost:4000/health',
       timeout: 120_000,
       reuseExistingServer: true,
+      env: {
+        ...baseEnv,
+        API_JWT_SECRET: process.env.API_JWT_SECRET ?? 'playwright-dev-secret',
+      },
     },
     {
-      command: 'pnpm -F web build && pnpm -F web start -p 3000',
+      command: 'pnpm -C apps/web build && pnpm -C apps/web start -p 3000',
       url: 'http://localhost:3000',
       timeout: 180_000,
       reuseExistingServer: false,

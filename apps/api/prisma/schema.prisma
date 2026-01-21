@@ -123,10 +123,26 @@ enum AppRole {
   BUYER
 }
 
+enum BillingPlan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   role      AppRole
   passwordHash String
+  plan      BillingPlan @default(FREE)
+  subscriptionStatus SubscriptionStatus?
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
   createdAt DateTime @default(now())
 }

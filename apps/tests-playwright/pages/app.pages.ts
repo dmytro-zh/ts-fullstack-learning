@@ -12,6 +12,7 @@ import { ProductsPage } from './products/products.page';
 import { StoresPage } from './stores/stores.page';
 import { ThankYouPage } from './thank-you/thank-you.page';
 import { RegisterPage } from './register/register.page';
+import { BillingPage } from './billing/billing.page';
 
 export type AppPages = {
   admin: AdminPage;
@@ -27,6 +28,7 @@ export type AppPages = {
   stores: StoresPage;
   thankYou: ThankYouPage;
   register: RegisterPage;
+  billing: BillingPage;
 };
 
 export function createAppPages(page: Page): AppPages {
@@ -44,5 +46,6 @@ export function createAppPages(page: Page): AppPages {
     stores: new StoresPage(page),
     thankYou: new ThankYouPage(page),
     register: new RegisterPage(page),
+    billing: new BillingPage(page),
   };
 }

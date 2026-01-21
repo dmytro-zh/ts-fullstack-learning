@@ -33,7 +33,9 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.57.0",
+    "@prisma/client": "^6.16.2",
     "@types/node": "^20.19.13",
+    "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",

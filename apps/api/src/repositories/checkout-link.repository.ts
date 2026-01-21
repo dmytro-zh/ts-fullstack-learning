@@ -23,4 +23,13 @@ export class CheckoutLinkRepository {
       include: { product: true, store: true },
     });
   }
+
+  countByOwner(ownerId: string) {
+    return prisma.checkoutLink.count({
+      where: {
+        active: true,
+        store: { ownerId },
+      },
+    });
+  }
 }

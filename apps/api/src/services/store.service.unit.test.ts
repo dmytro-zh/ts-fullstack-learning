@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { StoreService } from './store.service';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES, FREE_PLAN_LIMITS } from '@ts-fullstack-learning/shared';
 import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 import type { GraphQLContext } from '../server-context';
@@ -16,6 +16,13 @@ function makeRepo() {
     findAllByOwner: vi.fn(),
     findById: vi.fn(),
     findByIdForOwner: vi.fn(),
+    countByOwner: vi.fn(),
+  };
+}
+
+function makeUserRepo() {
+  return {
+    getBillingForUser: vi.fn(),
   };
 }
 
@@ -23,9 +30,11 @@ describe('StoreService', () => {
   describe('createStore', () => {
     it('happy - MERCHANT can create store', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.create.mockResolvedValue({ id: 's1' });
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
         name: 'My Store',
@@ -42,9 +51,11 @@ describe('StoreService', () => {
 
     it('happy - PLATFORM_OWNER can create store', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.create.mockResolvedValue({ id: 's2' });
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       await service.createStore(ctx({ userId: 'u2', role: APP_ROLES.PLATFORM_OWNER }), {
         name: 'Owner Store',
@@ -59,7 +70,9 @@ describe('StoreService', () => {
 
     it('forbidden - missing auth (userId or role)', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.createStore(ctx({ userId: null, role: APP_ROLES.MERCHANT }), { name: 'X' }),
@@ -74,7 +87,9 @@ describe('StoreService', () => {
 
     it('forbidden - BUYER cannot create store', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.createStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), { name: 'X' }),
@@ -85,11 +100,45 @@ describe('StoreService', () => {
 
     it('validation - empty name throws', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), { name: '' }),
       ).rejects.toBeTruthy();
+
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('forbidden - FREE plan hits store limit', async () => {
+      const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.FREE });
+      repo.countByOwner.mockResolvedValue(FREE_PLAN_LIMITS.stores);
+
+      const service = new StoreService(repo as any, userRepo as any);
+
+      await expect(
+        service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), { name: 'X' }),
+      ).rejects.toMatchObject({ code: ERROR_CODES.PLAN_LIMIT_EXCEEDED });
+
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('forbids when PRO subscription is past due', async () => {
+      const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({
+        plan: APP_PLANS.PRO,
+        subscriptionStatus: 'PAST_DUE',
+      });
+
+      const service = new StoreService(repo as any, userRepo as any);
+
+      await expect(
+        service.createStore(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), { name: 'X' }),
+      ).rejects.toMatchObject({ code: ERROR_CODES.SUBSCRIPTION_INACTIVE });
 
       expect(repo.create).not.toHaveBeenCalled();
     });
@@ -98,9 +147,11 @@ describe('StoreService', () => {
   describe('getStores', () => {
     it('happy - PLATFORM_OWNER gets all stores', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.findAll.mockResolvedValue([{ id: 's1' }, { id: 's2' }]);
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.getStores(ctx({ userId: 'u1', role: APP_ROLES.PLATFORM_OWNER }));
 
@@ -111,9 +162,11 @@ describe('StoreService', () => {
 
     it('happy - MERCHANT gets stores by owner', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.findAllByOwner.mockResolvedValue([{ id: 's1' }]);
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.getStores(ctx({ userId: 'u2', role: APP_ROLES.MERCHANT }));
 
@@ -124,7 +177,9 @@ describe('StoreService', () => {
 
     it('forbidden - MERCHANT without userId', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.getStores(ctx({ userId: null, role: APP_ROLES.MERCHANT })),
@@ -136,7 +191,9 @@ describe('StoreService', () => {
 
     it('forbidden - BUYER cannot get stores', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.getStores(ctx({ userId: 'u1', role: APP_ROLES.BUYER })),
@@ -150,9 +207,11 @@ describe('StoreService', () => {
   describe('getStore', () => {
     it('happy - PLATFORM_OWNER can fetch by id', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.findById.mockResolvedValue({ id: 's1' });
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.getStore(
         ctx({ userId: 'u1', role: APP_ROLES.PLATFORM_OWNER }),
@@ -165,9 +224,11 @@ describe('StoreService', () => {
 
     it('happy - MERCHANT can fetch by id for owner', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.findByIdForOwner.mockResolvedValue({ id: 's1' });
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.getStore(ctx({ userId: 'u9', role: APP_ROLES.MERCHANT }), 's1');
 
@@ -177,7 +238,9 @@ describe('StoreService', () => {
 
     it('forbidden - MERCHANT without userId', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.getStore(ctx({ userId: null, role: APP_ROLES.MERCHANT }), 's1'),
@@ -188,7 +251,9 @@ describe('StoreService', () => {
 
     it('forbidden - BUYER cannot get store', async () => {
       const repo = makeRepo();
-      const service = new StoreService(repo as any);
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+      const service = new StoreService(repo as any, userRepo as any);
 
       await expect(
         service.getStore(ctx({ userId: 'u1', role: APP_ROLES.BUYER }), 's1'),
@@ -200,9 +265,11 @@ describe('StoreService', () => {
 
     it('not found - returns null when repo returns null', async () => {
       const repo = makeRepo();
+      const userRepo = makeUserRepo();
+      userRepo.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
       repo.findByIdForOwner.mockResolvedValue(null);
 
-      const service = new StoreService(repo as any);
+      const service = new StoreService(repo as any, userRepo as any);
 
       const result = await service.getStore(
         ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }),

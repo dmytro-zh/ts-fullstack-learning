@@ -7,14 +7,16 @@ import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import crypto from 'node:crypto';
+import { handleStripeWebhook } from './billing/stripe-webhook';
 import { createApolloServer } from './server';
 import { prisma } from './lib/prisma';
 import type { GraphQLContext } from './server-context';
 import { getRequestAuth } from './auth/get-request-auth';
-import { issueApiToken } from './auth/issue-api-token';
 import { ZodError } from 'zod';
 import { registerUser, loginUser } from './auth/auth.service';
 import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
+import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { createProCheckoutSession } from './billing/billing.service';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -26,7 +28,12 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 app.use(cors());
-app.use(express.json());
+const jsonMiddleware = express.json();
+
+app.use((req, res, next) => {
+  if (req.path === '/billing/webhook') return next();
+  return jsonMiddleware(req, res, next);
+});
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -142,6 +149,42 @@ app.post('/auth/login', async (req, res) => {
 app.post('/uploads/sessions', (_req, res) => {
   const uploadSession = createUploadSessionId();
   return res.status(201).json({ uploadSession });
+});
+
+app.post('/billing/checkout-session', async (req, res) => {
+  try {
+    const auth = await getRequestAuth(req);
+
+    if (!auth.userId || !auth.role) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (auth.role !== APP_ROLES.MERCHANT && auth.role !== APP_ROLES.PLATFORM_OWNER) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const priceId = process.env.STRIPE_PRICE_PRO_MONTHLY_ID;
+    if (!priceId) {
+      return res.status(500).json({ error: 'Stripe price is not configured' });
+    }
+
+    const baseUrl = (process.env.WEB_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/g, '');
+    const successUrl = `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/billing?status=cancelled`;
+
+    const session = await createProCheckoutSession({
+      userId: auth.userId,
+      priceId,
+      successUrl,
+      cancelUrl,
+    });
+
+    return res.status(201).json({ url: session.url });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to create checkout session' });
+  }
 });
 
 app.get('/uploads/sessions/:uploadSession', async (req, res) => {
@@ -462,6 +505,8 @@ async function start() {
       },
     }),
   );
+
+  app.post('/billing/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
 
   app.get('/debug/auth', async (req, res) => {
     const auth = await getRequestAuth(req);

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { prismaTest as prisma } from '../integration/db';
-import { createTestApolloServer, defaultMerchantAuth } from '../helpers/apollo';
+import { createTestApolloServer, defaultMerchantAuth, ensureTestUser } from '../helpers/apollo';
 
 const CREATE_STORE = `
   mutation CreateStore($input: StoreInput!) {
@@ -50,6 +50,7 @@ describe('CheckoutLink GraphQL flow', () => {
 
   beforeAll(async () => {
     api = await createTestApolloServer();
+    await ensureTestUser(defaultMerchantAuth);
   });
 
   afterAll(async () => {

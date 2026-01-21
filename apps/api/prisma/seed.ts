@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_ROLES, APP_PLANS } from '@ts-fullstack-learning/shared';
 import { hashPassword } from '../src/auth/password';
 
 const MERCHANT_EMAIL = 'merchant@local.dev';
@@ -27,22 +27,28 @@ async function main() {
   // 1) Demo users (idempotent)
   const merchant = await prisma.user.upsert({
     where: { email: MERCHANT_EMAIL },
-    update: { role: APP_ROLES.MERCHANT, passwordHash: merchantPasswordHash },
+    update: { role: APP_ROLES.MERCHANT, passwordHash: merchantPasswordHash, plan: APP_PLANS.PRO },
     create: {
       email: MERCHANT_EMAIL,
       role: APP_ROLES.MERCHANT,
       passwordHash: merchantPasswordHash,
+      plan: APP_PLANS.PRO,
     },
     select: { id: true },
   });
 
   await prisma.user.upsert({
     where: { email: OWNER_EMAIL },
-    update: { role: APP_ROLES.PLATFORM_OWNER, passwordHash: ownerPasswordHash },
+    update: {
+      role: APP_ROLES.PLATFORM_OWNER,
+      passwordHash: ownerPasswordHash,
+      plan: APP_PLANS.PRO,
+    },
     create: {
       email: OWNER_EMAIL,
       role: APP_ROLES.PLATFORM_OWNER,
       passwordHash: ownerPasswordHash,
+      plan: APP_PLANS.PRO,
     },
     select: { id: true },
   });

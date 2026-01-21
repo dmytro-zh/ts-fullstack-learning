@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const merchantOnlyPrefixes = ['/dashboard', '/products', '/orders', '/stores', '/checkout-links'];
+const merchantOnlyPrefixes = [
+  '/dashboard',
+  '/products',
+  '/orders',
+  '/stores',
+  '/checkout-links',
+  '/billing',
+];
 const ownerOnlyPrefixes = ['/admin'];
 const authPages = ['/login', '/register'];
 
