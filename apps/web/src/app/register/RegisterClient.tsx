@@ -7,19 +7,13 @@ import { Input } from '../../components/ui/Input';
 import { Text } from '../../components/ui/Text';
 import styles from './page.module.css';
 
-const PASSWORD_RULES = [
-  'At least 12 characters',
-  'At least 1 uppercase letter',
-  'At least 1 lowercase letter',
-  'At least 1 number',
-  'At least 1 symbol',
-  'No spaces',
-];
+const PASSWORD_HINT = '12+ chars, upper/lower, number, symbol, no spaces.';
 
 export default function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [inviteCode, setInviteCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -32,23 +26,34 @@ export default function RegisterClient() {
   }, [searchParams]);
 
   const passwordsMatch = password.length > 0 && password === confirm;
-  const canSubmit = Boolean(email.trim()) && Boolean(password) && passwordsMatch && !submitting;
+  const canSubmit =
+    Boolean(inviteCode.trim()) &&
+    Boolean(email.trim()) &&
+    Boolean(password) &&
+    passwordsMatch &&
+    !submitting;
 
   const onSubmit = async () => {
     setErrorText(null);
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register-merchant', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          inviteCode: inviteCode.trim(),
+          email,
+          password,
+        }),
         credentials: 'include',
       });
 
       if (!res.ok) {
         const text = await res.text();
-        if (res.status === 409) {
+        if (res.status === 403) {
+          setErrorText('Invalid invite code.');
+        } else if (res.status === 409) {
           setErrorText('Email is already registered.');
         } else if (res.status === 400) {
           setErrorText('Please check your email and password.');
@@ -72,26 +77,38 @@ export default function RegisterClient() {
         <div className={styles.hero}>
           <div className={styles.badge}>
             <span className={styles.badgeDot} />
-            Create account
+            Merchant access
           </div>
 
           <Text as="h1" variant="title" className={styles.heading}>
-            Welcome to the dashboard.
+            Create a merchant account.
           </Text>
           <Text as="p" variant="muted" className={styles.subheading}>
-            Create a buyer account to view orders and manage checkout.
+            Invite code required. Starts on the Free plan.
           </Text>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <div className={styles.cardTitle}>Sign up</div>
-            <div className={styles.cardNote}>
-              You will be redirected to: <span className={styles.noteHighlight}>{callbackUrl}</span>
-            </div>
+            <div className={styles.cardTitle}>Merchant account</div>
+            <div className={styles.cardNote}>Invite code required.</div>
           </div>
 
           <div className={styles.form}>
+            <label className={styles.label}>
+              <span className={styles.labelText}>Invite code</span>
+              <Input
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                placeholder="Invite code"
+                size="lg"
+                data-testid="register-invite"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void onSubmit();
+                }}
+              />
+            </label>
+
             <label className={styles.label}>
               <span className={styles.labelText}>Email</span>
               <Input
@@ -143,11 +160,7 @@ export default function RegisterClient() {
 
           <div className={styles.rules}>
             <div className={styles.rulesTitle}>Password rules</div>
-            <ul>
-              {PASSWORD_RULES.map((rule) => (
-                <li key={rule}>{rule}</li>
-              ))}
-            </ul>
+            <div>{PASSWORD_HINT}</div>
           </div>
 
           {confirm.length > 0 && !passwordsMatch ? (
@@ -170,7 +183,7 @@ export default function RegisterClient() {
               onClick={() => void onSubmit()}
               data-testid="register-submit"
             >
-              {submitting ? 'Creating account...' : 'Create account'}
+              {submitting ? 'Creating merchant...' : 'Create merchant account'}
             </Button>
 
             <div className={styles.footer}>

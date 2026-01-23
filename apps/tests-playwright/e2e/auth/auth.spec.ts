@@ -29,12 +29,13 @@ test('@smoke owner sees admin link', async ({ pages, roles }) => {
   await pages.admin.expectTitleVisible();
 });
 
-test('@smoke buyer can register via UI', async ({ pages }) => {
+test('@smoke merchant can register via invite', async ({ pages }) => {
   const seed = Date.now();
-  const email = `buyer+${seed}@example.com`;
-  const password = `Buyer!${seed}Aa`;
+  const email = `merchant+${seed}@example.com`;
+  const password = `Merchant!${seed}Aa`;
+  const inviteCode = process.env.MERCHANT_INVITE_CODE ?? 'dev-invite';
 
-  await pages.register.register({ email, password });
+  await pages.register.register({ inviteCode, email, password });
 
   await pages.nav.signOut();
   await pages.nav.expectSignedOut();
