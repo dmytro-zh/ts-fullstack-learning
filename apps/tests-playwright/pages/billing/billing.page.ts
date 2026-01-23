@@ -19,6 +19,9 @@ export class BillingPage {
 
   async expectLoaded() {
     await expect(this.container()).toBeVisible();
-    await expect(this.upgradeButton()).toBeVisible();
+  }
+
+  proActiveNote() {
+    return this.page.getByTestId(billingLocators.proActive);
   }
 }
