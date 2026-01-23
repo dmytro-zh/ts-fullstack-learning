@@ -129,4 +129,25 @@ describe('billing.service', () => {
       }),
     ).rejects.toThrow('User not found');
   });
+
+  it('throws when Stripe session url is missing', async () => {
+    prismaUser.findUnique.mockResolvedValueOnce({
+      id: 'u1',
+      email: 'm@x.com',
+      stripeCustomerId: 'cus_existing',
+    });
+    stripeMock.checkout.sessions.create.mockResolvedValueOnce({
+      id: 'cs_missing',
+      url: null,
+    });
+
+    await expect(
+      createProCheckoutSession({
+        userId: 'u1',
+        priceId: 'price_123',
+        successUrl: 'http://localhost:3000/billing?status=success&session_id={CHECKOUT_SESSION_ID}',
+        cancelUrl: 'http://localhost:3000/billing?status=cancelled',
+      }),
+    ).rejects.toThrow('Stripe session is missing url');
+  });
 });

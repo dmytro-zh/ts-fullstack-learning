@@ -83,4 +83,14 @@ describe('getBillingMe', () => {
       stripeSubscriptionId: 'sub_456',
     });
   });
+
+  it('returns 500 on unexpected error', async () => {
+    getRequestAuthMock.mockRejectedValue(new Error('boom'));
+    const res = makeRes();
+
+    await getBillingMe({} as Request, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Failed to load billing status' });
+  });
 });
