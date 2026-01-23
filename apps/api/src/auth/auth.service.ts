@@ -1,4 +1,4 @@
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_ROLES, APP_PLANS } from '@ts-fullstack-learning/shared';
 import { prisma } from '../lib/prisma';
 import { issueApiToken } from './issue-api-token';
 import { hashPassword, verifyPassword } from './password';
@@ -42,6 +42,41 @@ export async function registerUser(input: RegisterInput): Promise<{ token: strin
   });
 
   return { token };
+}
+
+export async function registerMerchant(
+  input: RegisterInput,
+): Promise<{ token: string; userId: string }> {
+  const parsed = registerInputSchema.parse(input);
+
+  const existing = await prisma.user.findUnique({
+    where: { email: parsed.email },
+    select: { id: true },
+  });
+
+  if (existing) {
+    throw new AuthError(AUTH_ERROR_CODES.EMAIL_TAKEN, 'Email already registered');
+  }
+
+  const passwordHash = await hashPassword(parsed.password);
+
+  const user = await prisma.user.create({
+    data: {
+      email: parsed.email,
+      role: APP_ROLES.MERCHANT,
+      plan: APP_PLANS.FREE,
+      passwordHash,
+    },
+    select: { id: true, email: true, role: true },
+  });
+
+  const token = await issueApiToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  return { token, userId: user.id };
 }
 
 export async function loginUser(input: LoginInput): Promise<{ token: string }> {

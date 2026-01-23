@@ -146,3 +146,12 @@ model User {
   stripeSubscriptionId String?  @unique
   createdAt DateTime @default(now())
 }
+
+model MerchantInvite {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  email        String?
+  createdAt    DateTime @default(now())
+  usedAt       DateTime?
+  usedByUserId String?
+}
