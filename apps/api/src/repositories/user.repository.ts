@@ -11,7 +11,12 @@ export class UserRepository {
   getBillingForUser(id: string) {
     return prisma.user.findUnique({
       where: { id },
-      select: { plan: true, subscriptionStatus: true },
+      select: {
+        plan: true,
+        subscriptionStatus: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+      },
     });
   }
 
