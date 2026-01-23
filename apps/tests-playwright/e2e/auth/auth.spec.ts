@@ -1,4 +1,16 @@
 import { test } from '../../fixtures/test-fixtures';
+import { prisma } from '../../../api/src/lib/prisma';
+
+async function createMerchantInvite(email: string) {
+  const seed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const code = `pw-${seed}`;
+
+  await prisma.merchantInvite.create({
+    data: { code, email },
+  });
+
+  return code;
+}
 
 test('@smoke merchant login shows core links and no admin', async ({ pages, roles }) => {
   await pages.login.login(roles.merchant);
@@ -33,7 +45,7 @@ test('@smoke merchant can register via invite', async ({ pages }) => {
   const seed = Date.now();
   const email = `merchant+${seed}@example.com`;
   const password = `Merchant!${seed}Aa`;
-  const inviteCode = process.env.MERCHANT_INVITE_CODE ?? 'dev-invite';
+  const inviteCode = await createMerchantInvite(email);
 
   await pages.register.register({ inviteCode, email, password });
 

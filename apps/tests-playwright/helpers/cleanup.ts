@@ -8,6 +8,7 @@ dotenv.config({ path: apiEnvPath });
 const TEST_STORE_PREFIX = 'PW Store ';
 const TEST_PRODUCT_PREFIX = 'PW Product ';
 const TEST_LINK_PREFIX = 'pw-';
+const TEST_INVITE_PREFIX = 'pw-';
 const TEST_BUYER_EMAIL_PREFIX = 'buyer+';
 const TEST_BUYER_EMAIL_SUFFIX = '@example.com';
 
@@ -72,6 +73,10 @@ export async function cleanupTestData() {
     if (storeIds.length > 0) {
       await prisma.store.deleteMany({ where: { id: { in: storeIds } } });
     }
+
+    await prisma.merchantInvite.deleteMany({
+      where: { code: { startsWith: TEST_INVITE_PREFIX } },
+    });
 
     await prisma.user.deleteMany({
       where: {
