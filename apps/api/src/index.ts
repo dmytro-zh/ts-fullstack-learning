@@ -18,6 +18,7 @@ import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 import { createProCheckoutSession } from './billing/billing.service';
 import { getBillingMe } from './billing/billing.controller';
+import { getAccountMe } from './account/account.controller';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -189,6 +190,8 @@ app.post('/billing/checkout-session', async (req, res) => {
 });
 
 app.get('/billing/me', getBillingMe);
+
+app.get('/account/me', getAccountMe);
 
 app.get('/uploads/sessions/:uploadSession', async (req, res) => {
   try {

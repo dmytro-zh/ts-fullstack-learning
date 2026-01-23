@@ -54,4 +54,16 @@ export class UserRepository {
       },
     });
   }
+
+  getAccountForUser(id: string) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        email: true,
+        role: true,
+        plan: true,
+        subscriptionStatus: true,
+      },
+    });
+  }
 }
