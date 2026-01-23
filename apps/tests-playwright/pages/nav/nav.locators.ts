@@ -7,4 +7,5 @@ export const navLocators = {
   dashboard: 'nav-dashboard',
   checkoutLinks: 'nav-checkout-links',
   admin: 'nav-admin',
+  account: 'nav-account',
 };

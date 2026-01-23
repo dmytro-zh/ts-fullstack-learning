@@ -37,11 +37,16 @@ export class NavBar {
     return this.page.getByTestId(navLocators.admin);
   }
 
+  accountLink() {
+    return this.page.getByTestId(navLocators.account);
+  }
+
   private async expectCoreNav() {
     await expect(this.checkoutLinksLink()).toBeVisible();
     await expect(this.productsLink()).toBeVisible();
     await expect(this.storesLink()).toBeVisible();
     await expect(this.dashboardLink()).toBeVisible();
+    await expect(this.accountLink()).toBeVisible();
   }
 
   async expectMerchantNav() {
