@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 import { registerLocators } from './register.locators';
 
 type RegisterCredentials = {
+  inviteCode: string;
   email: string;
   password: string;
   confirm?: string;
@@ -17,6 +18,10 @@ export class RegisterPage {
 
   container() {
     return this.page.getByTestId(registerLocators.page);
+  }
+
+  inviteField() {
+    return this.page.getByTestId(registerLocators.invite);
   }
 
   emailField() {
@@ -40,6 +45,7 @@ export class RegisterPage {
   }
 
   async expectFormVisible() {
+    await expect(this.inviteField()).toBeVisible();
     await expect(this.emailField()).toBeVisible();
     await expect(this.passwordField()).toBeVisible();
     await expect(this.confirmField()).toBeVisible();
@@ -50,6 +56,7 @@ export class RegisterPage {
     const confirm = credentials.confirm ?? credentials.password;
 
     await this.goto();
+    await this.inviteField().fill(credentials.inviteCode);
     await this.emailField().fill(credentials.email);
     await this.passwordField().fill(credentials.password);
     await this.confirmField().fill(confirm);

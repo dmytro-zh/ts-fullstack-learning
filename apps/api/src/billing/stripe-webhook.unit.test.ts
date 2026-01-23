@@ -88,6 +88,18 @@ describe('stripe webhook handler', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Missing Stripe signature' });
   });
 
+  it('returns 400 when signature verification fails', async () => {
+    stripeMock.webhooks.constructEvent.mockImplementationOnce(() => {
+      throw new Error('bad signature');
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Webhook signature verification failed' });
+  });
+
   it('updates user on checkout.session.completed', async () => {
     stripeMock.webhooks.constructEvent.mockReturnValue({
       type: 'checkout.session.completed',
@@ -156,5 +168,83 @@ describe('stripe webhook handler', () => {
       subscriptionStatus: 'CANCELED',
       stripeSubscriptionId: null,
     });
+  });
+
+  it('updates billing for active subscription with object customer', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_active',
+          customer: { id: 'cus_active' },
+          status: 'active',
+        },
+      },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(userRepoMock.updateBillingByStripeCustomerId).toHaveBeenCalledWith('cus_active', {
+      plan: 'PRO',
+      subscriptionStatus: 'ACTIVE',
+      stripeSubscriptionId: 'sub_active',
+    });
+  });
+
+  it('defaults billing status for unknown subscription status', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_unknown',
+          customer: 'cus_unknown',
+          status: 'incomplete',
+        },
+      },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(userRepoMock.updateBillingByStripeCustomerId).toHaveBeenCalledWith('cus_unknown', {
+      plan: 'FREE',
+      subscriptionStatus: null,
+      stripeSubscriptionId: 'sub_unknown',
+    });
+  });
+
+  it('ignores unsupported event types', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'invoice.created',
+      data: { object: {} },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(prismaUser.update).not.toHaveBeenCalled();
+    expect(userRepoMock.updateBillingByStripeCustomerId).not.toHaveBeenCalled();
+  });
+
+  it('logs and continues on handler errors', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    prismaUser.update.mockRejectedValueOnce(new Error('db failed'));
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          customer: 'cus_123',
+          subscription: 'sub_123',
+          metadata: { userId: 'u1' },
+        },
+      },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

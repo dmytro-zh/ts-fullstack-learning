@@ -17,6 +17,9 @@ import { registerUser, loginUser } from './auth/auth.service';
 import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
 import { APP_ROLES } from '@ts-fullstack-learning/shared';
 import { createProCheckoutSession } from './billing/billing.service';
+import { getBillingMe } from './billing/billing.controller';
+import { getAccountMe } from './account/account.controller';
+import { registerMerchantHandler } from './auth/register-merchant.controller';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -121,6 +124,8 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
+app.post('/auth/register-merchant', registerMerchantHandler);
+
 app.post('/auth/login', async (req, res) => {
   try {
     const { token } = await loginUser({
@@ -186,6 +191,10 @@ app.post('/billing/checkout-session', async (req, res) => {
     return res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
+
+app.get('/billing/me', getBillingMe);
+
+app.get('/account/me', getAccountMe);
 
 app.get('/uploads/sessions/:uploadSession', async (req, res) => {
   try {

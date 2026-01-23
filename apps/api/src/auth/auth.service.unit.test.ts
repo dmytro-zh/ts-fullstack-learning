@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { APP_ROLES } from '@ts-fullstack-learning/shared';
+import { APP_PLANS, APP_ROLES } from '@ts-fullstack-learning/shared';
 import { AuthError, AUTH_ERROR_CODES } from './auth.errors';
 
 vi.mock('../lib/prisma', () => {
@@ -22,7 +22,7 @@ vi.mock('./password', () => {
 
 import { prisma } from '../lib/prisma';
 import { hashPassword, verifyPassword } from './password';
-import { loginUser, registerUser } from './auth.service';
+import { loginUser, registerMerchant, registerUser } from './auth.service';
 
 const prismaUser = prisma.user as unknown as {
   findUnique: ReturnType<typeof vi.fn>;
@@ -97,6 +97,52 @@ describe('auth.service', () => {
     ).rejects.toBeTruthy();
 
     expect(prismaUser.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('registerMerchant creates a MERCHANT on FREE plan and returns token', async () => {
+    prismaUser.findUnique.mockResolvedValueOnce(null);
+    (hashPassword as ReturnType<typeof vi.fn>).mockResolvedValueOnce('hashed-pass');
+    prismaUser.create.mockResolvedValueOnce({
+      id: 'm1',
+      email: 'merchant@example.com',
+      role: APP_ROLES.MERCHANT,
+    });
+
+    const res = await registerMerchant({
+      email: 'Merchant@Example.com',
+      password: 'StrongPass1!',
+    });
+
+    expect(prismaUser.findUnique).toHaveBeenCalledWith({
+      where: { email: 'merchant@example.com' },
+      select: { id: true },
+    });
+
+    expect(prismaUser.create).toHaveBeenCalledWith({
+      data: {
+        email: 'merchant@example.com',
+        role: APP_ROLES.MERCHANT,
+        plan: APP_PLANS.FREE,
+        passwordHash: 'hashed-pass',
+      },
+      select: { id: true, email: true, role: true },
+    });
+
+    expect(res.token).toEqual(expect.any(String));
+    expect(res.userId).toBe('m1');
+  });
+
+  it('registerMerchant throws when email already exists', async () => {
+    prismaUser.findUnique.mockResolvedValueOnce({ id: 'm1' });
+
+    await expect(
+      registerMerchant({
+        email: 'merchant@example.com',
+        password: 'StrongPass1!',
+      }),
+    ).rejects.toMatchObject({
+      code: AUTH_ERROR_CODES.EMAIL_TAKEN,
+    });
   });
 
   it('loginUser normalizes email before lookup', async () => {

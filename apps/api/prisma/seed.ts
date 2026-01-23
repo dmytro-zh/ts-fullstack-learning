@@ -6,6 +6,7 @@ const MERCHANT_EMAIL = 'merchant@local.dev';
 const OWNER_EMAIL = 'owner@local.dev';
 const MERCHANT_PASSWORD = 'Merchant!2025';
 const OWNER_PASSWORD = 'Owner!2025Secure';
+const DEFAULT_INVITE_CODE = process.env.MERCHANT_INVITE_CODE ?? 'dev-invite';
 
 const prisma = new PrismaClient();
 
@@ -124,6 +125,12 @@ async function main() {
       },
     });
   }
+
+  await prisma.merchantInvite.upsert({
+    where: { code: DEFAULT_INVITE_CODE },
+    update: {},
+    create: { code: DEFAULT_INVITE_CODE },
+  });
 }
 
 main()

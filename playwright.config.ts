@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config as loadEnv } from 'dotenv';
+
+loadEnv({ path: 'apps/api/.env' });
 
 const baseEnv = Object.fromEntries(
   Object.entries(process.env).filter(([, value]) => typeof value === 'string'),
