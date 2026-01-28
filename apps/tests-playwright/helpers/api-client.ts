@@ -134,11 +134,11 @@ export async function createCheckoutLink(gql: APIRequestContext, input: Checkout
 
 export async function checkoutByLink(gql: APIRequestContext, input: CheckoutByLinkInput) {
   const data = await graphqlRequest<{
-    checkoutByLink: { order: { id: string; product: { name: string } } };
+    startCheckoutByLink: { orderId: string; checkoutUrl: string };
   }>(
     gql,
-    'mutation CheckoutByLink($input: CheckoutByLinkInput!){ checkoutByLink(input:$input){ order { id product { name } } } }',
+    'mutation StartCheckoutByLink($input: CheckoutByLinkInput!){ startCheckoutByLink(input:$input){ orderId checkoutUrl } }',
     { input },
   );
-  return data.checkoutByLink;
+  return data.startCheckoutByLink;
 }
