@@ -20,11 +20,11 @@ type LinkInput = z.infer<typeof linkInput>;
 
 const checkoutByLinkInput = z.object({
   slug: z.string().min(1),
-  customerName: z.string().min(1),
-  email: z.string().email(),
+  customerName: z.string().trim().min(2),
+  email: z.string().trim().email(),
   quantity: z.number().int().min(1),
-  shippingAddress: z.string().min(5),
-  shippingNote: z.string().optional(),
+  shippingAddress: z.string().trim().min(10),
+  shippingNote: z.string().trim().max(500).optional(),
 });
 type CheckoutByLinkInput = z.infer<typeof checkoutByLinkInput>;
 
