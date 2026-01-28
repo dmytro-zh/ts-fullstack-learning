@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { requireAuth, requireMerchantOrOwner } from './auth/guards';
-import { issueReceiptToken, verifyReceiptToken } from './auth/receipt-token';
+import { verifyReceiptToken } from './auth/receipt-token';
 import { ProductService } from './services/product.service';
 import { StoreService } from './services/store.service';
 import { CheckoutLinkService } from './services/checkout-link.service';
@@ -22,6 +22,7 @@ const typeDefs = /* GraphQL */ `
     COMPLETED
     CANCELLED
     REFUNDED
+    FAILED
   }
 
   type Product {
@@ -59,6 +60,11 @@ const typeDefs = /* GraphQL */ `
     product: Product!
     store: Store
     createdAt: String!
+  }
+
+  type CheckoutSessionPayload {
+    orderId: ID!
+    checkoutUrl: String!
   }
 
   input CheckoutInput {
@@ -119,6 +125,11 @@ const typeDefs = /* GraphQL */ `
     receiptToken: String!
   }
 
+  type CheckoutSessionPayload {
+    orderId: ID!
+    checkoutUrl: String!
+  }
+
   type Query {
     health: String!
     products: [Product!]!
@@ -152,7 +163,7 @@ const typeDefs = /* GraphQL */ `
 
     createStore(input: StoreInput!): Store!
     createCheckoutLink(input: CheckoutLinkInput!): CheckoutLink!
-    checkoutByLink(input: CheckoutByLinkInput!): CheckoutReceipt!
+    startCheckoutByLink(input: CheckoutByLinkInput!): CheckoutSessionPayload!
     updateOrderStatus(orderId: ID!, status: OrderStatus!): Order!
   }
 `;
@@ -301,7 +312,7 @@ const resolvers = {
       return checkoutLinkService.createLink(ctx, args.input);
     },
 
-    checkoutByLink: async (
+    startCheckoutByLink: async (
       _: unknown,
       args: {
         input: {
@@ -315,10 +326,7 @@ const resolvers = {
       },
     ) => {
       // Public (checkout)
-      const order = await checkoutLinkService.checkoutByLink(args.input);
-      const receiptToken = await issueReceiptToken({ orderId: order.id, email: order.email });
-
-      return { order, receiptToken };
+      return checkoutLinkService.startCheckoutByLink(args.input);
     },
 
     updateOrderStatus: (

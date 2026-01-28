@@ -10,6 +10,8 @@ import { DomainError } from '../errors/domain-error';
 import { ERROR_CODES } from '../errors/codes';
 import type { GraphQLContext } from '../server-context';
 import type { Prisma } from '@prisma/client';
+import { getStripe } from '../lib/stripe';
+import { issueReceiptToken } from '../auth/receipt-token';
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -27,6 +29,10 @@ const checkoutByLinkInput = z.object({
   shippingNote: z.string().trim().max(500).optional(),
 });
 type CheckoutByLinkInput = z.infer<typeof checkoutByLinkInput>;
+
+function getWebBaseUrl() {
+  return (process.env.WEB_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/g, '');
+}
 
 export class CheckoutLinkService {
   constructor(
@@ -195,5 +201,132 @@ export class CheckoutLinkService {
         },
       });
     });
+  }
+
+  async startCheckoutByLink(input: CheckoutByLinkInput) {
+    const parsed = checkoutByLinkInput.parse(input);
+    const { slug, customerName, email, quantity, shippingAddress, shippingNote } = parsed;
+
+    const { order, product } = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const link = await tx.checkoutLink.findUnique({
+        where: { slug },
+        include: { product: true },
+      });
+
+      if (!link || !link.active || !link.product) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
+
+      const currentProduct = link.product;
+
+      if (currentProduct.deletedAt || currentProduct.isActive === false) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
+
+      if (currentProduct.quantity <= 0 || currentProduct.quantity < quantity) {
+        throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Product is out of stock', {
+          field: 'quantity',
+        });
+      }
+
+      const newQuantity = currentProduct.quantity - quantity;
+      await tx.product.update({
+        where: { id: currentProduct.id },
+        data: {
+          quantity: newQuantity,
+          inStock: newQuantity > 0,
+        },
+      });
+
+      const total = currentProduct.price * quantity;
+
+      const order = await tx.order.create({
+        data: {
+          customerName,
+          email,
+          quantity,
+          total,
+          shippingAddress,
+          shippingNote: shippingNote ?? null,
+          status: 'PENDING_PAYMENT',
+          checkoutLinkId: link.id,
+          storeId: link.storeId ?? null,
+          productId: currentProduct.id,
+        },
+      });
+
+      return { order, product: currentProduct };
+    });
+
+    const baseUrl = getWebBaseUrl();
+
+    if (process.env.CHECKOUT_TEST_MODE === '1') {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'PAID' },
+      });
+      const token = await issueReceiptToken({ orderId: order.id, email: order.email });
+      return { orderId: order.id, checkoutUrl: `${baseUrl}/thank-you/${order.id}?token=${token}` };
+    }
+
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: email,
+        line_items: [
+          {
+            quantity,
+            price_data: {
+              currency: 'usd',
+              unit_amount: Math.round(product.price * 100),
+              product_data: { name: product.name },
+            },
+          },
+        ],
+        success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/c/${slug}?status=cancelled`,
+        metadata: {
+          orderId: order.id,
+          slug,
+        },
+      });
+
+      if (!session.url) {
+        throw new Error('Stripe session is missing url');
+      }
+
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          checkoutSessionId: session.id,
+          paymentIntentId:
+            typeof session.payment_intent === 'string' ? session.payment_intent : null,
+        },
+      });
+
+      return { orderId: order.id, checkoutUrl: session.url };
+    } catch (err) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'FAILED' },
+      });
+      await prisma.product.update({
+        where: { id: order.productId },
+        data: {
+          quantity: { increment: quantity },
+          inStock: true,
+        },
+      });
+      throw err;
+    }
   }
 }

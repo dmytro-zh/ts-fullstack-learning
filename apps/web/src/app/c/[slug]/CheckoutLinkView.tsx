@@ -116,8 +116,7 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
         if (trimmedNote) payload.shippingNote = trimmedNote;
 
         const result = await checkoutByLinkAction(payload);
-        const token = encodeURIComponent(result.receiptToken);
-        window.location.href = `/thank-you/${result.order.id}?token=${token}`;
+        window.location.href = result.checkoutUrl;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Checkout failed');
       }

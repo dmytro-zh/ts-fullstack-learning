@@ -2,20 +2,11 @@
 
 import { createWebGraphQLClient } from '../../lib/graphql-client';
 
-const CHECKOUT_BY_LINK = /* GraphQL */ `
-  mutation CheckoutByLink($input: CheckoutByLinkInput!) {
-    checkoutByLink(input: $input) {
-      receiptToken
-      order {
-        id
-        total
-        quantity
-        product {
-          name
-        }
-        email
-        shippingAddress
-      }
+const START_CHECKOUT_BY_LINK = /* GraphQL */ `
+  mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {
+    startCheckoutByLink(input: $input) {
+      orderId
+      checkoutUrl
     }
   }
 `;
@@ -30,21 +21,14 @@ export type CheckoutByLinkInput = {
 };
 
 type CheckoutByLinkPayload = {
-  checkoutByLink: {
-    receiptToken: string;
-    order: {
-      id: string;
-      total: number;
-      quantity: number;
-      product: { name: string };
-      email: string;
-      shippingAddress: string;
-    };
+  startCheckoutByLink: {
+    orderId: string;
+    checkoutUrl: string;
   };
 };
 
 export async function checkoutByLinkAction(input: CheckoutByLinkInput) {
   const client = await createWebGraphQLClient();
-  const res = await client.request<CheckoutByLinkPayload>(CHECKOUT_BY_LINK, { input });
-  return res.checkoutByLink;
+  const res = await client.request<CheckoutByLinkPayload>(START_CHECKOUT_BY_LINK, { input });
+  return res.startCheckoutByLink;
 }

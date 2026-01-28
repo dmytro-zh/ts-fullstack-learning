@@ -50,13 +50,25 @@ export type CheckoutLinkInput = {
   storeId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type CheckoutReceipt = {
+  __typename?: 'CheckoutReceipt';
+  order: Order;
+  receiptToken: Scalars['String']['output'];
+};
+
+export type CheckoutSessionPayload = {
+  __typename?: 'CheckoutSessionPayload';
+  checkoutUrl: Scalars['String']['output'];
+  orderId: Scalars['ID']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addProduct: Product;
-  checkoutByLink: Order;
   createCheckoutLink: CheckoutLink;
   createStore: Store;
   deleteProduct: Product;
+  startCheckoutByLink: CheckoutSessionPayload;
   updateOrderStatus: Order;
   updateProduct: Product;
 };
@@ -70,10 +82,6 @@ export type MutationAddProductArgs = {
   storeId: Scalars['ID']['input'];
 };
 
-export type MutationCheckoutByLinkArgs = {
-  input: CheckoutByLinkInput;
-};
-
 export type MutationCreateCheckoutLinkArgs = {
   input: CheckoutLinkInput;
 };
@@ -84,6 +92,10 @@ export type MutationCreateStoreArgs = {
 
 export type MutationDeleteProductArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationStartCheckoutByLinkArgs = {
+  input: CheckoutByLinkInput;
 };
 
 export type MutationUpdateOrderStatusArgs = {
@@ -121,6 +133,7 @@ export type Order = {
 export enum OrderStatus {
   Cancelled = 'CANCELLED',
   Completed = 'COMPLETED',
+  Failed = 'FAILED',
   New = 'NEW',
   Paid = 'PAID',
   Pending = 'PENDING',
@@ -165,6 +178,7 @@ export type Query = {
   checkoutLink?: Maybe<CheckoutLink>;
   health: Scalars['String']['output'];
   order?: Maybe<Order>;
+  orderReceipt: Order;
   orders: Array<Order>;
   product?: Maybe<Product>;
   products: Array<Product>;
@@ -177,6 +191,11 @@ export type QueryCheckoutLinkArgs = {
 
 export type QueryOrderArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryOrderReceiptArgs = {
+  orderId: Scalars['ID']['input'];
+  token: Scalars['String']['input'];
 };
 
 export type QueryOrdersArgs = {
@@ -228,13 +247,17 @@ export type AddProductMutation = {
   };
 };
 
-export type CheckoutByLinkMutationVariables = Exact<{
+export type StartCheckoutByLinkMutationVariables = Exact<{
   input: CheckoutByLinkInput;
 }>;
 
-export type CheckoutByLinkMutation = {
+export type StartCheckoutByLinkMutation = {
   __typename?: 'Mutation';
-  checkoutByLink: { __typename?: 'Order'; id: string; total: number; status: OrderStatus };
+  startCheckoutByLink: {
+    __typename?: 'CheckoutSessionPayload';
+    orderId: string;
+    checkoutUrl: string;
+  };
 };
 
 export type CheckoutLinkQueryVariables = Exact<{
@@ -568,13 +591,13 @@ export const AddProductDocument = {
     },
   ],
 } as unknown as DocumentNode<AddProductMutation, AddProductMutationVariables>;
-export const CheckoutByLinkDocument = {
+export const StartCheckoutByLinkDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'mutation',
-      name: { kind: 'Name', value: 'CheckoutByLink' },
+      name: { kind: 'Name', value: 'StartCheckoutByLink' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
@@ -590,7 +613,7 @@ export const CheckoutByLinkDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'checkoutByLink' },
+            name: { kind: 'Name', value: 'startCheckoutByLink' },
             arguments: [
               {
                 kind: 'Argument',
@@ -601,9 +624,8 @@ export const CheckoutByLinkDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'orderId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'checkoutUrl' } },
               ],
             },
           },
@@ -611,7 +633,7 @@ export const CheckoutByLinkDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CheckoutByLinkMutation, CheckoutByLinkMutationVariables>;
+} as unknown as DocumentNode<StartCheckoutByLinkMutation, StartCheckoutByLinkMutationVariables>;
 export const CheckoutLinkDocument = {
   kind: 'Document',
   definitions: [
