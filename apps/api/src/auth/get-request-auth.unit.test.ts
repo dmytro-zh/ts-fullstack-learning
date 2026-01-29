@@ -54,6 +54,21 @@ describe('getRequestAuth', () => {
     expect(auth).toEqual({ userId: null, role: null });
   });
 
+  it('accepts authorization header arrays', async () => {
+    vi.stubEnv('API_JWT_SECRET', 'test-secret');
+
+    const token = await makeToken({
+      sub: 'user-456',
+      email: 'user@example.com',
+      role: APP_ROLES.BUYER,
+      secret: 'test-secret',
+    });
+
+    const req = { headers: { authorization: [`Bearer ${token}`] } } as any;
+    const auth = await getRequestAuth(req);
+    expect(auth).toEqual({ userId: 'user-456', role: APP_ROLES.BUYER });
+  });
+
   it('returns null auth when Bearer token is missing/empty', async () => {
     vi.stubEnv('API_JWT_SECRET', 'test-secret');
 

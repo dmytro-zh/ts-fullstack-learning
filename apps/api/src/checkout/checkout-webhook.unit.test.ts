@@ -115,6 +115,11 @@ describe('checkout webhook handler', () => {
       },
     });
 
+    prismaOrder.findUnique.mockResolvedValueOnce({
+      id: 'order_1',
+      status: 'PENDING_PAYMENT',
+    });
+
     const res = buildRes();
     await handleCheckoutWebhook(buildReq(), res);
 
@@ -139,11 +144,16 @@ describe('checkout webhook handler', () => {
       },
     });
 
+    prismaOrder.findFirst.mockResolvedValueOnce({
+      id: 'order_2',
+      status: 'PENDING_PAYMENT',
+    });
+
     const res = buildRes();
     await handleCheckoutWebhook(buildReq(), res);
 
     expect(prismaOrder.update).toHaveBeenCalledWith({
-      where: { checkoutSessionId: 'cs_456' },
+      where: { id: 'order_2' },
       data: {
         status: 'PAID',
         paymentIntentId: 'pi_456',
@@ -211,6 +221,19 @@ describe('checkout webhook handler', () => {
     expect(prismaTransaction).toHaveBeenCalledWith(['orderUpdate', 'productUpdate']);
   });
 
+  it('ignores unsupported event types', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'invoice.created',
+      data: { object: {} },
+    });
+
+    const res = buildRes();
+    await handleCheckoutWebhook(buildReq(), res);
+
+    expect(prismaOrder.update).not.toHaveBeenCalled();
+    expect(prismaProduct.update).not.toHaveBeenCalled();
+  });
+
   it('skips inventory restore if order is already paid', async () => {
     stripeMock.webhooks.constructEvent.mockReturnValueOnce({
       type: 'checkout.session.expired',
@@ -238,6 +261,10 @@ describe('checkout webhook handler', () => {
 
   it('logs and continues on handler errors', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    prismaOrder.findUnique.mockResolvedValueOnce({
+      id: 'order_error',
+      status: 'PENDING_PAYMENT',
+    });
     prismaOrder.update.mockRejectedValueOnce(new Error('db failed'));
 
     stripeMock.webhooks.constructEvent.mockReturnValueOnce({

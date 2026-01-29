@@ -23,7 +23,19 @@ const mocks = vi.hoisted(() => {
     },
     prisma: {
       $transaction: vi.fn(),
+      order: {
+        update: vi.fn(),
+      },
+      product: {
+        update: vi.fn(),
+      },
     },
+  };
+});
+
+const emailMocks = vi.hoisted(() => {
+  return {
+    sendOrderPaidEmails: vi.fn(),
   };
 });
 
@@ -63,8 +75,30 @@ vi.mock('../lib/prisma', () => {
   return { prisma: mocks.prisma };
 });
 
+vi.mock('../lib/stripe', () => {
+  return {
+    getStripe: vi.fn(),
+  };
+});
+
+vi.mock('../auth/receipt-token', () => {
+  return {
+    issueReceiptToken: vi.fn(),
+  };
+});
+
+vi.mock('../email/email.service', () => {
+  return {
+    createEmailService: () => ({
+      sendOrderPaidEmails: emailMocks.sendOrderPaidEmails,
+    }),
+  };
+});
+
 // 3) Import service AFTER mocks are declared
 import { CheckoutLinkService } from './checkout-link.service';
+import { getStripe } from '../lib/stripe';
+import { issueReceiptToken } from '../auth/receipt-token';
 
 const checkoutLinkRepoMock = mocks.checkoutLinkRepo;
 const productRepoMock = mocks.productRepo;
@@ -275,6 +309,257 @@ describe('checkoutByLink', () => {
   });
 });
 
+describe('startCheckoutByLink', () => {
+  let lastTx: any;
+
+  beforeEach(() => {
+    lastTx = undefined;
+    delete process.env.CHECKOUT_TEST_MODE;
+    vi.clearAllMocks();
+  });
+
+  it('returns receipt url in test mode and sends emails', async () => {
+    process.env.CHECKOUT_TEST_MODE = '1';
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            product: { id: 'p1', price: 10, quantity: 2 },
+          }),
+        },
+        product: {
+          update: vi.fn().mockResolvedValueOnce({ id: 'p1' }),
+        },
+        order: {
+          create: vi.fn().mockResolvedValueOnce({
+            id: 'o1',
+            email: 'john@test.com',
+            productId: 'p1',
+          }),
+        },
+      };
+
+      return fn(lastTx);
+    });
+
+    prismaMock.order.update.mockResolvedValueOnce({ id: 'o1', status: 'PAID' });
+    (issueReceiptToken as ReturnType<typeof vi.fn>).mockResolvedValueOnce('token123');
+
+    const service = new CheckoutLinkService();
+    const res = await service.startCheckoutByLink({
+      slug: 'slug',
+      customerName: 'John',
+      email: 'john@test.com',
+      quantity: 1,
+      shippingAddress: '123 Main St',
+    });
+
+    expect(prismaMock.order.update).toHaveBeenCalledWith({
+      where: { id: 'o1' },
+      data: { status: 'PAID' },
+    });
+    expect(emailMocks.sendOrderPaidEmails).toHaveBeenCalledWith('o1');
+    expect(res.checkoutUrl).toBe('http://localhost:3000/thank-you/o1?token=token123');
+  });
+
+  it('creates Stripe session and stores ids when not in test mode', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            product: { id: 'p1', price: 10, quantity: 2, name: 'Widget' },
+          }),
+        },
+        product: {
+          update: vi.fn().mockResolvedValueOnce({ id: 'p1' }),
+        },
+        order: {
+          create: vi.fn().mockResolvedValueOnce({
+            id: 'o1',
+            email: 'john@test.com',
+            productId: 'p1',
+          }),
+        },
+      };
+
+      return fn(lastTx);
+    });
+
+    const stripeMock = {
+      checkout: {
+        sessions: {
+          create: vi.fn().mockResolvedValueOnce({
+            id: 'cs_1',
+            url: 'http://stripe.test/checkout',
+            payment_intent: 'pi_1',
+          }),
+        },
+      },
+    };
+
+    (getStripe as ReturnType<typeof vi.fn>).mockReturnValueOnce(stripeMock);
+    prismaMock.order.update.mockResolvedValueOnce({ id: 'o1' });
+
+    const service = new CheckoutLinkService();
+    const res = await service.startCheckoutByLink({
+      slug: 'slug',
+      customerName: 'John',
+      email: 'john@test.com',
+      quantity: 1,
+      shippingAddress: '123 Main St',
+    });
+
+    expect(stripeMock.checkout.sessions.create).toHaveBeenCalled();
+    expect(prismaMock.order.update).toHaveBeenCalledWith({
+      where: { id: 'o1' },
+      data: {
+        checkoutSessionId: 'cs_1',
+        paymentIntentId: 'pi_1',
+      },
+    });
+    expect(res.checkoutUrl).toBe('http://stripe.test/checkout');
+  });
+
+  it('marks order failed and restores inventory when session url missing', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            product: { id: 'p1', price: 10, quantity: 2, name: 'Widget' },
+          }),
+        },
+        product: {
+          update: vi.fn().mockResolvedValueOnce({ id: 'p1' }),
+        },
+        order: {
+          create: vi.fn().mockResolvedValueOnce({
+            id: 'o1',
+            email: 'john@test.com',
+            productId: 'p1',
+          }),
+        },
+      };
+
+      return fn(lastTx);
+    });
+
+    const stripeMock = {
+      checkout: {
+        sessions: {
+          create: vi.fn().mockResolvedValueOnce({
+            id: 'cs_1',
+            url: null,
+            payment_intent: 'pi_1',
+          }),
+        },
+      },
+    };
+
+    (getStripe as ReturnType<typeof vi.fn>).mockReturnValueOnce(stripeMock);
+
+    await expect(
+      new CheckoutLinkService().startCheckoutByLink({
+        slug: 'slug',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toThrow('Stripe session is missing url');
+
+    expect(prismaMock.order.update).toHaveBeenCalledWith({
+      where: { id: 'o1' },
+      data: { status: 'FAILED' },
+    });
+    expect(prismaMock.product.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { quantity: { increment: 1 }, inStock: true },
+    });
+  });
+
+  it('throws when checkout link is missing or inactive', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce(null),
+        },
+      };
+      return fn(lastTx);
+    });
+
+    await expect(
+      new CheckoutLinkService().startCheckoutByLink({
+        slug: 'missing',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE });
+  });
+
+  it('throws when product is inactive in startCheckoutByLink', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            product: { id: 'p1', price: 10, quantity: 2, isActive: false, deletedAt: null },
+          }),
+        },
+      };
+      return fn(lastTx);
+    });
+
+    await expect(
+      new CheckoutLinkService().startCheckoutByLink({
+        slug: 'inactive',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE });
+  });
+
+  it('throws when product is out of stock in startCheckoutByLink', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            product: { id: 'p1', price: 10, quantity: 0 },
+          }),
+        },
+      };
+      return fn(lastTx);
+    });
+
+    await expect(
+      new CheckoutLinkService().startCheckoutByLink({
+        slug: 'out',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.INVALID_CHECKOUT_INPUT });
+  });
+});
+
 describe('createLink', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -391,6 +676,20 @@ describe('createLink', () => {
     ).rejects.toMatchObject({ code: ERROR_CODES.SUBSCRIPTION_INACTIVE });
 
     expect(checkoutLinkRepoMock.create).not.toHaveBeenCalled();
+  });
+
+  it('throws when billing is missing', async () => {
+    productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
+    storeRepoMock.findByIdForOwner.mockResolvedValueOnce({ id: 's1' });
+    userRepoMock.getBillingForUser.mockResolvedValueOnce(null);
+    const service = new CheckoutLinkService();
+
+    await expect(
+      service.createLink(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        slug: 'missing-billing',
+        productId: 'p1',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.NOT_FOUND });
   });
 
   it('returns existing active link for same product/store', async () => {
