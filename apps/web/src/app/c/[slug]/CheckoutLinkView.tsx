@@ -39,6 +39,7 @@ function getInitialActiveIndex(images: UiImage[]): number {
 }
 
 export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [form, setForm] = useState<FormState>({
     name: '',
     email: '',
@@ -48,7 +49,6 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
   });
 
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const p = link.product;
@@ -66,31 +66,57 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
 
   const activeImageUrl = images[activeIndex]?.url ?? null;
 
+  const updateField =
+    (key: keyof FormState) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = event.target.value;
+      setForm((prev) => ({ ...prev, [key]: value }));
+      if (fieldErrors[key]) {
+        setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+      }
+    };
+
+  function validate(form: FormState) {
+    const errors: Partial<Record<keyof FormState, string>> = {};
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const address = form.shippingAddress.trim();
+    const quantity = Number(form.quantity);
+
+    if (name.length < 2) errors.name = 'Name must be at least 2 characters.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Enter a valid email.';
+    if (address.length < 10) errors.shippingAddress = 'Shipping address is too short.';
+    if (!Number.isInteger(quantity) || quantity < 1)
+      errors.quantity = 'Quantity must be at least 1.';
+
+    return errors;
+  }
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (disabled) return;
 
-    setMessage(null);
     setError(null);
+
+    const errors = validate(form);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     startTransition(async () => {
       try {
-        const quantityNumber = Number(form.quantity) || 1;
-
         const payload: CheckoutByLinkInput = {
           slug: link.slug,
-          customerName: form.name,
-          email: form.email,
-          quantity: quantityNumber,
-          shippingAddress: form.shippingAddress,
+          customerName: form.name.trim(),
+          email: form.email.trim(),
+          quantity: Number(form.quantity) || 1,
+          shippingAddress: form.shippingAddress.trim(),
         };
 
         const trimmedNote = form.shippingNote.trim();
         if (trimmedNote) payload.shippingNote = trimmedNote;
 
         const result = await checkoutByLinkAction(payload);
-        const token = encodeURIComponent(result.receiptToken);
-        window.location.href = `/thank-you/${result.order.id}?token=${token}`;
+        window.location.href = result.checkoutUrl;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Checkout failed');
       }
@@ -231,12 +257,15 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
             <span>Name</span>
             <input
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={updateField('name')}
               required
               placeholder="John Doe"
               data-testid="checkout-name"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
+            {fieldErrors.name ? (
+              <p style={{ color: '#b00', margin: 0 }}>{fieldErrors.name}</p>
+            ) : null}
           </label>
 
           <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
@@ -244,12 +273,15 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
             <input
               type="email"
               value={form.email}
-              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+              onChange={updateField('email')}
               required
               placeholder="you@example.com"
               data-testid="checkout-email"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
+            {fieldErrors.email ? (
+              <p style={{ color: '#b00', margin: 0 }}>{fieldErrors.email}</p>
+            ) : null}
           </label>
 
           <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
@@ -258,18 +290,22 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
               type="number"
               min={1}
               value={form.quantity}
-              onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
+              onChange={updateField('quantity')}
               required
+              placeholder="1"
               data-testid="checkout-quantity"
               style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db' }}
             />
+            {fieldErrors.quantity ? (
+              <p style={{ color: '#b00', margin: 0 }}>{fieldErrors.quantity}</p>
+            ) : null}
           </label>
 
           <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
             <span>Shipping address</span>
             <textarea
               value={form.shippingAddress}
-              onChange={(e) => setForm((prev) => ({ ...prev, shippingAddress: e.target.value }))}
+              onChange={updateField('shippingAddress')}
               required
               placeholder="Street, city, postal code, country"
               data-testid="checkout-shipping-address"
@@ -281,13 +317,16 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
                 resize: 'vertical',
               }}
             />
+            {fieldErrors.shippingAddress ? (
+              <p style={{ color: '#b00', margin: 0 }}>{fieldErrors.shippingAddress}</p>
+            ) : null}
           </label>
 
           <label style={{ display: 'grid', gap: 4, fontWeight: 600 }}>
             <span>Note (optional)</span>
             <textarea
               value={form.shippingNote}
-              onChange={(e) => setForm((prev) => ({ ...prev, shippingNote: e.target.value }))}
+              onChange={updateField('shippingNote')}
               placeholder="Any additional instructions for shipping"
               data-testid="checkout-note"
               style={{
@@ -318,7 +357,6 @@ export function CheckoutLinkView({ link }: { link: CheckoutLinkData }) {
             {disabled ? 'Out of stock' : isPending ? 'Processing...' : 'Buy now'}
           </button>
 
-          {message ? <p style={{ color: 'green', margin: 0 }}>{message}</p> : null}
           {error ? <p style={{ color: '#b00', margin: 0 }}>{error}</p> : null}
         </form>
       </div>

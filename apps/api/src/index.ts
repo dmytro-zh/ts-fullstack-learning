@@ -8,10 +8,12 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import crypto from 'node:crypto';
 import { handleStripeWebhook } from './billing/stripe-webhook';
+import { handleCheckoutWebhook } from './checkout/checkout-webhook';
 import { createApolloServer } from './server';
 import { prisma } from './lib/prisma';
 import type { GraphQLContext } from './server-context';
 import { getRequestAuth } from './auth/get-request-auth';
+import { issueReceiptToken } from './auth/receipt-token';
 import { ZodError } from 'zod';
 import { registerUser, loginUser } from './auth/auth.service';
 import { AuthError, AUTH_ERROR_CODES } from './auth/auth.errors';
@@ -35,6 +37,7 @@ const jsonMiddleware = express.json();
 
 app.use((req, res, next) => {
   if (req.path === '/billing/webhook') return next();
+  if (req.path === '/checkout/webhook') return next();
   return jsonMiddleware(req, res, next);
 });
 
@@ -195,6 +198,37 @@ app.post('/billing/checkout-session', async (req, res) => {
 app.get('/billing/me', getBillingMe);
 
 app.get('/account/me', getAccountMe);
+
+app.get('/checkout/session/:sessionId', async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    if (!sessionId) return res.status(400).json({ error: 'sessionId is required' });
+
+    const order = await prisma.order.findFirst({
+      where: { checkoutSessionId: sessionId },
+      select: { id: true, email: true, status: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (order.status === 'PAID') {
+      const receiptToken = await issueReceiptToken({ orderId: order.id, email: order.email });
+      return res.status(200).json({ orderId: order.id, receiptToken, status: 'PAID' });
+    }
+
+    if (order.status === 'FAILED') {
+      return res.status(409).json({ error: 'Payment failed', status: 'FAILED' });
+    }
+
+    return res.status(202).json({ status: order.status });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to load checkout session' });
+  }
+});
 
 app.get('/uploads/sessions/:uploadSession', async (req, res) => {
   try {
@@ -516,6 +550,7 @@ async function start() {
   );
 
   app.post('/billing/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
+  app.post('/checkout/webhook', express.raw({ type: 'application/json' }), handleCheckoutWebhook);
 
   app.get('/debug/auth', async (req, res) => {
     const auth = await getRequestAuth(req);

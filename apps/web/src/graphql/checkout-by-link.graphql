@@ -1,10 +1,6 @@
-mutation CheckoutByLink($input: CheckoutByLinkInput!) {
-  checkoutByLink(input: $input) {
-    receiptToken
-    order {
-      id
-      total
-      status
-    }
+mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {
+  startCheckoutByLink(input: $input) {
+    orderId
+    checkoutUrl
   }
 }

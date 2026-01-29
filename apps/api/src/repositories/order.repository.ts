@@ -14,6 +14,7 @@ export class OrderRepository {
             $Enums.OrderStatus.COMPLETED,
             $Enums.OrderStatus.CANCELLED,
             $Enums.OrderStatus.REFUNDED,
+            $Enums.OrderStatus.FAILED,
           ],
         },
       },

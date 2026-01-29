@@ -17,6 +17,7 @@ const STATUS_LABELS: Record<OrderStatusEnum, string> = {
   [OrderStatus.Pending]: 'Pending',
   [OrderStatus.PendingPayment]: 'Pending payment',
   [OrderStatus.Paid]: 'Paid',
+  [OrderStatus.Failed]: 'Failed',
   [OrderStatus.Processing]: 'Processing',
   [OrderStatus.Shipped]: 'Shipped',
   [OrderStatus.Completed]: 'Completed',
@@ -29,6 +30,7 @@ const STATUS_OPTIONS: OrderStatusEnum[] = [
   OrderStatus.Pending,
   OrderStatus.PendingPayment,
   OrderStatus.Paid,
+  OrderStatus.Failed,
   OrderStatus.Processing,
   OrderStatus.Shipped,
   OrderStatus.Completed,
@@ -46,6 +48,8 @@ function statusColors(status: OrderStatusEnum): { bg: string; text: string } {
       return { bg: '#fef9c3', text: '#92400e' };
     case OrderStatus.Paid:
       return { bg: '#dcfce7', text: '#166534' };
+    case OrderStatus.Failed:
+      return { bg: '#fee2e2', text: '#b91c1c' };
     case OrderStatus.Processing:
       return { bg: '#e0f2fe', text: '#0369a1' };
     case OrderStatus.Shipped:

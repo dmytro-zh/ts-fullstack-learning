@@ -27,16 +27,17 @@ export default defineConfig({
         'src/repositories/**',
         'src/lib/**',
         'src/errors/format-graphql-error.ts',
+        'src/email/email-provider.ts',
 
         'src/**/generated/**',
         'src/**/types/**',
         'src/index.ts',
       ],
       thresholds: {
-        lines: 85,
-        functions: 85,
-        branches: 70,
-        statements: 85,
+        lines: 90,
+        functions: 90,
+        branches: 80,
+        statements: 90,
       },
     },
 

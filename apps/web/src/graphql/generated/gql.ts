@@ -15,7 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
   'mutation AddProduct($name: String!, $price: Float!, $storeId: ID!, $description: String, $imageUrl: String, $quantity: Int) {\n  addProduct(\n    name: $name\n    price: $price\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n    quantity: $quantity\n  ) {\n    id\n    slug\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n  }\n}': typeof types.AddProductDocument;
-  'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}': typeof types.CheckoutByLinkDocument;
+  'mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {\n  startCheckoutByLink(input: $input) {\n    orderId\n    checkoutUrl\n  }\n}': typeof types.StartCheckoutByLinkDocument;
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    createdAt\n    product {\n      id\n      name\n      price\n      inStock\n      description\n      imageUrl\n      images {\n        id\n        url\n        isPrimary\n        createdAt\n      }\n    }\n    store {\n      id\n      name\n      email\n    }\n  }\n}': typeof types.CheckoutLinkDocument;
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}': typeof types.CreateCheckoutLinkDocument;
   'mutation CreateStore($input: StoreInput!) {\n  createStore(input: $input) {\n    id\n    name\n    email\n  }\n}': typeof types.CreateStoreDocument;
@@ -32,8 +32,8 @@ type Documents = {
 const documents: Documents = {
   'mutation AddProduct($name: String!, $price: Float!, $storeId: ID!, $description: String, $imageUrl: String, $quantity: Int) {\n  addProduct(\n    name: $name\n    price: $price\n    storeId: $storeId\n    description: $description\n    imageUrl: $imageUrl\n    quantity: $quantity\n  ) {\n    id\n    slug\n    name\n    price\n    inStock\n    storeId\n    description\n    imageUrl\n    quantity\n  }\n}':
     types.AddProductDocument,
-  'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}':
-    types.CheckoutByLinkDocument,
+  'mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {\n  startCheckoutByLink(input: $input) {\n    orderId\n    checkoutUrl\n  }\n}':
+    types.StartCheckoutByLinkDocument,
   'query CheckoutLink($slug: String!) {\n  checkoutLink(slug: $slug) {\n    id\n    slug\n    active\n    createdAt\n    product {\n      id\n      name\n      price\n      inStock\n      description\n      imageUrl\n      images {\n        id\n        url\n        isPrimary\n        createdAt\n      }\n    }\n    store {\n      id\n      name\n      email\n    }\n  }\n}':
     types.CheckoutLinkDocument,
   'mutation CreateCheckoutLink($input: CheckoutLinkInput!) {\n  createCheckoutLink(input: $input) {\n    id\n    slug\n    product {\n      id\n      name\n    }\n    store {\n      id\n      name\n    }\n    active\n  }\n}':
@@ -83,8 +83,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: 'mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}',
-): (typeof documents)['mutation CheckoutByLink($input: CheckoutByLinkInput!) {\n  checkoutByLink(input: $input) {\n    id\n    total\n    status\n  }\n}'];
+  source: 'mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {\n  startCheckoutByLink(input: $input) {\n    orderId\n    checkoutUrl\n  }\n}',
+): (typeof documents)['mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {\n  startCheckoutByLink(input: $input) {\n    orderId\n    checkoutUrl\n  }\n}'];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

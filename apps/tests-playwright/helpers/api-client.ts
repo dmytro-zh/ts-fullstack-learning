@@ -100,6 +100,18 @@ type CheckoutByLinkInput = {
   shippingAddress: string;
 };
 
+export async function updateOrderStatus(
+  gql: APIRequestContext,
+  input: { orderId: string; status: string },
+) {
+  const data = await graphqlRequest<{ updateOrderStatus: { id: string; status: string } }>(
+    gql,
+    'mutation UpdateOrderStatus($orderId: ID!, $status: OrderStatus!){ updateOrderStatus(orderId:$orderId, status:$status){ id status } }',
+    { orderId: input.orderId, status: input.status },
+  );
+  return data.updateOrderStatus;
+}
+
 export async function createStore(gql: APIRequestContext, input: StoreInput) {
   const data = await graphqlRequest<{ createStore: { id: string; name: string } }>(
     gql,
@@ -134,11 +146,11 @@ export async function createCheckoutLink(gql: APIRequestContext, input: Checkout
 
 export async function checkoutByLink(gql: APIRequestContext, input: CheckoutByLinkInput) {
   const data = await graphqlRequest<{
-    checkoutByLink: { order: { id: string; product: { name: string } } };
+    startCheckoutByLink: { orderId: string; checkoutUrl: string };
   }>(
     gql,
-    'mutation CheckoutByLink($input: CheckoutByLinkInput!){ checkoutByLink(input:$input){ order { id product { name } } } }',
+    'mutation StartCheckoutByLink($input: CheckoutByLinkInput!){ startCheckoutByLink(input:$input){ orderId checkoutUrl } }',
     { input },
   );
-  return data.checkoutByLink;
+  return data.startCheckoutByLink;
 }

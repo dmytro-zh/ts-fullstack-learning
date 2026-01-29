@@ -19,17 +19,19 @@ const orderStatusSchema = z.enum([
   'COMPLETED',
   'CANCELLED',
   'REFUNDED',
+  'FAILED',
 ]);
 
 const ALLOWED_STATUS_TRANSITIONS = {
   NEW: ['PENDING_PAYMENT', 'CANCELLED'],
-  PENDING_PAYMENT: ['PAID', 'CANCELLED'],
+  PENDING_PAYMENT: ['PAID', 'FAILED', 'CANCELLED'],
   PAID: ['PROCESSING', 'CANCELLED', 'REFUNDED'],
   PROCESSING: ['SHIPPED', 'CANCELLED', 'REFUNDED'],
   SHIPPED: ['COMPLETED'],
   COMPLETED: [],
   CANCELLED: [],
   REFUNDED: [],
+  FAILED: [],
 } as const satisfies Partial<Record<$Enums.OrderStatus, readonly $Enums.OrderStatus[]>>;
 
 function assertValidStatusTransition(from: $Enums.OrderStatus, to: $Enums.OrderStatus) {

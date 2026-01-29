@@ -126,6 +126,32 @@ describe('stripe webhook handler', () => {
     });
   });
 
+  it('updates user when customer/subscription are objects', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          customer: { id: 'cus_obj' },
+          subscription: { id: 'sub_obj' },
+          metadata: { userId: 'u2' },
+        },
+      },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(prismaUser.update).toHaveBeenCalledWith({
+      where: { id: 'u2' },
+      data: {
+        stripeCustomerId: 'cus_obj',
+        stripeSubscriptionId: 'sub_obj',
+        plan: 'PRO',
+        subscriptionStatus: 'ACTIVE',
+      },
+    });
+  });
+
   it('updates billing on subscription changes', async () => {
     stripeMock.webhooks.constructEvent.mockReturnValueOnce({
       type: 'customer.subscription.updated',
@@ -190,6 +216,24 @@ describe('stripe webhook handler', () => {
       subscriptionStatus: 'ACTIVE',
       stripeSubscriptionId: 'sub_active',
     });
+  });
+
+  it('skips subscription updates when customer is missing', async () => {
+    stripeMock.webhooks.constructEvent.mockReturnValueOnce({
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_missing',
+          customer: null,
+          status: 'active',
+        },
+      },
+    });
+
+    const res = buildRes();
+    await handleStripeWebhook(buildReq(), res);
+
+    expect(userRepoMock.updateBillingByStripeCustomerId).not.toHaveBeenCalled();
   });
 
   it('defaults billing status for unknown subscription status', async () => {

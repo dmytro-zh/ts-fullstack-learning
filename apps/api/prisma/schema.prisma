@@ -69,6 +69,7 @@ enum OrderStatus {
   COMPLETED
   CANCELLED
   REFUNDED
+  FAILED
 }
 
 model Order {
@@ -88,6 +89,9 @@ model Order {
 
   @@index([checkoutLinkId])
   @@index([storeId])
+
+  checkoutSessionId String? @unique
+  paymentIntentId   String? @unique
 }
 
 model Store {

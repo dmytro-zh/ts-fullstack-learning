@@ -24,6 +24,7 @@ export default defineConfig({
       env: {
         ...baseEnv,
         API_JWT_SECRET: process.env.API_JWT_SECRET ?? 'playwright-dev-secret',
+        CHECKOUT_TEST_MODE: '1',
       },
     },
     {

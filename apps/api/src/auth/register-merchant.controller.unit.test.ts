@@ -162,4 +162,27 @@ describe('registerMerchantHandler', () => {
 
     expect(res.status).toHaveBeenCalledWith(409);
   });
+
+  it('returns 500 for unexpected errors', async () => {
+    prismaFindUniqueMock.mockResolvedValue({
+      id: 'invite-1',
+      code: 'secret',
+      email: null,
+      usedAt: null,
+    });
+    registerMerchantMock.mockImplementation(() => {
+      throw new Error('boom');
+    });
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = makeRes();
+
+    await registerMerchantHandler(
+      makeReq({ inviteCode: 'secret', email: 'test@example.com', password: 'Password!123' }),
+      res,
+    );
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
 });

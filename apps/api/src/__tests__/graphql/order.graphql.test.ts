@@ -26,18 +26,10 @@ const CREATE_LINK = `
 `;
 
 const CHECKOUT_BY_LINK = `
-  mutation CheckoutByLink($input: CheckoutByLinkInput!) {
-    checkoutByLink(input: $input) {
-      receiptToken
-      order {
-        id
-        status
-        total
-        quantity
-        storeId
-        productId
-        checkoutLinkId
-      }
+  mutation StartCheckoutByLink($input: CheckoutByLinkInput!) {
+    startCheckoutByLink(input: $input) {
+      orderId
+      checkoutUrl
     }
   }
 `;
@@ -82,12 +74,14 @@ describe('Order GraphQL flow', () => {
   const slug = `test-order-slug-${Date.now()}`;
 
   beforeAll(async () => {
+    process.env.CHECKOUT_TEST_MODE = '1';
     api = await createTestApolloServer();
     await ensureTestUser(defaultMerchantAuth);
   });
 
   afterAll(async () => {
     await api.stop();
+    delete process.env.CHECKOUT_TEST_MODE;
   });
 
   it('@smoke list orders by store', async () => {
@@ -141,10 +135,10 @@ describe('Order GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const orderId = (checkoutData as any)?.checkoutByLink?.order?.id;
-    const receiptToken = (checkoutData as any)?.checkoutByLink?.receiptToken;
+    const orderId = (checkoutData as any)?.startCheckoutByLink?.orderId;
+    const checkoutUrl = (checkoutData as any)?.startCheckoutByLink?.checkoutUrl;
     expect(orderId).toBeTruthy();
-    expect(receiptToken).toBeTruthy();
+    expect(checkoutUrl).toBeTruthy();
 
     const ordersData = await api.exec(
       {
@@ -210,13 +204,18 @@ describe('Order GraphQL flow', () => {
       defaultMerchantAuth,
     );
 
-    const orderId = (checkoutData as any)?.checkoutByLink?.order?.id;
-    const initialStatus = (checkoutData as any)?.checkoutByLink?.order?.status;
-    const receiptToken = (checkoutData as any)?.checkoutByLink?.receiptToken;
+    const orderId = (checkoutData as any)?.startCheckoutByLink?.orderId;
+    const checkoutUrl = (checkoutData as any)?.startCheckoutByLink?.checkoutUrl;
 
     expect(orderId).toBeTruthy();
-    expect(initialStatus).toBe('PAID');
-    expect(receiptToken).toBeTruthy();
+    expect(checkoutUrl).toBeTruthy();
+
+    const initialOrderData = await api.exec(
+      { query: GET_ORDER, variables: { id: orderId } },
+      defaultMerchantAuth,
+    );
+
+    expect((initialOrderData as any)?.order?.status).toBe('PAID');
 
     const updData = await api.exec(
       {
