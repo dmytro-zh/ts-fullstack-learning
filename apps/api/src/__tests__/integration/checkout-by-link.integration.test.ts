@@ -63,7 +63,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
       customerName: 'John Doe',
       email: 'john@test.dev',
       quantity: 2,
-      shippingAddress: 'Toronto, ON',
+      shippingAddress: '123 Toronto, ON',
       shippingNote: 'Leave at door',
     };
 
@@ -98,7 +98,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
       customerName: 'John',
       email: 'john@test.dev',
       quantity: 2,
-      shippingAddress: 'Somewhere',
+      shippingAddress: 'Somewhere long',
     } as any);
 
     const updated = await prismaTest.product.findUnique({ where: { id: product.id } });
@@ -117,7 +117,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
         customerName: 'John',
         email: 'john@test.dev',
         quantity: 1,
-        shippingAddress: 'Somewhere',
+        shippingAddress: 'Somewhere long',
       } as any),
     ).rejects.toMatchObject({
       code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
@@ -134,7 +134,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
         customerName: 'John',
         email: 'john@test.dev',
         quantity: 1,
-        shippingAddress: 'Somewhere',
+        shippingAddress: 'Somewhere long',
       } as any),
     ).rejects.toMatchObject({
       code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
@@ -153,7 +153,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
         customerName: 'John',
         email: 'john@test.dev',
         quantity: 1,
-        shippingAddress: 'Somewhere',
+        shippingAddress: 'Somewhere long',
       } as any),
     ).rejects.toMatchObject({
       code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
@@ -172,7 +172,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
         customerName: 'John',
         email: 'john@test.dev',
         quantity: 0,
-        shippingAddress: 'Somewhere',
+        shippingAddress: 'Somewhere long',
       } as any),
     ).rejects.toMatchObject({ name: 'ZodError' });
   });
@@ -188,7 +188,7 @@ describe('CheckoutLinkService (integration) - checkoutByLink', () => {
         customerName: 'John',
         email: 'john@test.dev',
         quantity: 2,
-        shippingAddress: 'Somewhere',
+        shippingAddress: 'Somewhere long',
       } as any),
     ).rejects.toMatchObject({
       code: ERROR_CODES.INVALID_CHECKOUT_INPUT,
