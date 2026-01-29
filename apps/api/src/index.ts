@@ -224,7 +224,7 @@ app.get('/admin/merchants', async (req, res) => {
     await getAdminAuth(req);
 
     const merchants = await prisma.user.findMany({
-      where: { role: 'MERCHANT' },
+      where: { role: APP_ROLES.MERCHANT },
       select: {
         id: true,
         email: true,
@@ -302,6 +302,78 @@ app.get('/admin/stores', async (req, res) => {
   }
 });
 
+app.get('/admin/metrics', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const periodDays = 30;
+    const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+
+    const priceCents = Number(process.env.STRIPE_PRICE_PRO_MONTHLY_AMOUNT_CENTS ?? '2900') || 2900;
+
+    const [activeProCount, pastDueCount, canceledCount, newMerchantsCount] = await Promise.all([
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'ACTIVE',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'PAST_DUE',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'CANCELED',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          createdAt: { gte: since },
+        },
+      }),
+    ]);
+
+    const ordersAgg = await prisma.order.aggregate({
+      _count: { _all: true },
+      _sum: { total: true },
+      where: {
+        status: 'PAID',
+        createdAt: { gte: since },
+      },
+    });
+
+    const ordersCount = ordersAgg._count._all ?? 0;
+    const revenueCents = Math.round((ordersAgg._sum.total ?? 0) * 100);
+    const aovCents = ordersCount > 0 ? Math.round(revenueCents / ordersCount) : 0;
+
+    return res.json({
+      ok: true,
+      periodDays,
+      since: since.toISOString(),
+      activeProCount,
+      pastDueCount,
+      canceledCount,
+      newMerchantsCount,
+      mrrCents: activeProCount * priceCents,
+      ordersCount,
+      revenueCents,
+      aovCents,
+    });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: status === 403 ? 'Forbidden' : 'Failed to load metrics' });
+  }
+});
 app.post('/admin/merchants/:id/plan', async (req, res) => {
   try {
     await getAdminAuth(req);
