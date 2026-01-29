@@ -1,6 +1,32 @@
+import { cookies } from 'next/headers';
 import styles from '../admin.module.css';
 
-export default function AdminMerchantsPage() {
+type Merchant = {
+  id: string;
+  email: string;
+  plan: 'FREE' | 'PRO';
+  subscriptionStatus: 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | null;
+  storesCount: number;
+};
+
+async function fetchMerchants(): Promise<Merchant[]> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('api_token')?.value ?? null;
+  if (!token) return [];
+
+  const res = await fetch(`${process.env.API_URL ?? 'http://localhost:4000'}/admin/merchants`, {
+    headers: { authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) return [];
+  const data = (await res.json()) as { ok: boolean; merchants: Merchant[] };
+  return data.merchants ?? [];
+}
+
+export default async function AdminMerchantsPage() {
+  const merchants = await fetchMerchants();
+
   return (
     <div>
       <div className={styles.header}>
@@ -10,17 +36,34 @@ export default function AdminMerchantsPage() {
         </div>
       </div>
 
-      <div
-        style={{
-          borderRadius: 14,
-          border: '1px dashed rgba(148,163,184,0.4)',
-          padding: 16,
-          fontSize: 13,
-          color: '#64748b',
-          background: '#f9fafb',
-        }}
-      >
-        Merchants table will be implemented here.
+      <div style={{ overflowX: 'auto' }}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={styles.th}>Email</th>
+              <th className={styles.th}>Plan</th>
+              <th className={styles.th}>Subscription</th>
+              <th className={styles.th}>Stores</th>
+            </tr>
+          </thead>
+          <tbody>
+            {merchants.map((m) => (
+              <tr key={m.id} className={styles.row}>
+                <td className={styles.td}>{m.email}</td>
+                <td className={styles.td}>{m.plan}</td>
+                <td className={styles.td}>{m.subscriptionStatus ?? '-'}</td>
+                <td className={styles.td}>{m.storesCount}</td>
+              </tr>
+            ))}
+            {merchants.length === 0 ? (
+              <tr>
+                <td style={{ padding: '12px 6px', color: '#94a3b8' }} colSpan={4}>
+                  No merchants found.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
       </div>
     </div>
   );
