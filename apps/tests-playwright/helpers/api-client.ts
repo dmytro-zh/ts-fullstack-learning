@@ -100,6 +100,18 @@ type CheckoutByLinkInput = {
   shippingAddress: string;
 };
 
+export async function updateOrderStatus(
+  gql: APIRequestContext,
+  input: { orderId: string; status: string },
+) {
+  const data = await graphqlRequest<{ updateOrderStatus: { id: string; status: string } }>(
+    gql,
+    'mutation UpdateOrderStatus($orderId: ID!, $status: OrderStatus!){ updateOrderStatus(orderId:$orderId, status:$status){ id status } }',
+    { orderId: input.orderId, status: input.status },
+  );
+  return data.updateOrderStatus;
+}
+
 export async function createStore(gql: APIRequestContext, input: StoreInput) {
   const data = await graphqlRequest<{ createStore: { id: string; name: string } }>(
     gql,
