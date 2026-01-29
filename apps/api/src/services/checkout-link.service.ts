@@ -12,6 +12,13 @@ import type { GraphQLContext } from '../server-context';
 import type { Prisma } from '@prisma/client';
 import { getStripe } from '../lib/stripe';
 import { issueReceiptToken } from '../auth/receipt-token';
+import { createEmailService } from '../email/email.service';
+
+const emailService = createEmailService();
+
+function getCheckoutCurrency() {
+  return (process.env.CHECKOUT_CURRENCY ?? 'cad').toLowerCase();
+}
 
 const linkInput = z.object({
   slug: z.string().min(1),
@@ -273,6 +280,7 @@ export class CheckoutLinkService {
         where: { id: order.id },
         data: { status: 'PAID' },
       });
+      await emailService.sendOrderPaidEmails(order.id);
       const token = await issueReceiptToken({ orderId: order.id, email: order.email });
       return { orderId: order.id, checkoutUrl: `${baseUrl}/thank-you/${order.id}?token=${token}` };
     }
@@ -286,7 +294,7 @@ export class CheckoutLinkService {
           {
             quantity,
             price_data: {
-              currency: 'usd',
+              currency: getCheckoutCurrency(),
               unit_amount: Math.round(product.price * 100),
               product_data: { name: product.name },
             },

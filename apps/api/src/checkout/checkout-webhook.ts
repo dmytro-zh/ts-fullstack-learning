@@ -1,10 +1,53 @@
 import type { Request, Response } from 'express';
 import type Stripe from 'stripe';
+import { createEmailService } from '../email/email.service';
 import { getStripe } from '../lib/stripe';
 import { prisma } from '../lib/prisma';
 
+const emailService = createEmailService();
+
 function getCheckoutWebhookSecret() {
   return process.env.STRIPE_CHECKOUT_WEBHOOK_SECRET ?? process.env.STRIPE_WEBHOOK_SECRET;
+}
+
+async function markOrderPaidById(
+  orderId: string,
+  sessionId: string,
+  paymentIntentId: string | null,
+) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true },
+  });
+
+  if (!order || order.status === 'PAID') return false;
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: 'PAID',
+      checkoutSessionId: sessionId,
+      paymentIntentId,
+    },
+  });
+
+  return true;
+}
+
+async function markOrderPaidBySession(sessionId: string, paymentIntentId: string | null) {
+  const order = await prisma.order.findFirst({
+    where: { checkoutSessionId: sessionId },
+    select: { id: true, status: true },
+  });
+
+  if (!order || order.status === 'PAID') return null;
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { status: 'PAID', paymentIntentId },
+  });
+
+  return order.id;
 }
 
 async function markOrderFailed(orderId: string) {
@@ -60,21 +103,17 @@ export async function handleCheckoutWebhook(req: Request, res: Response) {
         const metadataOrderId = session.metadata?.orderId;
 
         if (metadataOrderId) {
-          await prisma.order.update({
-            where: { id: metadataOrderId },
-            data: {
-              status: 'PAID',
-              checkoutSessionId: sessionId,
-              paymentIntentId,
-            },
-          });
+          const updated = await markOrderPaidById(metadataOrderId, sessionId, paymentIntentId);
+          if (updated) {
+            await emailService.sendOrderPaidEmails(metadataOrderId);
+          }
           break;
         }
 
-        await prisma.order.update({
-          where: { checkoutSessionId: sessionId },
-          data: { status: 'PAID', paymentIntentId },
-        });
+        const updatedOrderId = await markOrderPaidBySession(sessionId, paymentIntentId);
+        if (updatedOrderId) {
+          await emailService.sendOrderPaidEmails(updatedOrderId);
+        }
         break;
       }
 
