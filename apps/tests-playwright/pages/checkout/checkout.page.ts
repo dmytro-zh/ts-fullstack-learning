@@ -108,6 +108,6 @@ export class CheckoutPage {
   }
 
   async expectEmptyStateMessage() {
-    await expect(this.page.getByText('Link not found or inactive.')).toBeVisible();
+    await expect(this.page.getByTestId('checkout-empty-state')).toBeVisible();
   }
 }

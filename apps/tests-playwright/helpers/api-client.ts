@@ -8,7 +8,9 @@ type AuthInput = {
 type ApiClient = {
   apiBaseUrl: string;
   api: APIRequestContext;
+  authApi: APIRequestContext;
   gql: APIRequestContext;
+  token: string;
   dispose: () => Promise<void>;
 };
 
@@ -40,12 +42,20 @@ export async function createApiClient(auth: AuthInput): Promise<ApiClient> {
     extraHTTPHeaders: { authorization: `Bearer ${token}` },
   });
 
+  const authApi = await request.newContext({
+    baseURL: apiBaseUrl,
+    extraHTTPHeaders: { authorization: `Bearer ${token}` },
+  });
+
   return {
     apiBaseUrl,
     api,
+    authApi,
     gql,
+    token,
     dispose: async () => {
       await gql.dispose();
+      await authApi.dispose();
       await api.dispose();
     },
   };
