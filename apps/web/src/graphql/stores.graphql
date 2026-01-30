@@ -3,5 +3,6 @@ query Stores {
     id
     name
     email
+    isActive
   }
 }

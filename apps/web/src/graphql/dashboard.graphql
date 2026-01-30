@@ -2,6 +2,7 @@ query StoresOverview {
   stores {
     id
     name
+    isActive
   }
 }
 

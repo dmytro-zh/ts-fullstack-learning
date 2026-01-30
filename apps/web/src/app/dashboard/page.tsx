@@ -114,6 +114,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const activeStore =
     (hasStores && stores.find((s) => s.id === initialStoreId)) || stores[0] || null;
+  const isStoreBlocked = activeStore?.isActive === false;
 
   let dashboardData: StoreDashboardQuery | null = null;
 
@@ -413,6 +414,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       >
                         {store.name}
                       </span>
+                      {store.isActive === false ? (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            border: '1px solid rgba(148, 163, 184, 0.45)',
+                            background: '#f1f5f9',
+                            color: '#64748b',
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Blocked
+                        </span>
+                      ) : null}
                     </Link>
                   );
                 })}
@@ -423,66 +440,127 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               style={{
                 display: 'grid',
                 gap: 16,
+                position: 'relative',
               }}
             >
+              {isStoreBlocked ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: 20,
+                    background: 'rgba(248, 250, 252, 0.22)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    border: '1px solid rgba(203, 213, 225, 0.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2,
+                  }}
+                  data-testid="dashboard-store-blocked"
+                >
+                  <div
+                    style={{
+                      padding: '18px 20px',
+                      borderRadius: 16,
+                      border: '1px solid rgba(148, 163, 184, 0.35)',
+                      background: '#ffffff',
+                      boxShadow: '0 12px 28px rgba(15, 23, 42, 0.12)',
+                      textAlign: 'center',
+                      maxWidth: 320,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, letterSpacing: 0.12, color: '#64748b' }}>
+                      STORE STATUS
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: '#0f172a',
+                      }}
+                    >
+                      Store is blocked
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>
+                      Links and new sales are paused until it’s re‑enabled.
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 12,
+                  gap: 16,
+                  opacity: isStoreBlocked ? 0.55 : 1,
                 }}
               >
                 <div
                   style={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.95)',
-                    background: '#ffffff',
-                    padding: 14,
                     display: 'grid',
-                    gap: 4,
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 12,
                   }}
                 >
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>Revenue (30d)</span>
-                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
-                    {formattedRevenue30d}
-                  </span>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>
-                    Last 30 days of paid orders
-                  </span>
-                </div>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(209,213,219,0.95)',
+                      background: '#ffffff',
+                      padding: 14,
+                      display: 'grid',
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: '#6b7280' }}>Revenue (30d)</span>
+                    <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
+                      {formattedRevenue30d}
+                    </span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                      Last 30 days of paid orders
+                    </span>
+                  </div>
 
-                <div
-                  style={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.95)',
-                    background: '#ffffff',
-                    padding: 14,
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>Orders (30d)</span>
-                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
-                    {recentOrdersCount}
-                  </span>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>Paid orders for this store</span>
-                </div>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(209,213,219,0.95)',
+                      background: '#ffffff',
+                      padding: 14,
+                      display: 'grid',
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: '#6b7280' }}>Orders (30d)</span>
+                    <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
+                      {recentOrdersCount}
+                    </span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                      Paid orders for this store
+                    </span>
+                  </div>
 
-                <div
-                  style={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(209,213,219,0.95)',
-                    background: '#ffffff',
-                    padding: 14,
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: '#6b7280' }}>Products</span>
-                  <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
-                    {totalProductsCount}
-                  </span>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>All products in this store</span>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      border: '1px solid rgba(209,213,219,0.95)',
+                      background: '#ffffff',
+                      padding: 14,
+                      display: 'grid',
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: '#6b7280' }}>Products</span>
+                    <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.03 }}>
+                      {totalProductsCount}
+                    </span>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                      All products in this store
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -726,25 +804,44 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                               <span style={{ fontSize: 13, fontWeight: 600 }}>
                                 ${p.price.toFixed(2)}
                               </span>
-                              <Link
-                                href={`/checkout-links?productId=${encodeURIComponent(
-                                  p.id,
-                                )}&store=${encodeURIComponent(activeStore.id)}`}
-                                style={{
-                                  padding: '6px 11px',
-                                  borderRadius: 999,
-                                  border: '1px solid #1d4ed8',
-                                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                                  fontSize: 11,
-                                  fontWeight: 500,
-                                  color: '#f9fafb',
-                                  textDecoration: 'none',
-                                  whiteSpace: 'nowrap',
-                                  boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
-                                }}
-                              >
-                                Create link
-                              </Link>
+                              {isStoreBlocked ? (
+                                <span
+                                  title="Store is blocked"
+                                  style={{
+                                    padding: '6px 11px',
+                                    borderRadius: 999,
+                                    border: '1px solid rgba(148, 163, 184, 0.45)',
+                                    background: '#f1f5f9',
+                                    fontSize: 11,
+                                    fontWeight: 500,
+                                    color: '#64748b',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  Store blocked
+                                </span>
+                              ) : (
+                                <Link
+                                  href={`/checkout-links?productId=${encodeURIComponent(
+                                    p.id,
+                                  )}&store=${encodeURIComponent(activeStore.id)}`}
+                                  style={{
+                                    padding: '6px 11px',
+                                    borderRadius: 999,
+                                    border: '1px solid #1d4ed8',
+                                    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                                    fontSize: 11,
+                                    fontWeight: 500,
+                                    color: '#f9fafb',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
+                                  }}
+                                  title="Create a checkout link"
+                                >
+                                  Create link
+                                </Link>
+                              )}
                             </div>
                           </div>
                         );

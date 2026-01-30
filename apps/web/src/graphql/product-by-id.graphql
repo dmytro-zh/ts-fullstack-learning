@@ -11,6 +11,7 @@ query ProductById($id: ID!) {
       id
       name
       email
+      isActive
     }
     images {
       id

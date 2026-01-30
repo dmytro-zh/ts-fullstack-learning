@@ -55,8 +55,37 @@ export default async function PublicCheckoutPage({ params }: PageProps) {
           }}
           data-testid="checkout-empty-state"
         >
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout link</h1>
-          <p style={{ marginTop: 12 }}>Link not found or inactive.</p>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Checkout unavailable</h1>
+          <p style={{ marginTop: 12 }}>
+            This checkout link is no longer active. Please contact the merchant for an updated link.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (link.store?.isActive === false) {
+    return (
+      <main style={{ padding: 32, minHeight: '100vh', background: '#f7f7f8', color: '#111827' }}>
+        <div
+          style={{
+            maxWidth: 720,
+            margin: '0 auto',
+            background: '#fff',
+            border: '1px solid #fee2e2',
+            borderRadius: 12,
+            padding: 20,
+            boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+          }}
+          data-testid="checkout-store-blocked"
+        >
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+            Store temporarily unavailable
+          </h1>
+          <p style={{ marginTop: 12 }}>
+            This store is currently disabled, so checkout links are not available. Please reach out
+            to the merchant for assistance.
+          </p>
         </div>
       </main>
     );

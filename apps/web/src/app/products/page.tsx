@@ -95,6 +95,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   const stores = storesData.stores ?? [];
   const store = stores.find((s) => s.id === storeId) ?? null;
+  const isStoreBlocked = store?.isActive === false;
   const allProducts = storeData.products ?? [];
   const products = allProducts.filter((p) => p.storeId === storeId && p.isActive !== false);
 
@@ -157,6 +158,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             >
               Every product this store can sell, in one place.
             </p>
+            {isStoreBlocked ? (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  color: '#b45309',
+                }}
+              >
+                This store is blocked. Checkout links are disabled until an admin re‑enables it.
+              </p>
+            ) : null}
           </div>
 
           <div
@@ -274,26 +286,44 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       <span style={{ fontSize: 13, fontWeight: 600 }}>
                         ${product.price.toFixed(2)}
                       </span>
-                      <Link
-                        href={`/checkout-links?store=${encodeURIComponent(
-                          storeId,
-                        )}&productId=${encodeURIComponent(product.id)}`}
-                        style={{
-                          padding: '6px 11px',
-                          borderRadius: 999,
-                          border: '1px solid #1d4ed8',
-                          background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                          fontSize: 11,
-                          fontWeight: 500,
-                          color: '#f9fafb',
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
-                        }}
-                        data-testid="products-create-link"
-                      >
-                        Create link
-                      </Link>
+                      {isStoreBlocked ? (
+                        <span
+                          title="Store is blocked"
+                          style={{
+                            padding: '6px 11px',
+                            borderRadius: 999,
+                            border: '1px solid rgba(245, 158, 11, 0.35)',
+                            background: '#fffbeb',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#b45309',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Store blocked
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/checkout-links?store=${encodeURIComponent(
+                            storeId,
+                          )}&productId=${encodeURIComponent(product.id)}`}
+                          style={{
+                            padding: '6px 11px',
+                            borderRadius: 999,
+                            border: '1px solid #1d4ed8',
+                            background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#f9fafb',
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 10px 24px rgba(37,99,235,0.3)',
+                          }}
+                          data-testid="products-create-link"
+                        >
+                          Create link
+                        </Link>
+                      )}
                     </div>
                   </div>
                 );
