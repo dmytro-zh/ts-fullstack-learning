@@ -258,12 +258,24 @@ app.get('/admin/stores', async (req, res) => {
   try {
     await getAdminAuth(req);
 
+    const merchantIds = await prisma.user.findMany({
+      where: { role: APP_ROLES.MERCHANT },
+      select: { id: true },
+    });
+
+    const merchantIdList = merchantIds.map((m) => m.id);
+    if (merchantIdList.length === 0) {
+      return res.json({ ok: true, stores: [] });
+    }
+
     const stores = await prisma.store.findMany({
+      where: { ownerId: { in: merchantIdList } },
       select: {
         id: true,
         name: true,
         ownerId: true,
         email: true,
+        isActive: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -299,6 +311,27 @@ app.get('/admin/stores', async (req, res) => {
   } catch (err: any) {
     const status = err?.status ?? 500;
     res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Failed to load stores' });
+  }
+});
+
+app.post('/admin/stores/:id/status', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const isActive = req.body?.isActive === true || req.body?.isActive === 'true';
+
+    const updated = await prisma.store.update({
+      where: { id: req.params.id },
+      data: { isActive },
+      select: { id: true, name: true, isActive: true },
+    });
+
+    return res.json({ ok: true, store: updated });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: status === 403 ? 'Forbidden' : 'Failed to update store' });
   }
 });
 
@@ -374,6 +407,7 @@ app.get('/admin/metrics', async (req, res) => {
       .json({ error: status === 403 ? 'Forbidden' : 'Failed to load metrics' });
   }
 });
+
 app.post('/admin/merchants/:id/plan', async (req, res) => {
   try {
     await getAdminAuth(req);

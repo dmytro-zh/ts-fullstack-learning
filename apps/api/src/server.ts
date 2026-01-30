@@ -97,6 +97,7 @@ const typeDefs = /* GraphQL */ `
     ownerId: ID!
     name: String!
     email: String
+    isActive: Boolean!
     products: [Product!]!
     createdAt: String!
     updatedAt: String!
