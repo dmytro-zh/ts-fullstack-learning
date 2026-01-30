@@ -211,6 +211,7 @@ export type Store = {
   createdAt: Scalars['String']['output'];
   email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['ID']['output'];
   products: Array<Product>;
@@ -288,7 +289,13 @@ export type CheckoutLinkQuery = {
         createdAt: string;
       }>;
     };
-    store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
+    store?: {
+      __typename?: 'Store';
+      id: string;
+      name: string;
+      email?: string | null;
+      isActive: boolean;
+    } | null;
   } | null;
 };
 
@@ -321,7 +328,7 @@ export type StoresOverviewQueryVariables = Exact<{ [key: string]: never }>;
 
 export type StoresOverviewQuery = {
   __typename?: 'Query';
-  stores: Array<{ __typename?: 'Store'; id: string; name: string }>;
+  stores: Array<{ __typename?: 'Store'; id: string; name: string; isActive: boolean }>;
 };
 
 export type StoreDashboardQueryVariables = Exact<{
@@ -415,7 +422,13 @@ export type ProductByIdQuery = {
     storeId?: string | null;
     description?: string | null;
     quantity: number;
-    store?: { __typename?: 'Store'; id: string; name: string; email?: string | null } | null;
+    store?: {
+      __typename?: 'Store';
+      id: string;
+      name: string;
+      email?: string | null;
+      isActive: boolean;
+    } | null;
     images: Array<{
       __typename?: 'ProductImage';
       id: string;
@@ -451,7 +464,13 @@ export type StoresQueryVariables = Exact<{ [key: string]: never }>;
 
 export type StoresQuery = {
   __typename?: 'Query';
-  stores: Array<{ __typename?: 'Store'; id: string; name: string; email?: string | null }>;
+  stores: Array<{
+    __typename?: 'Store';
+    id: string;
+    name: string;
+    email?: string | null;
+    isActive: boolean;
+  }>;
 };
 
 export type UpdateOrderStatusMutationVariables = Exact<{
@@ -708,6 +727,7 @@ export const CheckoutLinkDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
                     ],
                   },
                 },
@@ -847,6 +867,7 @@ export const StoresOverviewDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
               ],
             },
           },
@@ -1148,6 +1169,7 @@ export const ProductByIdDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
                     ],
                   },
                 },
@@ -1227,6 +1249,7 @@ export const StoresDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isActive' } },
               ],
             },
           },

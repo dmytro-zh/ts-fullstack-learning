@@ -22,6 +22,10 @@ export class DashboardPage {
     return this.page.getByTestId(dashboardLocators.storeList);
   }
 
+  blockedOverlay() {
+    return this.page.getByTestId('dashboard-store-blocked');
+  }
+
   productsPanel() {
     return this.page.getByTestId(dashboardLocators.productsPanel);
   }

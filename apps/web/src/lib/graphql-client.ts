@@ -12,6 +12,11 @@ export async function createWebGraphQLClient() {
   const token = cookieStore.get('api_token')?.value ?? null;
 
   return new GraphQLClient(getUpstreamGraphqlUrl(), {
+    fetch: (input, init) =>
+      fetch(input, {
+        ...init,
+        cache: 'no-store',
+      }),
     headers: {
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },

@@ -10,6 +10,12 @@ function reqWithAuthHeader(value?: string): express.Request {
   } as any;
 }
 
+function reqWithCookie(value?: string): express.Request {
+  return {
+    headers: value ? { cookie: value } : {},
+  } as any;
+}
+
 function normalizeSecret(secret: string): Uint8Array {
   return new TextEncoder().encode(secret);
 }
@@ -46,6 +52,53 @@ describe('getRequestAuth', () => {
     vi.stubEnv('API_JWT_SECRET', 'test-secret');
     const auth = await getRequestAuth(reqWithAuthHeader());
     expect(auth).toEqual({ userId: null, role: null });
+  });
+
+  it('returns null auth when cookie header is missing', async () => {
+    vi.stubEnv('API_JWT_SECRET', 'test-secret');
+    const auth = await getRequestAuth(reqWithCookie());
+    expect(auth).toEqual({ userId: null, role: null });
+  });
+
+  it('accepts api_token from cookies when no authorization header', async () => {
+    vi.stubEnv('API_JWT_SECRET', 'test-secret');
+
+    const token = await makeToken({
+      sub: 'cookie-user',
+      email: 'cookie@example.com',
+      role: APP_ROLES.MERCHANT,
+      secret: 'test-secret',
+    });
+
+    const auth = await getRequestAuth(reqWithCookie(`api_token=${token}`));
+    expect(auth).toEqual({ userId: 'cookie-user', role: APP_ROLES.MERCHANT });
+  });
+
+  it('ignores cookies when Bearer token is present', async () => {
+    vi.stubEnv('API_JWT_SECRET', 'test-secret');
+
+    const bearer = await makeToken({
+      sub: 'bearer-user',
+      email: 'bearer@example.com',
+      role: APP_ROLES.BUYER,
+      secret: 'test-secret',
+    });
+    const cookie = await makeToken({
+      sub: 'cookie-user',
+      email: 'cookie@example.com',
+      role: APP_ROLES.MERCHANT,
+      secret: 'test-secret',
+    });
+
+    const req = {
+      headers: {
+        authorization: `Bearer ${bearer}`,
+        cookie: `api_token=${cookie}`,
+      },
+    } as any;
+
+    const auth = await getRequestAuth(req);
+    expect(auth).toEqual({ userId: 'bearer-user', role: APP_ROLES.BUYER });
   });
 
   it('returns null auth when scheme is not Bearer', async () => {

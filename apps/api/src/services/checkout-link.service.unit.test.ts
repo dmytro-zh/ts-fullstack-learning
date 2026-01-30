@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
       findById: vi.fn(),
     },
     storeRepo: {
+      findById: vi.fn(),
       findByIdForOwner: vi.fn(),
     },
     userRepo: {
@@ -59,6 +60,7 @@ vi.mock('../repositories/product.repository', () => {
 
 vi.mock('../repositories/store.repository', () => {
   class StoreRepository {
+    findById = mocks.storeRepo.findById;
     findByIdForOwner = mocks.storeRepo.findByIdForOwner;
   }
   return { StoreRepository };
@@ -114,6 +116,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   checkoutLinkRepoMock.countByOwner.mockResolvedValue(0);
   userRepoMock.getBillingForUser.mockResolvedValue({ plan: APP_PLANS.PRO });
+  storeRepoMock.findById.mockResolvedValue({ id: 's1', isActive: true });
 });
 
 describe('checkoutByLink', () => {
@@ -155,6 +158,37 @@ describe('checkoutByLink', () => {
             active: true,
             storeId: 's1',
             product: { id: 'p1', price: 10, quantity: 1, isActive: false, deletedAt: null },
+          }),
+        },
+      };
+      return fn(lastTx);
+    });
+
+    const service = new CheckoutLinkService();
+    await expect(
+      service.checkoutByLink({
+        slug: 'slug',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toMatchObject({
+      code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+      field: 'slug',
+    });
+  });
+
+  it('throws CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE when store is blocked', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            store: { id: 's1', isActive: false },
+            product: { id: 'p1', price: 10, quantity: 1, isActive: true, deletedAt: null },
           }),
         },
       };
@@ -533,6 +567,33 @@ describe('startCheckoutByLink', () => {
     ).rejects.toMatchObject({ code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE });
   });
 
+  it('throws when store is blocked in startCheckoutByLink', async () => {
+    prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
+      lastTx = {
+        checkoutLink: {
+          findUnique: vi.fn().mockResolvedValueOnce({
+            id: 'l1',
+            active: true,
+            storeId: 's1',
+            store: { id: 's1', isActive: false },
+            product: { id: 'p1', price: 10, quantity: 2, isActive: true, deletedAt: null },
+          }),
+        },
+      };
+      return fn(lastTx);
+    });
+
+    await expect(
+      new CheckoutLinkService().startCheckoutByLink({
+        slug: 'blocked',
+        customerName: 'John',
+        email: 'john@test.com',
+        quantity: 1,
+        shippingAddress: '123 Main St',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE });
+  });
+
   it('throws when product is out of stock in startCheckoutByLink', async () => {
     prismaMock.$transaction.mockImplementationOnce(async (fn: any) => {
       lastTx = {
@@ -611,6 +672,32 @@ describe('createLink', () => {
         productId: 'p1',
       }),
     ).rejects.toMatchObject({ code: ERROR_CODES.NOT_FOUND });
+  });
+
+  it('throws when store is missing', async () => {
+    productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
+    storeRepoMock.findById.mockResolvedValueOnce(null);
+    const service = new CheckoutLinkService();
+
+    await expect(
+      service.createLink(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        slug: 'missing-store',
+        productId: 'p1',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.STORE_NOT_FOUND });
+  });
+
+  it('throws when store is blocked', async () => {
+    productRepoMock.findById.mockResolvedValueOnce({ id: 'p1', storeId: 's1' });
+    storeRepoMock.findById.mockResolvedValueOnce({ id: 's1', isActive: false });
+    const service = new CheckoutLinkService();
+
+    await expect(
+      service.createLink(ctx({ userId: 'u1', role: APP_ROLES.MERCHANT }), {
+        slug: 'blocked-store',
+        productId: 'p1',
+      }),
+    ).rejects.toMatchObject({ code: ERROR_CODES.INVALID_CHECKOUT_INPUT });
   });
 
   it('throws when storeId does not match product', async () => {
@@ -801,6 +888,6 @@ describe('getBySlug', () => {
     const service = new CheckoutLinkService();
 
     const res = await service.getBySlug('slug-1');
-    expect(res).toEqual({ id: 'l1' });
+    expect(res).toMatchObject({ id: 'l1' });
   });
 });

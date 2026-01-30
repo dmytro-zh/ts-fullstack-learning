@@ -71,6 +71,18 @@ export class CheckoutLinkService {
       });
     }
 
+    const store = await this.storeRepo.findById(product.storeId);
+    if (!store) {
+      throw new DomainError(ERROR_CODES.STORE_NOT_FOUND, 'Store not found', {
+        field: 'storeId',
+      });
+    }
+    if (store.isActive === false) {
+      throw new DomainError(ERROR_CODES.INVALID_CHECKOUT_INPUT, 'Store is blocked', {
+        field: 'storeId',
+      });
+    }
+
     if (storeId && storeId !== product.storeId) {
       throw new DomainError(
         ERROR_CODES.INVALID_CHECKOUT_INPUT,
@@ -150,6 +162,7 @@ export class CheckoutLinkService {
         where: { slug },
         include: {
           product: true,
+          store: true,
         },
       });
 
@@ -162,6 +175,14 @@ export class CheckoutLinkService {
       }
 
       const product = link.product;
+
+      if (link.storeId && link.store?.isActive === false) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
 
       // Do not allow checkout for inactive/soft-deleted products
       if (product.deletedAt || product.isActive === false) {
@@ -217,7 +238,7 @@ export class CheckoutLinkService {
     const { order, product } = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const link = await tx.checkoutLink.findUnique({
         where: { slug },
-        include: { product: true },
+        include: { product: true, store: true },
       });
 
       if (!link || !link.active || !link.product) {
@@ -229,6 +250,14 @@ export class CheckoutLinkService {
       }
 
       const currentProduct = link.product;
+
+      if (link.storeId && link.store?.isActive === false) {
+        throw new DomainError(
+          ERROR_CODES.CHECKOUT_LINK_NOT_FOUND_OR_INACTIVE,
+          'Checkout link not found or inactive',
+          { field: 'slug' },
+        );
+      }
 
       if (currentProduct.deletedAt || currentProduct.isActive === false) {
         throw new DomainError(

@@ -5,7 +5,7 @@ import type { Product, Store } from '../../graphql/generated/graphql';
 import { createCheckoutLinkAction } from '../actions/createCheckoutLink';
 
 type ProductOption = Pick<Product, 'id' | 'name' | 'price' | 'storeId'>;
-type StoreOption = Pick<Store, 'id' | 'name' | 'email'>;
+type StoreOption = Pick<Store, 'id' | 'name' | 'email' | 'isActive'>;
 
 type Props = {
   products: ProductOption[];
@@ -71,12 +71,19 @@ export function CheckoutLinksForm({ products, stores, initialProductId, initialS
 
   const currentProduct =
     filteredProducts.find((p) => p.id === form.productId) ?? filteredProducts[0] ?? products[0];
+  const currentStore = stores.find((s) => s.id === form.storeId) ?? null;
+  const isStoreBlocked = currentStore?.isActive === false;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
     setError(null);
     setLinkUrl(null);
+
+    if (isStoreBlocked) {
+      setError('This store is blocked. Unblock it in Admin to create new checkout links.');
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -193,7 +200,7 @@ export function CheckoutLinksForm({ products, stores, initialProductId, initialS
         >
           {stores.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.name} {s.email ? `(${s.email})` : ''}
+              {s.name} {s.email ? `(${s.email})` : ''} {s.isActive ? '' : '(Blocked)'}
             </option>
           ))}
         </select>
@@ -201,19 +208,19 @@ export function CheckoutLinksForm({ products, stores, initialProductId, initialS
 
       <button
         type="submit"
-        disabled={isPending || !form.productId}
+        disabled={isPending || !form.productId || isStoreBlocked}
         data-testid="checkout-links-submit"
         style={{
           padding: '10px 12px',
           borderRadius: 8,
           border: '1px solid #1d4ed8',
-          background: isPending ? '#dbeafe' : '#2563eb',
-          color: '#fff',
+          background: isPending || isStoreBlocked ? '#e5e7eb' : '#2563eb',
+          color: isPending || isStoreBlocked ? '#94a3b8' : '#fff',
           fontWeight: 700,
-          cursor: isPending ? 'not-allowed' : 'pointer',
+          cursor: isPending || isStoreBlocked ? 'not-allowed' : 'pointer',
         }}
       >
-        {isPending ? 'Creating…' : 'Create checkout link'}
+        {isPending ? 'Creating…' : isStoreBlocked ? 'Store is blocked' : 'Create checkout link'}
       </button>
 
       {linkUrl && (

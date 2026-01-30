@@ -19,6 +19,21 @@ function parseBearerToken(req: express.Request): string | null {
   return token.trim();
 }
 
+function parseCookieToken(req: express.Request): string | null {
+  const raw = req.headers.cookie;
+  if (!raw) return null;
+
+  const parts = raw.split(';');
+  for (const part of parts) {
+    const [key, value] = part.trim().split('=');
+    if (key === 'api_token' && value) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
 function normalizeSecret(secret: string): Uint8Array {
   return new TextEncoder().encode(secret);
 }
@@ -30,7 +45,7 @@ function isAppRole(value: unknown): value is AppRole {
 }
 
 export async function getRequestAuth(req: express.Request): Promise<RequestAuth> {
-  const token = parseBearerToken(req);
+  const token = parseBearerToken(req) ?? parseCookieToken(req);
   if (!token) return { userId: null, role: null };
 
   const secret = process.env.API_JWT_SECRET;

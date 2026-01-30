@@ -96,6 +96,25 @@ function normalizeProductImages(images: Array<{ id: string; url: string; isPrima
   });
 }
 
+function requireOwnerRole(role: string | null) {
+  if (role !== APP_ROLES.PLATFORM_OWNER) {
+    const err = new Error('Forbidden');
+    (err as any).status = 403;
+    throw err;
+  }
+}
+
+async function getAdminAuth(req: express.Request) {
+  const auth = await getRequestAuth(req);
+  if (!auth.userId) {
+    const err = new Error('Unauthorized');
+    (err as any).status = 401;
+    throw err;
+  }
+  requireOwnerRole(auth.role);
+  return auth;
+}
+
 /**
  * API auth (prod-like):
  * Web calls POST /auth/login and receives an access token (JWS).
@@ -198,6 +217,217 @@ app.post('/billing/checkout-session', async (req, res) => {
 app.get('/billing/me', getBillingMe);
 
 app.get('/account/me', getAccountMe);
+
+// ADMIN endpoints (11.2)
+app.get('/admin/merchants', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const merchants = await prisma.user.findMany({
+      where: { role: APP_ROLES.MERCHANT },
+      select: {
+        id: true,
+        email: true,
+        plan: true,
+        subscriptionStatus: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const storeCounts = await prisma.store.groupBy({
+      by: ['ownerId'],
+      _count: { _all: true },
+    });
+
+    const storesByOwner = new Map(storeCounts.map((s) => [s.ownerId, s._count._all]));
+
+    res.json({
+      ok: true,
+      merchants: merchants.map((m) => ({
+        ...m,
+        storesCount: storesByOwner.get(m.id) ?? 0,
+      })),
+    });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Failed to load merchants' });
+  }
+});
+
+app.get('/admin/stores', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const merchantIds = await prisma.user.findMany({
+      where: { role: APP_ROLES.MERCHANT },
+      select: { id: true },
+    });
+
+    const merchantIdList = merchantIds.map((m) => m.id);
+    if (merchantIdList.length === 0) {
+      return res.json({ ok: true, stores: [] });
+    }
+
+    const stores = await prisma.store.findMany({
+      where: { ownerId: { in: merchantIdList } },
+      select: {
+        id: true,
+        name: true,
+        ownerId: true,
+        email: true,
+        isActive: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const productsCount = await prisma.product.groupBy({
+      by: ['storeId'],
+      _count: { _all: true },
+    });
+    const productsByStore = new Map(productsCount.map((s) => [s.storeId, s._count._all]));
+
+    const revenueByStore = await prisma.order.groupBy({
+      by: ['storeId'],
+      _sum: { total: true },
+      where: { status: 'PAID' },
+    });
+    const revenueMap = new Map(revenueByStore.map((s) => [s.storeId, s._sum.total ?? 0]));
+
+    const ownerEmails = await prisma.user.findMany({
+      where: { id: { in: stores.map((s) => s.ownerId) } },
+      select: { id: true, email: true },
+    });
+    const ownerEmailMap = new Map(ownerEmails.map((u) => [u.id, u.email]));
+
+    res.json({
+      ok: true,
+      stores: stores.map((s) => ({
+        ...s,
+        ownerEmail: ownerEmailMap.get(s.ownerId) ?? null,
+        productsCount: productsByStore.get(s.id) ?? 0,
+        revenue: revenueMap.get(s.id) ?? 0,
+      })),
+    });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Failed to load stores' });
+  }
+});
+
+app.post('/admin/stores/:id/status', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const isActive = req.body?.isActive === true || req.body?.isActive === 'true';
+
+    const updated = await prisma.store.update({
+      where: { id: req.params.id },
+      data: { isActive },
+      select: { id: true, name: true, isActive: true },
+    });
+
+    return res.json({ ok: true, store: updated });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: status === 403 ? 'Forbidden' : 'Failed to update store' });
+  }
+});
+
+app.get('/admin/metrics', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+
+    const periodDays = 30;
+    const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+
+    const priceCents = Number(process.env.STRIPE_PRICE_PRO_MONTHLY_AMOUNT_CENTS ?? '2900') || 2900;
+
+    const [activeProCount, pastDueCount, canceledCount, newMerchantsCount] = await Promise.all([
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'ACTIVE',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'PAST_DUE',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          plan: 'PRO',
+          subscriptionStatus: 'CANCELED',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          role: APP_ROLES.MERCHANT,
+          createdAt: { gte: since },
+        },
+      }),
+    ]);
+
+    const ordersAgg = await prisma.order.aggregate({
+      _count: { _all: true },
+      _sum: { total: true },
+      where: {
+        status: 'PAID',
+        createdAt: { gte: since },
+      },
+    });
+
+    const ordersCount = ordersAgg._count._all ?? 0;
+    const revenueCents = Math.round((ordersAgg._sum.total ?? 0) * 100);
+    const aovCents = ordersCount > 0 ? Math.round(revenueCents / ordersCount) : 0;
+
+    return res.json({
+      ok: true,
+      periodDays,
+      since: since.toISOString(),
+      activeProCount,
+      pastDueCount,
+      canceledCount,
+      newMerchantsCount,
+      mrrCents: activeProCount * priceCents,
+      ordersCount,
+      revenueCents,
+      aovCents,
+    });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: status === 403 ? 'Forbidden' : 'Failed to load metrics' });
+  }
+});
+
+app.post('/admin/merchants/:id/plan', async (req, res) => {
+  try {
+    await getAdminAuth(req);
+    const plan = req.body?.plan === 'PRO' ? 'PRO' : 'FREE';
+
+    const updated = await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        plan,
+        subscriptionStatus: plan === 'PRO' ? 'ACTIVE' : null,
+      },
+      select: { id: true, plan: true, subscriptionStatus: true },
+    });
+
+    res.json({ ok: true, merchant: updated });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
+    res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Failed to update plan' });
+  }
+});
 
 app.get('/checkout/session/:sessionId', async (req, res) => {
   try {

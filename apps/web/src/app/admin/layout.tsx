@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { APP_ROLES, type AppRole } from '@ts-fullstack-learning/shared';
+import styles from './admin.module.css';
 
 export const runtime = 'nodejs';
 
@@ -34,7 +36,11 @@ async function getAuth(): Promise<UpstreamAuth> {
   return (await res.json()) as UpstreamAuth;
 }
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
+type AdminLayoutProps = {
+  children: ReactNode;
+};
+
+export default async function AdminLayout({ children }: AdminLayoutProps) {
   const auth = await getAuth();
 
   if (!auth.userId) {
@@ -45,5 +51,26 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect('/forbidden');
   }
 
-  return <>{children}</>;
+  return (
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarTitle}>Admin</div>
+          <nav className={styles.nav}>
+            <Link href="/admin" className={styles.navLink}>
+              Overview
+            </Link>
+            <Link href="/admin/merchants" className={styles.navLink}>
+              Merchants
+            </Link>
+            <Link href="/admin/stores" className={styles.navLink}>
+              Stores
+            </Link>
+          </nav>
+        </aside>
+
+        <section className={styles.content}>{children}</section>
+      </div>
+    </div>
+  );
 }

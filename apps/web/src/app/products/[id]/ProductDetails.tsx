@@ -797,6 +797,7 @@ export function ProductDetails({
     boxShadow: '0 10px 26px rgba(15, 23, 42, 0.06)',
   };
 
+  const isStoreBlocked = product.store?.isActive === false;
   const checkoutHref = storeId
     ? `/checkout-links?productId=${encodeURIComponent(product.id)}&store=${encodeURIComponent(storeId)}`
     : `/checkout-links?productId=${encodeURIComponent(product.id)}`;
@@ -993,24 +994,42 @@ export function ProductDetails({
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Link
-            href={checkoutHref}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 999,
-              border: '1px solid rgba(37,99,235,0.35)',
-              background: '#ffffff',
-              color: '#2563eb',
-              fontWeight: 900,
-              textDecoration: 'none',
-              boxShadow: '0 8px 22px rgba(15,23,42,0.06)',
-              lineHeight: '20px',
-              whiteSpace: 'nowrap',
-            }}
-            title="Create a shareable checkout link for this product"
-          >
-            Create checkout link
-          </Link>
+          {isStoreBlocked ? (
+            <span
+              title="Store is blocked"
+              style={{
+                padding: '10px 14px',
+                borderRadius: 999,
+                border: '1px solid #e5e7eb',
+                background: '#f1f5f9',
+                color: '#94a3b8',
+                fontWeight: 900,
+                lineHeight: '20px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Store blocked
+            </span>
+          ) : (
+            <Link
+              href={checkoutHref}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 999,
+                border: '1px solid rgba(37,99,235,0.35)',
+                background: '#ffffff',
+                color: '#2563eb',
+                fontWeight: 900,
+                textDecoration: 'none',
+                boxShadow: '0 8px 22px rgba(15,23,42,0.06)',
+                lineHeight: '20px',
+                whiteSpace: 'nowrap',
+              }}
+              title="Create a shareable checkout link for this product"
+            >
+              Create checkout link
+            </Link>
+          )}
 
           <input
             ref={fileInputRef}

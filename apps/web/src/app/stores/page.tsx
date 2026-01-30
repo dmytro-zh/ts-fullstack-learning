@@ -117,6 +117,7 @@ export default async function StoresPage({ searchParams }: PageProps) {
                     <span>
                       {s.name}
                       {s.email ? ` (${s.email})` : ''}
+                      {s.isActive === false ? ' (Blocked)' : ''}
                     </span>
 
                     <Link
