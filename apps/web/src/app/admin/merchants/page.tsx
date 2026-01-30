@@ -1,5 +1,8 @@
 import { cookies } from 'next/headers';
 import styles from '../admin.module.css';
+import { MerchantPlanButton } from '../merchant-plan-button';
+
+export const dynamic = 'force-dynamic';
 
 type Merchant = {
   id: string;
@@ -14,7 +17,8 @@ async function fetchMerchants(): Promise<Merchant[]> {
   const token = cookieStore.get('api_token')?.value ?? null;
   if (!token) return [];
 
-  const res = await fetch(`${process.env.API_URL ?? 'http://localhost:4000'}/admin/merchants`, {
+  const apiBase = process.env.API_BASE_URL ?? 'http://localhost:4000';
+  const res = await fetch(`${apiBase}/admin/merchants`, {
     headers: { authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
@@ -44,6 +48,7 @@ export default async function AdminMerchantsPage() {
               <th className={styles.th}>Plan</th>
               <th className={styles.th}>Subscription</th>
               <th className={styles.th}>Stores</th>
+              <th className={styles.th}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -53,11 +58,14 @@ export default async function AdminMerchantsPage() {
                 <td className={styles.td}>{m.plan}</td>
                 <td className={styles.td}>{m.subscriptionStatus ?? '-'}</td>
                 <td className={styles.td}>{m.storesCount}</td>
+                <td className={styles.td}>
+                  <MerchantPlanButton id={m.id} plan={m.plan} />
+                </td>
               </tr>
             ))}
             {merchants.length === 0 ? (
               <tr>
-                <td style={{ padding: '12px 6px', color: '#94a3b8' }} colSpan={4}>
+                <td style={{ padding: '12px 6px', color: '#94a3b8' }} colSpan={5}>
                   No merchants found.
                 </td>
               </tr>

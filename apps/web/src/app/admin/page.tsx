@@ -23,7 +23,7 @@ function formatCad(cents: number) {
   }).format((cents ?? 0) / 100);
 }
 
-function getBaseUrl() {
+function getBaseUrl(h: Awaited<ReturnType<typeof headers>>) {
   const envBase =
     process.env.NEXT_PUBLIC_WEB_BASE_URL ??
     process.env.WEB_BASE_URL ??
@@ -33,18 +33,18 @@ function getBaseUrl() {
     return envBase.replace(/\/+$/g, '');
   }
 
-  const h = headers();
   const proto = h.get('x-forwarded-proto') ?? 'http';
   const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
   return `${proto}://${host}`;
 }
 
 export default async function AdminOverviewPage() {
-  const baseUrl = getBaseUrl();
-  const cookieHeader = headers().get('cookie') ?? '';
+  const h = await headers();
+  const baseUrl = getBaseUrl(h);
+  const cookieHeader = h.get('cookie') ?? '';
   const res = await fetch(`${baseUrl}/api/admin/metrics`, {
     cache: 'no-store',
-    headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+    headers: { cookie: cookieHeader },
   });
 
   const data = res.ok
@@ -64,10 +64,12 @@ export default async function AdminOverviewPage() {
       };
 
   return (
-    <div>
+    <div data-testid="admin-page">
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Overview</h1>
+          <h1 className={styles.title} data-testid="admin-title">
+            Overview
+          </h1>
           <p className={styles.subtitle}>Platform health for the last {data.periodDays} days.</p>
         </div>
       </div>
